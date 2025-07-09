@@ -1,0 +1,15 @@
+[project]
+name = "gimmegit"
+version = "0.0.1"
+description = "A repo for every occasion"
+license = "MIT"
+dependencies = [
+    "gitpython",
+    "PyGithub"
+]
+
+[project.scripts]
+gimmegit = "gimmegit:cli"
+
+[tool.ruff]
+line-length = 99
