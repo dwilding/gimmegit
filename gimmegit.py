@@ -3,26 +3,21 @@ from datetime import datetime
 from pathlib import Path
 import argparse
 import re
-import os
-import subprocess
 import sys
 
 import git
 import github
 
-# GIMMEGIT_BUILD_SCRIPT: str | None = None
 # GIMMEGIT_CLONE_ROOT: str | None = None
 # GIMMEGIT_GIT_EMAIL: str | None = None
 # GIMMEGIT_GIT_NAME: str | None = None
 # GIMMEGIT_GITHUB_SSH: bool = False
 # GIMMEGIT_GITHUB_TOKEN: str | None = None
 
-GIMMEGIT_BUILD_SCRIPT = "/home/david.wilding@canonical.com/workspace/build.sh"
 GIMMEGIT_CLONE_ROOT = "/home/david.wilding@canonical.com/clones"
 GIMMEGIT_GIT_EMAIL = "david.wilding@canonical.com"
 GIMMEGIT_GIT_NAME = "David Wilding"
 GIMMEGIT_GITHUB_SSH = True
-
 
 
 @dataclass
@@ -34,7 +29,7 @@ class Context:
     owner: str
     project: str
     source_url: str | None
-    target_branch: str | None
+    base_branch: str | None
 
 
 @dataclass
@@ -52,19 +47,15 @@ class ParsedURL:
 
 def cli() -> None:
     parser = argparse.ArgumentParser(description="todo")
-    parser.add_argument("-t", "--target", dest="target_branch", help="todo")
+    parser.add_argument("-b", "--base", dest="base_branch", help="todo")
     parser.add_argument("repo", help="todo")
     parser.add_argument("new_branch", nargs="?", help="todo")
-    parser.add_argument("build_args", nargs=argparse.REMAINDER, help="todo")
     args = parser.parse_args()
     print("Getting repo details...")
     context = get_context(args)
     print(f"Cloning '{context.clone_url}'...")
     clone(context)
     print(f"Cloned repo:\n{context.clone_dir.resolve()}")
-    if GIMMEGIT_BUILD_SCRIPT:
-        print(f"Running build script...")
-        build(context, args.build_args)
 
 
 def get_context(args: argparse.Namespace) -> Context:
@@ -122,7 +113,7 @@ def get_context(args: argparse.Namespace) -> Context:
         owner=parsed.owner,
         project=project,
         source_url=source_url,
-        target_branch=args.target_branch,
+        base_branch=args.base_branch,
     )
 
 
@@ -170,54 +161,53 @@ def make_snapshot_name() -> str:
 def clone(context: Context) -> None:
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, no_tags=True)
     origin = cloned.remotes.origin
-    with cloned.config_writer() as config:
-        if GIMMEGIT_GIT_EMAIL:
-            config.set_value("user", "email", GIMMEGIT_GIT_EMAIL)
-        if GIMMEGIT_GIT_NAME:
-            config.set_value("user", "name", GIMMEGIT_GIT_NAME)
-    if not context.target_branch:
-        context.target_branch = get_default_branch(cloned)
+    if not context.base_branch:
+        context.base_branch = get_default_branch(cloned)
     if context.source_url:
         source = cloned.create_remote("source", context.source_url)
         source.fetch(no_tags=True)
         if context.create_branch:
-            # Create a local branch, starting from the target branch.
-            branch = cloned.create_head(context.branch, source.refs[context.target_branch])
+            # Create a local branch, starting from the base branch.
+            branch = cloned.create_head(context.branch, source.refs[context.base_branch])
         else:
             # Create a local branch that tracks the existing branch on origin.
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
-        # TODO: Create alias that fetches target, checks out branch, then merges from target.
+        base_remote = "source"
     else:
         if context.create_branch:
-            # Create a local branch, starting from the target branch.
-            branch = cloned.create_head(context.branch, origin.refs[context.target_branch])
+            # Create a local branch, starting from the base branch.
+            branch = cloned.create_head(context.branch, origin.refs[context.base_branch])
         else:
             # Create a local branch that tracks the existing branch.
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
-        # TODO: Create alias that fetches target, checks out branch, then merges from target.
+        base_remote = "origin"
+    with cloned.config_writer() as config:
+        update_branch = "!" + " && ".join(
+            [
+                f'echo "$ git checkout {branch}"',
+                f'git checkout "{branch}"',
+                f'echo "$ git fetch {base_remote} {context.base_branch}"',
+                f'git fetch "{base_remote}" "{context.base_branch}"',
+                f'echo "$ git merge {base_remote}/{context.base_branch}"',
+                f'git merge "{base_remote}/{context.base_branch}"',
+            ]
+        )  # Not cross-platform!
+        config.set_value(
+            "alias",
+            "update-branch",
+            update_branch,
+        )
+        if GIMMEGIT_GIT_EMAIL:
+            config.set_value("user", "email", GIMMEGIT_GIT_EMAIL)
+        if GIMMEGIT_GIT_NAME:
+            config.set_value("user", "name", GIMMEGIT_GIT_NAME)
 
 
 def get_default_branch(cloned: git.Repo) -> str:
     for ref in cloned.remotes.origin.refs:
         if ref.name == "origin/HEAD":
             return ref.ref.name.removeprefix("origin/")
-
-
-def build(context: Context, build_args: list) -> None:
-    args = [GIMMEGIT_BUILD_SCRIPT]
-    args.extend(build_args)
-    env = os.environ.copy()
-    env["GIMMEGIT_VAR_BRANCH"] = context.branch
-    env["GIMMEGIT_VAR_OWNER"] = context.owner
-    env["GIMMEGIT_VAR_PROJECT"] = context.project
-    if context.source_url:
-        env["GIMMEGIT_VAR_TARGET"] = f"source/{context.target_branch}"
-    else:
-        env["GIMMEGIT_VAR_TARGET"] = f"origin/{context.target_branch}"
-    if "--" in sys.argv[1:]:
-        env["GIMMEGIT_VAR_DASHDASH"] = "1"
-    subprocess.run(args, env=env, cwd=context.clone_dir, text=True)
