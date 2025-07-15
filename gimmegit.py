@@ -3,21 +3,14 @@ from datetime import datetime
 from pathlib import Path
 import argparse
 import re
+import os
 import sys
 
 import git
 import github
 
-# GIMMEGIT_CLONE_ROOT: str | None = None
-# GIMMEGIT_GIT_EMAIL: str | None = None
-# GIMMEGIT_GIT_NAME: str | None = None
-# GIMMEGIT_GITHUB_SSH: bool = False
-# GIMMEGIT_GITHUB_TOKEN: str | None = None
-
-GIMMEGIT_CLONE_ROOT = "/home/david.wilding@canonical.com/clones"
-GIMMEGIT_GIT_EMAIL = "david.wilding@canonical.com"
-GIMMEGIT_GIT_NAME = "David Wilding"
-GIMMEGIT_GITHUB_SSH = True
+GIMMEGIT_GITHUB_SSH = bool(os.getenv("GIMMEGIT_GITHUB_SSH"))
+GIMMEGIT_GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 
 
 @dataclass
@@ -97,11 +90,7 @@ def get_context(args: argparse.Namespace) -> Context:
         source_url = None
         project = parsed.project
     branch_short = branch.split("/")[-1]
-    slug = f"{project}/{parsed.owner}-{branch_short}"
-    if GIMMEGIT_CLONE_ROOT:
-        clone_dir = Path(GIMMEGIT_CLONE_ROOT) / slug
-    else:
-        clone_dir = Path(slug)
+    clone_dir = Path(f"{project}/{parsed.owner}-{branch_short}")
     if clone_dir.exists():
         print(f"You already have a clone:\n{clone_dir.resolve()}")
         sys.exit(10)
@@ -201,10 +190,6 @@ def clone(context: Context) -> None:
             "update-branch",
             update_branch,
         )
-        if GIMMEGIT_GIT_EMAIL:
-            config.set_value("user", "email", GIMMEGIT_GIT_EMAIL)
-        if GIMMEGIT_GIT_NAME:
-            config.set_value("user", "name", GIMMEGIT_GIT_NAME)
 
 
 def get_default_branch(cloned: git.Repo) -> str:
