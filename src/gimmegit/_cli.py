@@ -38,7 +38,7 @@ class ParsedURL:
     project: str
 
 
-def cli() -> None:
+def main() -> None:
     parser = argparse.ArgumentParser(description="todo")
     parser.add_argument("-b", "--base", dest="base_branch", help="todo")
     parser.add_argument("repo", help="todo")
@@ -196,3 +196,7 @@ def get_default_branch(cloned: git.Repo) -> str:
     for ref in cloned.remotes.origin.refs:
         if ref.name == "origin/HEAD":
             return ref.ref.name.removeprefix("origin/")
+
+
+if __name__ == "__main__":
+    main()
