@@ -4,13 +4,16 @@ from pathlib import Path
 import argparse
 import re
 import os
+import shutil
+import subprocess
 import sys
 
 import git
 import github
 
-GIMMEGIT_GITHUB_SSH = bool(os.getenv("GIMMEGIT_GITHUB_SSH"))
-GIMMEGIT_GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
+GITHUB_SSH = bool(os.getenv("GIMMEGIT_GITHUB_SSH"))
+GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
+NO_PRE_COMMIT = bool(os.getenv("GIMMEGIT_NO_PRE_COMMIT"))
 
 
 @dataclass
@@ -44,16 +47,16 @@ def main() -> None:
     parser.add_argument("repo", help="todo")
     parser.add_argument("new_branch", nargs="?", help="todo")
     args = parser.parse_args()
-    print("Getting repo details...")
     context = get_context(args)
-    print(f"Cloning '{context.clone_url}'...")
     clone(context)
+    install_pre_commit(context.clone_dir)
     print(f"Cloned repo:\n{context.clone_dir.resolve()}")
 
 
 def get_context(args: argparse.Namespace) -> Context:
+    print("Getting repo details...")
     if "/" not in args.repo:  # Simplistic way to detect a repo name
-        if not GIMMEGIT_GITHUB_TOKEN:
+        if not GITHUB_TOKEN:
             print(
                 "Error: GIMMEGIT_GITHUB_TOKEN is not set. Use a GitHub URL instead of a repo name."
             )
@@ -65,7 +68,7 @@ def get_context(args: argparse.Namespace) -> Context:
     if not parsed:
         print(f"Error: '{github_url}' is not a GitHub URL")
         sys.exit(1)
-    if GIMMEGIT_GITHUB_SSH:
+    if GITHUB_SSH:
         clone_url = f"git@github.com:{parsed.owner}/{parsed.project}.git"
     else:
         clone_url = f"https://github.com/{parsed.owner}/{parsed.project}.git"
@@ -119,19 +122,19 @@ def parse_github_url(url: str) -> ParsedURL | None:
 
 
 def get_github_login() -> str:
-    api = github.Github(GIMMEGIT_GITHUB_TOKEN)
+    api = github.Github(GITHUB_TOKEN)
     user = api.get_user()
     return user.login
 
 
 def get_github_source(owner: str, project: str) -> Source | None:
-    if not GIMMEGIT_GITHUB_TOKEN:
+    if not GITHUB_TOKEN:
         return None
-    api = github.Github(GIMMEGIT_GITHUB_TOKEN)
+    api = github.Github(GITHUB_TOKEN)
     repo = api.get_repo(f"{owner}/{project}")
     if repo.fork:
         parent = repo.parent
-        if GIMMEGIT_GITHUB_SSH:
+        if GITHUB_SSH:
             remote_url = f"git@github.com:{parent.owner.login}/{parent.name}.git"
         else:
             remote_url = f"https://github.com/{parent.owner.login}/{parent.name}.git"
@@ -148,6 +151,7 @@ def make_snapshot_name() -> str:
 
 
 def clone(context: Context) -> None:
+    print(f"Cloning '{context.clone_url}'...")
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, no_tags=True)
     origin = cloned.remotes.origin
     if not context.base_branch:
@@ -196,6 +200,17 @@ def get_default_branch(cloned: git.Repo) -> str:
     for ref in cloned.remotes.origin.refs:
         if ref.name == "origin/HEAD":
             return ref.ref.name.removeprefix("origin/")
+
+
+def install_pre_commit(clone_dir: Path) -> None:
+    if NO_PRE_COMMIT:
+        return
+    if not (clone_dir / ".pre-commit-config.yaml").exists():
+        return
+    if not shutil.which("uvx"):
+        return
+    print("Installing pre-commit using uvx...")
+    subprocess.run(["uvx", "pre-commit", "install"], cwd=clone_dir, check=True)
 
 
 if __name__ == "__main__":
