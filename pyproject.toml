@@ -1,6 +1,6 @@
 [project]
 name = "gimmegit"
-version = "0.0.3"
+version = "0.0.4"
 description = "Create and clone fully-isolated development branches"
 authors = [
     { name = "Dave Wilding", email = "tech@dpw.me" }
