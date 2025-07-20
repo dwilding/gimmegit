@@ -11,13 +11,14 @@ import sys
 import git
 import github
 
-GITHUB_SSH = bool(os.getenv("GIMMEGIT_GITHUB_SSH"))
 GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 NO_PRE_COMMIT = bool(os.getenv("GIMMEGIT_NO_PRE_COMMIT"))
+NO_SSH = bool(os.getenv("GIMMEGIT_NO_SSH"))
 
 
 @dataclass
 class Context:
+    base_branch: str | None
     branch: str
     clone_url: str
     clone_dir: Path
@@ -25,7 +26,6 @@ class Context:
     owner: str
     project: str
     source_url: str | None
-    base_branch: str | None
 
 
 @dataclass
@@ -68,7 +68,7 @@ def get_context(args: argparse.Namespace) -> Context:
     if not parsed:
         print(f"Error: '{github_url}' is not a GitHub URL")
         sys.exit(1)
-    if GITHUB_SSH:
+    if use_ssh():
         clone_url = f"git@github.com:{parsed.owner}/{parsed.project}.git"
     else:
         clone_url = f"https://github.com/{parsed.owner}/{parsed.project}.git"
@@ -98,6 +98,7 @@ def get_context(args: argparse.Namespace) -> Context:
         print(f"You already have a clone:\n{clone_dir.resolve()}")
         sys.exit(10)
     return Context(
+        base_branch=args.base_branch,
         branch=branch,
         clone_url=clone_url,
         clone_dir=clone_dir,
@@ -105,7 +106,6 @@ def get_context(args: argparse.Namespace) -> Context:
         owner=parsed.owner,
         project=project,
         source_url=source_url,
-        base_branch=args.base_branch,
     )
 
 
@@ -134,7 +134,7 @@ def get_github_source(owner: str, project: str) -> Source | None:
     repo = api.get_repo(f"{owner}/{project}")
     if repo.fork:
         parent = repo.parent
-        if GITHUB_SSH:
+        if use_ssh():
             remote_url = f"git@github.com:{parent.owner.login}/{parent.name}.git"
         else:
             remote_url = f"https://github.com/{parent.owner.login}/{parent.name}.git"
@@ -142,6 +142,13 @@ def get_github_source(owner: str, project: str) -> Source | None:
             remote_url=remote_url,
             project=parent.name,
         )
+
+
+def use_ssh() -> bool:
+    if NO_SSH:
+        return False
+    ssh_dir = Path.home() / ".ssh"
+    return any(ssh_dir.glob("id_*"))
 
 
 def make_snapshot_name() -> str:
