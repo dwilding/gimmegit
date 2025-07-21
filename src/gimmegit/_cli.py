@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 import argparse
+import logging
 import re
 import os
 import shutil
@@ -11,9 +12,11 @@ import sys
 import git
 import github
 
-sys.stdout = open(sys.stdout.fileno(), "w", buffering=1)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
+NO_COLOR = bool(os.getenv("NO_COLOR"))
 NO_PRE_COMMIT = bool(os.getenv("GIMMEGIT_NO_PRE_COMMIT"))
 NO_SSH = bool(os.getenv("GIMMEGIT_NO_SSH"))
 
@@ -45,22 +48,58 @@ class ParsedURL:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="todo")
-    parser.add_argument("-s", "--source-owner", dest="source_owner", help="todo")
-    parser.add_argument("-b", "--base-branch", dest="base_branch", help="todo")
+    parser.add_argument(
+        "--color", choices=["auto", "always", "never"], default="auto", help="todo"
+    )
+    parser.add_argument("-s", "--source-owner", help="todo")
+    parser.add_argument("-b", "--base-branch", help="todo")
     parser.add_argument("repo", help="todo")
     parser.add_argument("new_branch", nargs="?", help="todo")
     args = parser.parse_args()
-    context = get_context(args)
+    configure_logger(use_color(args.color))
+    try:
+        context = get_context(args)
+    except ValueError as e:
+        logger.error(e)
+        sys.exit(1)
     if context.clone_dir.exists():
-        print(f"You already have a clone:\n{context.clone_dir.resolve()}")
+        logger.info(f"You already have a clone:\n{context.clone_dir.resolve()}")
         sys.exit(10)
     clone(context)
     install_pre_commit(context.clone_dir)
-    print(f"Cloned repo:\n{context.clone_dir.resolve()}")
+    logger.info(f"Cloned repo:\n{context.clone_dir.resolve()}")
+
+
+def use_color(color_arg: str) -> bool:
+    if color_arg == "auto":
+        return os.isatty(sys.stdout.fileno()) and not NO_COLOR
+    if color_arg == "always":
+        return True
+    if color_arg == "never":
+        return False
+
+
+def configure_logger(color: bool) -> None:
+    info = logging.StreamHandler(sys.stdout)
+    info.setFormatter(logging.Formatter("%(message)s"))
+    warning = logging.StreamHandler(sys.stderr)
+    error = logging.StreamHandler(sys.stderr)
+    if color:
+        warning.setFormatter(logging.Formatter("\033[33mWarning:\033[0m %(message)s"))
+        error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
+    else:
+        warning.setFormatter(logging.Formatter("Warning: %(message)s"))
+        error.setFormatter(logging.Formatter("Error: %(message)s"))
+    info.addFilter(lambda _: _.levelno == logging.INFO)
+    warning.addFilter(lambda _: _.levelno == logging.WARNING)
+    error.addFilter(lambda _: _.levelno == logging.ERROR)
+    logger.addHandler(info)
+    logger.addHandler(warning)
+    logger.addHandler(error)
 
 
 def get_context(args: argparse.Namespace) -> Context:
-    print("Getting repo details...")
+    logger.info("Getting repo details...")
     # Parse the 'repo' arg to get the owner, project, and branch.
     if args.repo.startswith("https://"):
         github_url = args.repo
@@ -68,19 +107,16 @@ def get_context(args: argparse.Namespace) -> Context:
         github_url = f"https://github.com/{args.repo}"
     elif args.repo.count("/") == 0:
         if not GITHUB_TOKEN:
-            print(
-                "Error: GIMMEGIT_GITHUB_TOKEN is not set. Use a GitHub URL instead of a repo name."
+            raise ValueError(
+                "GIMMEGIT_GITHUB_TOKEN is not set. Use a GitHub URL instead of a repo name."
             )
-            sys.exit(1)
         github_login = get_github_login()
         github_url = f"https://github.com/{github_login}/{args.repo}"
     else:
-        print(f"Error: '{args.repo}' is not a supported repo name.")
-        sys.exit(1)
+        raise ValueError(f"'{args.repo}' is not a supported repo name.")
     parsed = parse_github_url(github_url)
     if not parsed:
-        print(f"Error: '{github_url}' is not a supported GitHub URL.")
-        sys.exit(1)
+        raise ValueError(f"'{github_url}' is not a supported GitHub URL.")
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
@@ -103,7 +139,7 @@ def get_context(args: argparse.Namespace) -> Context:
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
-        print(f"Warning: ignoring '{args.new_branch}' because '{github_url}' specifies a branch.")
+        logger.warning(f"Ignoring '{args.new_branch}' because '{github_url}' specifies a branch.")
     return Context(
         base_branch=args.base_branch,
         branch=branch,
@@ -173,13 +209,13 @@ def make_clone_path(owner: str, project: str, branch: str) -> str:
 
 
 def clone(context: Context) -> None:
-    print(f"Cloning '{context.clone_url}'...")
+    logger.info(f"Cloning '{context.clone_url}'...")
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, no_tags=True)
     origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
     if context.source_url:
-        print(f"Setting source to '{context.source_url}'...")
+        logger.info(f"Setting source to '{context.source_url}'...")
         source = cloned.create_remote("source", context.source_url)
         source.fetch(no_tags=True)
         if context.create_branch:
@@ -232,7 +268,7 @@ def install_pre_commit(clone_dir: Path) -> None:
         return
     if not shutil.which("uvx"):
         return
-    print("Installing pre-commit using uvx...")
+    logger.info("Installing pre-commit using uvx...")
     subprocess.run(["uvx", "pre-commit", "install"], cwd=clone_dir, check=True)
 
 
