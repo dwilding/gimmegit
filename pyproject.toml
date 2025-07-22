@@ -1,12 +1,12 @@
 [project]
 name = "gimmegit"
-version = "0.0.5"
+version = "0.0.6"
 description = "Create and clone fully-isolated development branches"
 authors = [
     { name = "Dave Wilding", email = "tech@dpw.me" },
 ]
 license = "MIT"
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 dependencies = [
     "gitpython>=3.1,<4",
     "PyGithub>=2.6,<3",
@@ -19,6 +19,7 @@ gimmegit = "gimmegit._cli:main"
 dev = [
     "ruff",
     "pytest",
+    "ty",
 ]
 
 [build-system]

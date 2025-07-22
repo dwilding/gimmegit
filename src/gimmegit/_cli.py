@@ -55,7 +55,13 @@ def main() -> None:
     parser.add_argument("-b", "--base-branch", help="todo")
     parser.add_argument("repo", help="todo")
     parser.add_argument("new_branch", nargs="?", help="todo")
-    args = parser.parse_args()
+    command_args = sys.argv[1:]
+    cloning_args = ["--no-tags"]
+    if "--" in command_args:
+        sep_index = command_args.index("--")
+        cloning_args.extend(command_args[sep_index + 1 :])
+        command_args = command_args[:sep_index]
+    args = parser.parse_args(command_args)
     configure_logger(use_color(args.color))
     try:
         context = get_context(args)
@@ -65,18 +71,17 @@ def main() -> None:
     if context.clone_dir.exists():
         logger.info(f"You already have a clone:\n{context.clone_dir.resolve()}")
         sys.exit(10)
-    clone(context)
+    clone(context, cloning_args)
     install_pre_commit(context.clone_dir)
     logger.info(f"Cloned repo:\n{context.clone_dir.resolve()}")
 
 
 def use_color(color_arg: str) -> bool:
-    if color_arg == "auto":
-        return os.isatty(sys.stdout.fileno()) and not NO_COLOR
-    if color_arg == "always":
-        return True
     if color_arg == "never":
         return False
+    if color_arg == "always":
+        return True
+    return os.isatty(sys.stdout.fileno()) and not NO_COLOR
 
 
 def configure_logger(color: bool) -> None:
@@ -203,14 +208,14 @@ def make_snapshot_name() -> str:
     return f"snapshot{today_formatted}"
 
 
-def make_clone_path(owner: str, project: str, branch: str) -> str:
+def make_clone_path(owner: str, project: str, branch: str) -> Path:
     branch_short = branch.split("/")[-1]
     return Path(f"{project}/{owner}-{branch_short}")
 
 
-def clone(context: Context) -> None:
+def clone(context: Context, cloning_args: list[str]) -> None:
     logger.info(f"Cloning '{context.clone_url}'...")
-    cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, no_tags=True)
+    cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, multi_options=cloning_args)
     origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
@@ -259,6 +264,7 @@ def get_default_branch(cloned: git.Repo) -> str:
     for ref in cloned.remotes.origin.refs:
         if ref.name == "origin/HEAD":
             return ref.ref.name.removeprefix("origin/")
+    raise RuntimeError("Unable to identify default branch.")
 
 
 def install_pre_commit(clone_dir: Path) -> None:
