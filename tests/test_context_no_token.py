@@ -19,7 +19,7 @@ def no_ssh(monkeypatch):
 
 def test_project():
     args = argparse.Namespace(
-        source_owner=None, base_branch=None, repo="gimmegit", new_branch=None
+        upstream_owner=None, base_branch=None, repo="gimmegit", new_branch=None
     )
     with pytest.raises(ValueError):
         _cli.get_context(args)
@@ -27,7 +27,7 @@ def test_project():
 
 def test_owner_project(snapshot_name, no_ssh):
     args = argparse.Namespace(
-        source_owner=None, base_branch=None, repo="dwilding/gimmegit", new_branch=None
+        upstream_owner=None, base_branch=None, repo="dwilding/gimmegit", new_branch=None
     )
     expected_context = _cli.Context(
         base_branch=None,
@@ -37,14 +37,14 @@ def test_owner_project(snapshot_name, no_ssh):
         create_branch=True,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     assert _cli.get_context(args) == expected_context
 
 
 def test_owner_project_branch(no_ssh):
     args = argparse.Namespace(
-        source_owner=None, base_branch=None, repo="dwilding/gimmegit", new_branch="fix-something"
+        upstream_owner=None, base_branch=None, repo="dwilding/gimmegit", new_branch="fix-something"
     )
     expected_context = _cli.Context(
         base_branch=None,
@@ -54,14 +54,14 @@ def test_owner_project_branch(no_ssh):
         create_branch=True,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     assert _cli.get_context(args) == expected_context
 
 
 def test_repo_url(snapshot_name, no_ssh):
     args = argparse.Namespace(
-        source_owner=None,
+        upstream_owner=None,
         base_branch=None,
         repo="https://github.com/dwilding/gimmegit",
         new_branch=None,
@@ -74,14 +74,14 @@ def test_repo_url(snapshot_name, no_ssh):
         create_branch=True,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     assert _cli.get_context(args) == expected_context
 
 
 def test_repo_url_branch(no_ssh):
     args = argparse.Namespace(
-        source_owner=None,
+        upstream_owner=None,
         base_branch=None,
         repo="https://github.com/dwilding/gimmegit",
         new_branch="fix-something",
@@ -94,14 +94,14 @@ def test_repo_url_branch(no_ssh):
         create_branch=True,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     assert _cli.get_context(args) == expected_context
 
 
 def test_branch_url(snapshot_name, no_ssh):
     args = argparse.Namespace(
-        source_owner=None,
+        upstream_owner=None,
         base_branch=None,
         repo="https://github.com/dwilding/gimmegit/tree/next-release",
         new_branch=None,
@@ -114,14 +114,14 @@ def test_branch_url(snapshot_name, no_ssh):
         create_branch=False,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     assert _cli.get_context(args) == expected_context
 
 
 def test_branch_url_branch(no_ssh, caplog):
     args = argparse.Namespace(
-        source_owner=None,
+        upstream_owner=None,
         base_branch=None,
         repo="https://github.com/dwilding/gimmegit/tree/next-release",
         new_branch="fix-something",  # This should be ignored.
@@ -134,7 +134,7 @@ def test_branch_url_branch(no_ssh, caplog):
         create_branch=False,
         owner="dwilding",
         project="gimmegit",
-        source_url=None,
+        upstream_url=None,
     )
     with caplog.at_level(logging.WARNING):
         assert _cli.get_context(args) == expected_context

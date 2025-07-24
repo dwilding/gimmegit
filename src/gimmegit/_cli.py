@@ -30,11 +30,11 @@ class Context:
     create_branch: bool
     owner: str
     project: str
-    source_url: str | None
+    upstream_url: str | None
 
 
 @dataclass
-class Source:
+class Upstream:
     remote_url: str
     project: str
 
@@ -51,7 +51,7 @@ def main() -> None:
     parser.add_argument(
         "--color", choices=["auto", "always", "never"], default="auto", help="todo"
     )
-    parser.add_argument("-s", "--source-owner", help="todo")
+    parser.add_argument("-u", "--upstream-owner", help="todo")
     parser.add_argument("-b", "--base-branch", help="todo")
     parser.add_argument("repo", help="todo")
     parser.add_argument("new_branch", nargs="?", help="todo")
@@ -125,16 +125,16 @@ def get_context(args: argparse.Namespace) -> Context:
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
-    # Get clone URLs for origin and source.
+    # Get clone URLs for origin and upstream.
     clone_url = make_github_clone_url(owner, project)
-    source_url = None
-    if args.source_owner:
-        source_url = make_github_clone_url(args.source_owner, project)
+    upstream_url = None
+    if args.upstream_owner:
+        upstream_url = make_github_clone_url(args.upstream_owner, project)
     else:
-        source = get_github_source(owner, project)
-        if source:
-            source_url = source.remote_url
-            project = source.project
+        upstream = get_github_upstream(owner, project)
+        if upstream:
+            upstream_url = upstream.remote_url
+            project = upstream.project
     # Decide whether to create a branch.
     create_branch = False
     if not branch:
@@ -153,7 +153,7 @@ def get_context(args: argparse.Namespace) -> Context:
         create_branch=create_branch,
         owner=owner,
         project=project,
-        source_url=source_url,
+        upstream_url=upstream_url,
     )
 
 
@@ -175,14 +175,14 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_source(owner: str, project: str) -> Source | None:
+def get_github_upstream(owner: str, project: str) -> Upstream | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
     repo = api.get_repo(f"{owner}/{project}")
     if repo.fork:
         parent = repo.parent
-        return Source(
+        return Upstream(
             remote_url=make_github_clone_url(parent.owner.login, parent.name),
             project=parent.name,
         )
@@ -219,19 +219,19 @@ def clone(context: Context, cloning_args: list[str]) -> None:
     origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
-    if context.source_url:
-        logger.info(f"Setting source to '{context.source_url}'...")
-        source = cloned.create_remote("source", context.source_url)
-        source.fetch(no_tags=True)
+    if context.upstream_url:
+        logger.info(f"Setting upstream to '{context.upstream_url}'...")
+        upstream = cloned.create_remote("upstream", context.upstream_url)
+        upstream.fetch(no_tags=True)
         if context.create_branch:
-            # Create a local branch, starting from the base branch on source.
-            branch = cloned.create_head(context.branch, source.refs[context.base_branch])
+            # Create a local branch, starting from the base branch on upstream.
+            branch = cloned.create_head(context.branch, upstream.refs[context.base_branch])
         else:
             # Create a local branch that tracks the existing branch on origin.
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
-        base_remote = "source"
+        base_remote = "upstream"
     else:
         if context.create_branch:
             # Create a local branch, starting from the base branch.
