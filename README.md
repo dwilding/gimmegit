@@ -65,7 +65,7 @@ gimmegit -u canonical dwilding/operator
 
 gimmegit generates a branch name based on the date. For example, `snapshot0801` on August 1.
 
-If you get tired of typing `-u canonical` and your GitHub username, create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and put the token in an environment variable called `GIMMEGIT_GITHUB_TOKEN`. Then, to clone your fork and create a branch:
+If you get tired of typing `-u canonical` and your username, create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and put the token in an environment variable called `GIMMEGIT_GITHUB_TOKEN`. Then, to clone your fork and create a branch:
 
 ```text
 gimmegit operator new-feature
