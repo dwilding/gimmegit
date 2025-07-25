@@ -16,9 +16,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
-NO_COLOR = bool(os.getenv("NO_COLOR"))
-NO_PRE_COMMIT = bool(os.getenv("GIMMEGIT_NO_PRE_COMMIT"))
-NO_SSH = bool(os.getenv("GIMMEGIT_NO_SSH"))
 
 
 @dataclass
@@ -47,14 +44,30 @@ class ParsedURL:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="todo")
-    parser.add_argument(
-        "--color", choices=["auto", "always", "never"], default="auto", help="todo"
+    parser = argparse.ArgumentParser(
+        description="Create and clone fully-isolated development branches"
     )
-    parser.add_argument("-u", "--upstream-owner", help="todo")
-    parser.add_argument("-b", "--base-branch", help="todo")
-    parser.add_argument("repo", help="todo")
-    parser.add_argument("new_branch", nargs="?", help="todo")
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="Use color in the output",
+    )
+    parser.add_argument(
+        "--ssh",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="Use SSH for git remotes",
+    )
+    parser.add_argument(
+        "--no-pre-commit",
+        action="store_true",
+        help="Don't try to install pre-commit after cloning",
+    )
+    parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
+    parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
+    parser.add_argument("repo", help="Repo to clone from GitHub")
+    parser.add_argument("new_branch", nargs="?", help="Name of the branch to create")
     command_args = sys.argv[1:]
     cloning_args = ["--no-tags"]
     if "--" in command_args:
@@ -72,7 +85,8 @@ def main() -> None:
         logger.info(f"You already have a clone:\n{context.clone_dir.resolve()}")
         sys.exit(10)
     clone(context, cloning_args)
-    install_pre_commit(context.clone_dir)
+    if not args.no_pre_commit:
+        install_pre_commit(context.clone_dir)
     logger.info(f"Cloned repo:\n{context.clone_dir.resolve()}")
 
 
@@ -81,7 +95,16 @@ def use_color(color_arg: str) -> bool:
         return False
     if color_arg == "always":
         return True
-    return os.isatty(sys.stdout.fileno()) and not NO_COLOR
+    return os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
+
+
+def use_ssh(ssh_arg: str) -> bool:
+    if ssh_arg == "never":
+        return False
+    if ssh_arg == "always":
+        return True
+    ssh_dir = Path.home() / ".ssh"
+    return any(ssh_dir.glob("id_*"))
 
 
 def configure_logger(color: bool) -> None:
@@ -126,12 +149,13 @@ def get_context(args: argparse.Namespace) -> Context:
     project = parsed.project
     branch = parsed.branch
     # Get clone URLs for origin and upstream.
-    clone_url = make_github_clone_url(owner, project)
+    ssh = use_ssh(args.ssh)
+    clone_url = make_github_clone_url(owner, project, ssh)
     upstream_url = None
     if args.upstream_owner:
-        upstream_url = make_github_clone_url(args.upstream_owner, project)
+        upstream_url = make_github_clone_url(args.upstream_owner, project, ssh)
     else:
-        upstream = get_github_upstream(owner, project)
+        upstream = get_github_upstream(owner, project, ssh)
         if upstream:
             upstream_url = upstream.remote_url
             project = upstream.project
@@ -175,7 +199,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> Upstream | None:
+def get_github_upstream(owner: str, project: str, ssh: bool) -> Upstream | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -183,23 +207,16 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
     if repo.fork:
         parent = repo.parent
         return Upstream(
-            remote_url=make_github_clone_url(parent.owner.login, parent.name),
+            remote_url=make_github_clone_url(parent.owner.login, parent.name, ssh),
             project=parent.name,
         )
 
 
-def make_github_clone_url(owner: str, project: str) -> str:
-    if use_ssh():
+def make_github_clone_url(owner: str, project: str, ssh: bool) -> str:
+    if ssh:
         return f"git@github.com:{owner}/{project}.git"
     else:
         return f"https://github.com/{owner}/{project}.git"
-
-
-def use_ssh() -> bool:
-    if NO_SSH:
-        return False
-    ssh_dir = Path.home() / ".ssh"
-    return any(ssh_dir.glob("id_*"))
 
 
 def make_snapshot_name() -> str:
@@ -268,8 +285,6 @@ def get_default_branch(cloned: git.Repo) -> str:
 
 
 def install_pre_commit(clone_dir: Path) -> None:
-    if NO_PRE_COMMIT:
-        return
     if not (clone_dir / ".pre-commit-config.yaml").exists():
         return
     if not shutil.which("uvx"):
