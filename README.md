@@ -95,6 +95,8 @@ gimmegit operator new-feature
 
 ## Specify the base branch
 
+### For a new branch
+
 By default, when gimmegit checks out a new branch, gimmegit bases the branch on the upstream repo's main branch. To specify the base branch, use `-b`:
 
 ```text
@@ -105,6 +107,8 @@ gimmegit -b 2.23-maintenance operator backport-fix
 ```
 
 To merge `canonical:2.23-maintenance` into `dwilding:backport-fix` in the future, run `git update-branch`.
+
+### For an existing branch
 
 To clone your fork, check out an existing branch, and set the base branch for `git update-branch`:
 
