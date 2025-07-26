@@ -104,7 +104,7 @@ gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator b
 Or equivalently, if you've set `GIMMEGIT_GITHUB_TOKEN`:
 
 ```text
-gimmegit -b 2.23-maintenance dwilding/operator backport-feature
+gimmegit -b 2.23-maintenance operator backport-feature
 ```
 
 ## Customize gimmegit
