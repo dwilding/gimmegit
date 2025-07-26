@@ -31,7 +31,7 @@ If you're reviewing dwilding's branch, this is probably the only command you'll 
 
 ### Work on an existing branch
 
-If you are dwilding, and you're working on the `fix-something` branch, use `-u` to specify the upstream owner:
+If you are dwilding, and you want to work on the `fix-something` branch, use `-u` to specify the upstream owner when cloning your fork:
 
 ```text
 gimmegit -u canonical https://github.com/dwilding/operator/tree/fix-something
@@ -95,16 +95,24 @@ gimmegit operator new-feature
 
 ## Specify the base branch
 
-When gimmegit checks out a new branch, gimmegit bases the branch on the upstream repo's default branch. To specify the base branch, use `-b`. For example:
+By default, when gimmegit checks out a new branch, gimmegit bases the branch on the upstream repo's main branch. To specify the base branch, use `-b`:
 
 ```text
-gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator backport-feature
+gimmegit -b 2.23-maintenance -u canonical dwilding/operator backport-fix
+
+# Or if GIMMEGIT_GITHUB_TOKEN is set
+gimmegit -b 2.23-maintenance operator backport-fix
 ```
 
-Or equivalently, if you've set `GIMMEGIT_GITHUB_TOKEN`:
+To merge `canonical:2.23-maintenance` into `dwilding:backport-fix` in the future, run `git update-branch`.
+
+To clone your fork, check out an existing branch, and set the base branch for `git update-branch`:
 
 ```text
-gimmegit -b 2.23-maintenance operator backport-feature
+gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/tree/backport-docs
+
+# Or if GIMMEGIT_GITHUB_TOKEN is set
+gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-docs
 ```
 
 ## Customize gimmegit
