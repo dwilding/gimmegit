@@ -31,7 +31,7 @@ If you're reviewing dwilding's branch, this is probably the only command you'll 
 
 ### Work on an existing branch
 
-If you are dwilding, and you're working on the `fix-something` branch, you should use `-u` to specify the upstream owner when cloning your fork:
+If you are dwilding, and you're working on the `fix-something` branch, use `-u` to specify the upstream owner:
 
 ```text
 gimmegit -u canonical https://github.com/dwilding/operator/tree/fix-something
@@ -53,7 +53,7 @@ Or equivalently:
 gimmegit -u canonical dwilding/operator new-feature
 ```
 
-gimmegit clones the fork into a directory called *operator/dwilding-new-feature* and checks out a new branch called `new-feature`. gimmegit doesn't push the new branch to GitHub.
+gimmegit clones the fork into a directory called *operator/dwilding-new-feature* and checks out a new branch called `new-feature`. gimmegit doesn't push the branch to GitHub.
 
 The new branch is based on `canonical:main`. You don't need to update `dwilding:main` before running gimmegit. To merge `canonical:main` into `dwilding:new-feature` in the future, run `git update-branch`.
 
@@ -85,7 +85,7 @@ gimmegit operator new-feature
     uv tool update-shell
     ```
 
- 3. Restart your shell.
+ 3. Restart your terminal.
 
  4. Run:
 
@@ -95,7 +95,17 @@ gimmegit operator new-feature
 
 ## Specify the base branch
 
-TODO
+When gimmegit checks out a new branch, gimmegit bases the branch on the upstream repo's default branch. To specify the base branch, use `-b`. For example:
+
+```text
+gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator backport-feature
+```
+
+Or equivalently, if you've set `GIMMEGIT_GITHUB_TOKEN`:
+
+```text
+gimmegit -b 2.23-maintenance dwilding/operator backport-feature
+```
 
 ## Customize gimmegit
 
