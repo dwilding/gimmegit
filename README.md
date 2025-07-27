@@ -14,7 +14,6 @@ In this README:
   - [Examples](#examples)
   - [Install gimmegit](#install-gimmegit)
   - [Specify the base branch](#specify-the-base-branch)
-  - [Customize gimmegit](#customize-gimmegit)
 
 ## Examples
 
@@ -118,7 +117,3 @@ gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/t
 # Or if GIMMEGIT_GITHUB_TOKEN is set
 gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-docs
 ```
-
-## Customize gimmegit
-
-TODO
