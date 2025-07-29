@@ -121,7 +121,7 @@ gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-
 
 ## Provide clone options
 
-To provide [clone options](https://git-scm.com/docs/clone) to gimmegit, list the options after `--`. For example, to provide the `--recurse-submodules` option:
+To provide [clone options](https://git-scm.com/docs/git-clone#_options) to gimmegit, list the options after `--`. For example, to provide the `--recurse-submodules` option:
 
 ```text
 gimmegit -u canonical dwilding/charmcraft -- --recurse-submodules
