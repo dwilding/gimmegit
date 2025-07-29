@@ -15,6 +15,9 @@ import github
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+COLOR = False
+SSH = False
+
 GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 
 
@@ -27,13 +30,15 @@ class Context:
     create_branch: bool
     owner: str
     project: str
+    upstream_owner: str | None
     upstream_url: str | None
 
 
 @dataclass
 class Upstream:
-    remote_url: str
+    owner: str
     project: str
+    remote_url: str
 
 
 @dataclass
@@ -75,44 +80,62 @@ def main() -> None:
         cloning_args.extend(command_args[sep_index + 1 :])
         command_args = command_args[:sep_index]
     args = parser.parse_args(command_args)
-    configure_logger(use_color(args.color))
+    set_global_color(args.color)
+    set_global_ssh(args.ssh)
+    configure_logger()
     try:
         context = get_context(args)
     except ValueError as e:
         logger.error(e)
         sys.exit(1)
     if context.clone_dir.exists():
-        logger.info(f"You already have a clone:\n{context.clone_dir.resolve()}")
+        outcome = "You already have a clone:"
+        logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
     clone(context, cloning_args)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
-    logger.info(f"Cloned repo:\n{context.clone_dir.resolve()}")
+    outcome = "Cloned repo:"
+    logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
 
 
-def use_color(color_arg: str) -> bool:
-    if color_arg == "never":
-        return False
-    if color_arg == "always":
-        return True
-    return os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
+def set_global_color(color_arg: str) -> None:
+    global COLOR
+    if color_arg == "auto":
+        COLOR = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
+    elif color_arg == "always":
+        COLOR = True
 
 
-def use_ssh(ssh_arg: str) -> bool:
-    if ssh_arg == "never":
-        return False
-    if ssh_arg == "always":
-        return True
-    ssh_dir = Path.home() / ".ssh"
-    return any(ssh_dir.glob("id_*"))
+def format_branch(branch: str) -> str:
+    if COLOR:
+        return f"\033[36m{branch}\033[0m"
+    else:
+        return branch
 
 
-def configure_logger(color: bool) -> None:
+def format_outcome(outcome: str) -> str:
+    if COLOR:
+        return f"\033[1m{outcome}\033[0m"
+    else:
+        return outcome
+
+
+def set_global_ssh(ssh_arg: str) -> None:
+    global SSH
+    if ssh_arg == "auto":
+        ssh_dir = Path.home() / ".ssh"
+        SSH = any(ssh_dir.glob("id_*"))
+    elif ssh_arg == "always":
+        SSH = True
+
+
+def configure_logger() -> None:
     info = logging.StreamHandler(sys.stdout)
     info.setFormatter(logging.Formatter("%(message)s"))
     warning = logging.StreamHandler(sys.stderr)
     error = logging.StreamHandler(sys.stderr)
-    if color:
+    if COLOR:
         warning.setFormatter(logging.Formatter("\033[33mWarning:\033[0m %(message)s"))
         error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
     else:
@@ -127,7 +150,7 @@ def configure_logger(color: bool) -> None:
 
 
 def get_context(args: argparse.Namespace) -> Context:
-    logger.info("Getting repo details...")
+    logger.info("Getting repo details")
     # Parse the 'repo' arg to get the owner, project, and branch.
     if args.repo.startswith("https://"):
         github_url = args.repo
@@ -149,14 +172,16 @@ def get_context(args: argparse.Namespace) -> Context:
     project = parsed.project
     branch = parsed.branch
     # Get clone URLs for origin and upstream.
-    ssh = use_ssh(args.ssh)
-    clone_url = make_github_clone_url(owner, project, ssh)
+    clone_url = make_github_clone_url(owner, project)
+    upstream_owner = None
     upstream_url = None
     if args.upstream_owner:
-        upstream_url = make_github_clone_url(args.upstream_owner, project, ssh)
+        upstream_owner = args.upstream_owner
+        upstream_url = make_github_clone_url(args.upstream_owner, project)
     else:
-        upstream = get_github_upstream(owner, project, ssh)
+        upstream = get_github_upstream(owner, project)
         if upstream:
+            upstream_owner = upstream.owner
             upstream_url = upstream.remote_url
             project = upstream.project
     # Decide whether to create a branch.
@@ -168,7 +193,7 @@ def get_context(args: argparse.Namespace) -> Context:
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
-        logger.warning(f"Ignoring '{args.new_branch}' because '{github_url}' specifies a branch.")
+        logger.warning(f"Ignoring '{args.new_branch}' because {github_url} specifies a branch.")
     return Context(
         base_branch=args.base_branch,
         branch=branch,
@@ -177,6 +202,7 @@ def get_context(args: argparse.Namespace) -> Context:
         create_branch=create_branch,
         owner=owner,
         project=project,
+        upstream_owner=upstream_owner,
         upstream_url=upstream_url,
     )
 
@@ -199,7 +225,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str, ssh: bool) -> Upstream | None:
+def get_github_upstream(owner: str, project: str) -> Upstream | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -207,13 +233,14 @@ def get_github_upstream(owner: str, project: str, ssh: bool) -> Upstream | None:
     if repo.fork:
         parent = repo.parent
         return Upstream(
-            remote_url=make_github_clone_url(parent.owner.login, parent.name, ssh),
+            remote_url=make_github_clone_url(parent.owner.login, parent.name),
+            owner=parent.owner.login,
             project=parent.name,
         )
 
 
-def make_github_clone_url(owner: str, project: str, ssh: bool) -> str:
-    if ssh:
+def make_github_clone_url(owner: str, project: str) -> str:
+    if SSH:
         return f"git@github.com:{owner}/{project}.git"
     else:
         return f"https://github.com/{owner}/{project}.git"
@@ -231,34 +258,50 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
-    logger.info(f"Cloning '{context.clone_url}'...")
+    # TODO: Handle branch errors
+    logger.info(f"Cloning {context.clone_url}")
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, multi_options=cloning_args)
     origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
+    branch_full = f"{context.owner}:{context.branch}"
     if context.upstream_url:
-        logger.info(f"Setting upstream to '{context.upstream_url}'...")
+        logger.info(f"Setting upstream to {context.upstream_url}")
         upstream = cloned.create_remote("upstream", context.upstream_url)
         upstream.fetch(no_tags=True)
+        base_branch_full = f"{context.upstream_owner}:{context.base_branch}"
+        base_remote = "upstream"
         if context.create_branch:
             # Create a local branch, starting from the base branch on upstream.
+            logger.info(
+                f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
+            )
             branch = cloned.create_head(context.branch, upstream.refs[context.base_branch])
         else:
             # Create a local branch that tracks the existing branch on origin.
+            logger.info(
+                f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
+            )
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
-        base_remote = "upstream"
     else:
+        base_branch_full = f"{context.owner}:{context.base_branch}"
+        base_remote = "origin"
         if context.create_branch:
             # Create a local branch, starting from the base branch.
+            logger.info(
+                f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
+            )
             branch = cloned.create_head(context.branch, origin.refs[context.base_branch])
         else:
             # Create a local branch that tracks the existing branch.
+            logger.info(
+                f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
+            )
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
-        base_remote = "origin"
     with cloned.config_writer() as config:
         update_branch = "!" + " && ".join(
             [
@@ -289,7 +332,7 @@ def install_pre_commit(clone_dir: Path) -> None:
         return
     if not shutil.which("uvx"):
         return
-    logger.info("Installing pre-commit using uvx...")
+    logger.info("Installing pre-commit using uvx")
     subprocess.run(["uvx", "pre-commit", "install"], cwd=clone_dir, check=True)
 
 

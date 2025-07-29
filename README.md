@@ -14,6 +14,7 @@ In this README:
   - [Examples](#examples)
   - [Install gimmegit](#install-gimmegit)
   - [Specify the base branch](#specify-the-base-branch)
+  - [Provide clone options](#provide-clone-options)
 
 ## Examples
 
@@ -116,4 +117,15 @@ gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/t
 
 # Or if GIMMEGIT_GITHUB_TOKEN is set
 gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-docs
+```
+
+## Provide clone options
+
+To provide [clone options](https://git-scm.com/docs/clone) to gimmegit, list the options after `--`. For example, to provide the `--recurse-submodules` option:
+
+```text
+gimmegit -u canonical dwilding/charmcraft -- --recurse-submodules
+
+# Or if GIMMEGIT_GITHUB_TOKEN is set
+gimmegit charmcraft -- --recurse-submodules
 ```
