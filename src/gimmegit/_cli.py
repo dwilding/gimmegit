@@ -253,8 +253,8 @@ def make_snapshot_name() -> str:
 
 
 def make_clone_path(owner: str, project: str, branch: str) -> Path:
-    branch_short = branch.split("/")[-1]
-    return Path(f"{project}/{owner}-{branch_short}")
+    branch_slug = branch.replace("/", "-")
+    return Path(f"{project}/{owner}-{branch_slug}")
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
