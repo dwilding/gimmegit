@@ -12,7 +12,7 @@ gimmegit is a command-line tool for cloning GitHub repos. You might find gimmegi
 Demo:
 
 ```text
-$ gimmegit -u canonical dwilding/jubilant my-feature
+~/work$ gimmegit -u canonical dwilding/jubilant my-feature
 Getting repo details
 Cloning git@github.com:dwilding/jubilant.git
 Setting upstream to git@github.com:canonical/jubilant.git
@@ -91,7 +91,7 @@ git update-branch
 
 # Clone the repo again, creating a branch called update-docs-16,
 # this time based on 16/edge instead of main
-cd ..
+cd ../..
 gimmegit -b 16/edge canonical/postgresql-operator update-docs-16
 
 # Change to the second clone directory
@@ -177,7 +177,7 @@ git update-branch
 
 # Clone dwilding's fork again, creating a branch called backport-docs,
 # this time based on canonical:2.23-maintenance instead of canonical:main
-cd ..
+cd ../..
 gimmegit -b 2.23-maintenance -u canonical dwilding/operator backport-docs
 
 # Change to the second clone directory
@@ -210,7 +210,7 @@ git update-branch
 
 # Clone your fork again, creating a branch called backport-docs,
 # this time based on canonical:2.23-maintenance instead of canonical:main
-cd ..
+cd ../..
 gimmegit -b 2.23-maintenance operator backport-docs
 
 # Change to the second clone directory
