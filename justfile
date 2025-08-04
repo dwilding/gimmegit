@@ -1,4 +1,4 @@
-check: lint static test
+check: lint test
 
 format:
   uv run ruff format
@@ -6,8 +6,6 @@ format:
 lint:
   uv run ruff check
   uv run ruff format --diff
-
-static:
   uv run ty check
 
 test:
