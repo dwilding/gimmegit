@@ -11,7 +11,7 @@ gimmegit is a command-line tool for cloning GitHub repos. You might find gimmegi
 
 **Demo**
 
-Clone dwilding's fork of [canonical/jubilant](https://github.com/canonical/jubilant) and create a branch called `update-docs`:
+Clone dwilding's fork of [canonical/jubilant](https://github.com/canonical/jubilant) and create a branch called `my-feature`:
 
 ```text
 ~/work$ gimmegit -u canonical dwilding/jubilant my-feature
