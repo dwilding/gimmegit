@@ -152,19 +152,7 @@ def configure_logger() -> None:
 def get_context(args: argparse.Namespace) -> Context:
     logger.info("Getting repo details")
     # Parse the 'repo' arg to get the owner, project, and branch.
-    if args.repo.startswith("https://"):
-        github_url = args.repo
-    elif args.repo.count("/") == 1:
-        github_url = f"https://github.com/{args.repo}"
-    elif args.repo.count("/") == 0:
-        if not GITHUB_TOKEN:
-            raise ValueError(
-                "GIMMEGIT_GITHUB_TOKEN is not set. Use a GitHub URL instead of a repo name."
-            )
-        github_login = get_github_login()
-        github_url = f"https://github.com/{github_login}/{args.repo}"
-    else:
-        raise ValueError(f"'{args.repo}' is not a supported repo name.")
+    github_url = make_github_url(args.repo)
     parsed = parse_github_url(github_url)
     if not parsed:
         raise ValueError(f"'{github_url}' is not a supported GitHub URL.")
@@ -205,6 +193,25 @@ def get_context(args: argparse.Namespace) -> Context:
         upstream_owner=upstream_owner,
         upstream_url=upstream_url,
     )
+
+
+def make_github_url(repo: str) -> str:
+    if repo.startswith("https://github.com/"):
+        return repo
+    if repo.count("/") == 1 and not repo.endswith("/"):
+        return f"https://github.com/{repo}"
+    if repo.endswith("/") or repo.endswith("\\"):
+        project = repo[:-1]  # The user might have tab-completed a project dir.
+    else:
+        project = repo
+    if "/" not in project:
+        if not GITHUB_TOKEN:
+            raise ValueError(
+                "GIMMEGIT_GITHUB_TOKEN is not set. For the repo, use '<owner>/<project>' or a GitHub URL."
+            )
+        github_login = get_github_login()
+        return f"https://github.com/{github_login}/{project}"
+    raise ValueError(f"'{repo}' is not a supported repo.")
 
 
 def parse_github_url(url: str) -> ParsedURL | None:

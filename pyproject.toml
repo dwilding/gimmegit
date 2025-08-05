@@ -1,11 +1,12 @@
 [project]
 name = "gimmegit"
-version = "0.0.12"
+version = "0.0.13"
 description = "Create and clone fully-isolated development branches"
 authors = [
     { name = "Dave Wilding", email = "tech@dpw.me" },
 ]
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">= 3.10"
 dependencies = [
     "gitpython>=3.1,<4",
