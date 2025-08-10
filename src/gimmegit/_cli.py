@@ -49,9 +49,7 @@ class ParsedURL:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Create and clone fully-isolated branches"
-    )
+    parser = argparse.ArgumentParser(description="Create and clone fully-isolated branches")
     parser.add_argument(
         "--color",
         choices=["auto", "always", "never"],
