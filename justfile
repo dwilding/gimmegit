@@ -14,6 +14,3 @@ test:
 build:
   uv build
   uv sync
-
-publish: build
-  uv publish
