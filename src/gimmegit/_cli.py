@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+import urllib.parse
 
 import git
 import github
@@ -217,10 +218,13 @@ def parse_github_url(url: str) -> ParsedURL | None:
     # TODO: Disallow PR URLs.
     match = re.search(pattern, url)
     if match:
+        branch = match.group(4)
+        if branch:
+            branch = urllib.parse.unquote(branch)
         return ParsedURL(
             owner=match.group(1),
             project=match.group(2),
-            branch=match.group(4),
+            branch=branch,
         )
 
 

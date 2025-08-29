@@ -151,6 +151,27 @@ def test_branch_url_slash(no_ssh, snapshot_name):
     assert _cli.get_context(args) == expected_context
 
 
+def test_branch_url_encoded(no_ssh, snapshot_name):
+    args = argparse.Namespace(
+        upstream_owner=None,
+        base_branch=None,
+        repo="https://github.com/dwilding/gimmegit/tree/release%2Bnext",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch=None,
+        branch="release+next",
+        clone_url="https://github.com/dwilding/gimmegit.git",
+        clone_dir=Path("gimmegit/dwilding-release+next"),
+        create_branch=False,
+        owner="dwilding",
+        project="gimmegit",
+        upstream_owner=None,
+        upstream_url=None,
+    )
+    assert _cli.get_context(args) == expected_context
+
+
 def test_branch_url_branch(no_ssh, caplog):
     args = argparse.Namespace(
         upstream_owner=None,
