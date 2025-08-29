@@ -197,6 +197,8 @@ def get_context(args: argparse.Namespace) -> Context:
 def make_github_url(repo: str) -> str:
     if repo.startswith("https://github.com/"):
         return repo
+    if repo.startswith("github.com/"):
+        return f"https://{repo}"
     if repo.count("/") == 1 and not repo.endswith("/"):
         return f"https://github.com/{repo}"
     if repo.endswith("/") or repo.endswith("\\"):

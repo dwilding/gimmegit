@@ -88,6 +88,27 @@ def test_repo_url(no_ssh, snapshot_name):
     assert _cli.get_context(args) == expected_context
 
 
+def test_repo_url_no_https(no_ssh, snapshot_name):
+    args = argparse.Namespace(
+        upstream_owner=None,
+        base_branch=None,
+        repo="github.com/dwilding/gimmegit",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch=None,
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/gimmegit.git",
+        clone_dir=Path("gimmegit/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="gimmegit",
+        upstream_owner=None,
+        upstream_url=None,
+    )
+    assert _cli.get_context(args) == expected_context
+
+
 def test_repo_url_branch(no_ssh):
     args = argparse.Namespace(
         upstream_owner=None,
@@ -114,6 +135,27 @@ def test_branch_url(no_ssh):
         upstream_owner=None,
         base_branch=None,
         repo="https://github.com/dwilding/gimmegit/tree/next-release",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch=None,
+        branch="next-release",
+        clone_url="https://github.com/dwilding/gimmegit.git",
+        clone_dir=Path("gimmegit/dwilding-next-release"),
+        create_branch=False,
+        owner="dwilding",
+        project="gimmegit",
+        upstream_owner=None,
+        upstream_url=None,
+    )
+    assert _cli.get_context(args) == expected_context
+
+
+def test_branch_url_no_https(no_ssh):
+    args = argparse.Namespace(
+        upstream_owner=None,
+        base_branch=None,
+        repo="github.com/dwilding/gimmegit/tree/next-release",
         new_branch=None,
     )
     expected_context = _cli.Context(
