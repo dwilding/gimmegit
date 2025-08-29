@@ -109,7 +109,7 @@ def test_repo_url_branch(no_ssh):
     assert _cli.get_context(args) == expected_context
 
 
-def test_branch_url(no_ssh, snapshot_name):
+def test_branch_url(no_ssh):
     args = argparse.Namespace(
         upstream_owner=None,
         base_branch=None,
@@ -130,7 +130,7 @@ def test_branch_url(no_ssh, snapshot_name):
     assert _cli.get_context(args) == expected_context
 
 
-def test_branch_url_slash(no_ssh, snapshot_name):
+def test_branch_url_slash(no_ssh):
     args = argparse.Namespace(
         upstream_owner=None,
         base_branch=None,
@@ -151,7 +151,7 @@ def test_branch_url_slash(no_ssh, snapshot_name):
     assert _cli.get_context(args) == expected_context
 
 
-def test_branch_url_encoded(no_ssh, snapshot_name):
+def test_branch_url_encoded(no_ssh):
     args = argparse.Namespace(
         upstream_owner=None,
         base_branch=None,
