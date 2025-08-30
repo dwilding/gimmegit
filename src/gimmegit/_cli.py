@@ -288,6 +288,19 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
             )
             branch = cloned.create_head(context.branch, upstream.refs[context.base_branch])
+            # Ensure that on first push, a remote branch is created and set as the tracking branch.
+            # The remote branch will be created on origin (the default remote).
+            with cloned.config_writer() as config:
+                config.set_value(
+                    "push",
+                    "default",
+                    "current",
+                )
+                config.set_value(
+                    "push",
+                    "autoSetupRemote",
+                    "true",
+                )
         else:
             # Create a local branch that tracks the existing branch on origin.
             logger.info(
@@ -305,6 +318,18 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
             )
             branch = cloned.create_head(context.branch, origin.refs[context.base_branch])
+            # Ensure that on first push, a remote branch is created and set as the tracking branch.
+            with cloned.config_writer() as config:
+                config.set_value(
+                    "push",
+                    "default",
+                    "current",
+                )
+                config.set_value(
+                    "push",
+                    "autoSetupRemote",
+                    "true",
+                )
         else:
             # Create a local branch that tracks the existing branch.
             logger.info(
