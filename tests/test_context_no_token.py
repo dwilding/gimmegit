@@ -17,10 +17,15 @@ def snapshot_name(monkeypatch):
     monkeypatch.setattr("gimmegit._cli.make_snapshot_name", lambda: "snapshot0801")
 
 
-# TODO: Should we support these repos?
+# TODO: Make sure these repos either pass or fail.
 # git@github.com:dwilding/frogtab.git
 # github.com/dwilding/frogtab.git
 # https://github.com/dwilding/frogtab.git
+
+
+# TODO: Make sure these repos fail.
+# github.com/dwilding/frogtab/foo
+# https://github.com/dwilding/frogtab/foo
 
 
 @pytest.mark.parametrize(
@@ -79,11 +84,6 @@ def test_repo_invalid(repo: str):
     with pytest.raises(ValueError) as exc_info:
         _cli.get_context(args)
     assert str(exc_info.value) == f"'{repo}' is not a supported repo."
-
-
-# TODO: Why do these URLs pass?
-# github.com/dwilding/frogtab/foo
-# https://github.com/dwilding/frogtab/foo
 
 
 @pytest.mark.parametrize(
