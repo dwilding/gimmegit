@@ -18,4 +18,4 @@ jobs:
       - name: Lint
         run: uvx --from rust-just just lint
       - name: Test
-        run: uvx --from rust-just just test
+        run: uvx --from rust-just just test-unit
