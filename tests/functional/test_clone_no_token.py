@@ -10,7 +10,7 @@ def test_fork_jubilant(test_dir, tool_cmd):
         text=True,
         check=True,
     )
-    assert result.stdout == f"""\
+    expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Setting upstream to https://github.com/canonical/jubilant.git
@@ -20,6 +20,7 @@ pre-commit installed at .git/hooks/pre-commit
 Cloned repo:
 {test_dir}/jubilant/dwilding-my-feature
 """
+    assert result.stdout == expected_stdout
 
 
 def test_fork_jubilant_exists(test_dir, tool_cmd):
@@ -29,8 +30,9 @@ def test_fork_jubilant_exists(test_dir, tool_cmd):
         text=True,
     )
     assert result.returncode == 10
-    assert result.stdout == f"""\
+    expected_stdout = f"""\
 Getting repo details
 You already have a clone:
 {test_dir}/jubilant/dwilding-my-feature
 """
+    assert result.stdout == expected_stdout
