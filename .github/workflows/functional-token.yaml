@@ -1,0 +1,18 @@
+name: Functional tests (full)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  functional-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Run functional tests
+        run: uvx --from rust-just just test-functional
+        env:
+          GITHUB_TOKEN: {{ secrets.DWILDING_GITHUB_TOKEN }}
