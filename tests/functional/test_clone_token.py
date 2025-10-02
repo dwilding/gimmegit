@@ -6,11 +6,18 @@ import pytest
 tool_args = ["--color", "never", "--ssh", "never"]
 
 
+@pytest.fixture()
+def token_env():
+    env = os.environ.copy()
+    env["GIMMEGIT_GITHUB_TOKEN"] = os.environ["GITHUB_TOKEN"]
+    return env
+
+
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_fork_jubilant_token(test_dir, tool_cmd):
+def test_fork_jubilant_token(test_dir, tool_cmd, token_env):
     result = subprocess.run(
         tool_cmd + tool_args + ["jubilant", "my-feature"],
-        env={"GIMMEGIT_GITHUB_TOKEN": os.environ["GITHUB_TOKEN"]},
+        env=token_env,
         capture_output=True,
         text=True,
         check=True,
