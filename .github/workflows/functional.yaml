@@ -1,10 +1,7 @@
-name: Functional tests
+name: Functional tests (anonymous)
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
   workflow_call:
   workflow_dispatch:
 
@@ -17,5 +14,3 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - name: Run functional tests
         run: uvx --from rust-just just test-functional
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
