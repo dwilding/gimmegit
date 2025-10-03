@@ -1,9 +1,21 @@
 import os
+import pathlib
 import subprocess
 
 import pytest
 
 tool_args = ["--color", "never", "--ssh", "never"]
+
+
+def get_branch(dir: str):
+    result = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
 
 
 @pytest.fixture()
@@ -22,6 +34,7 @@ def test_fork_jubilant_token(test_dir, tool_cmd, token_env):
         text=True,
         check=True,
     )
+    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -30,6 +43,7 @@ Checking out a new branch my-feature based on canonical:main
 Installing pre-commit using uvx
 pre-commit installed at .git/hooks/pre-commit
 Cloned repo:
-{test_dir}/jubilant/dwilding-my-feature
+{expected_dir}
 """
     assert result.stdout == expected_stdout
+    assert get_branch(expected_dir) == "my-feature"
