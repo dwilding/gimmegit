@@ -15,4 +15,4 @@ jobs:
       - name: Run functional tests
         run: uvx --from rust-just just test-functional
         env:
-          GITHUB_TOKEN: {{ secrets.DWILDING_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.DWILDING_GITHUB_TOKEN }}
