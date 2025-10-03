@@ -15,6 +15,27 @@ def get_branch(dir: str):
     return result.stdout.strip()
 
 
+def test_operator_branch(test_dir, tool_cmd):
+    result = subprocess.run(
+        tool_cmd + tool_args + ["https://github.com/canonical/operator/tree/2.23-maintenance"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = pathlib.Path(test_dir) / "operator/canonical-2.23-maintenance"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/operator.git
+Checking out canonical:2.23-maintenance with base canonical:main
+Installing pre-commit using uvx
+pre-commit installed at .git/hooks/pre-commit
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert get_branch(expected_dir) == "2.23-maintenance"
+
+
 def test_fork_jubilant(test_dir, tool_cmd):
     result = subprocess.run(
         tool_cmd + tool_args + ["-u", "canonical", "dwilding/jubilant", "my-feature"],
