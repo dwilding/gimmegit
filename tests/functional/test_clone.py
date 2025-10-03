@@ -1,18 +1,9 @@
 import pathlib
 import subprocess
 
+import helpers
+
 tool_args = ["--color", "never", "--ssh", "never"]
-
-
-def get_branch(dir: str):
-    result = subprocess.run(
-        ["git", "branch", "--show-current"],
-        cwd=dir,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout.strip()
 
 
 def test_operator_branch(test_dir, tool_cmd):
@@ -33,7 +24,10 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
-    assert get_branch(expected_dir) == "2.23-maintenance"
+    assert helpers.get_branch(expected_dir) == "2.23-maintenance"
+    assert helpers.get_config(expected_dir, "gimmegit.branch") == "2.23-maintenance"
+    assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "origin"
+    assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
 def test_fork_jubilant(test_dir, tool_cmd):
@@ -55,7 +49,10 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
-    assert get_branch(expected_dir) == "my-feature"
+    assert helpers.get_branch(expected_dir) == "my-feature"
+    assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
+    assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
+    assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
 def test_fork_jubilant_exists(test_dir, tool_cmd):

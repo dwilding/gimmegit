@@ -31,3 +31,11 @@ build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 99
+
+[tool.ty.environment]
+# Help ty resolve local imports in our testing code.
+root = [
+    "./src",
+    "./tests/functional",
+    "./tests/unit"
+]

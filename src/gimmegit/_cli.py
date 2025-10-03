@@ -341,18 +341,36 @@ def clone(context: Context, cloning_args: list[str]) -> None:
     with cloned.config_writer() as config:
         update_branch = "!" + " && ".join(
             [
-                f'echo "$ git checkout {branch}"',
-                f'git checkout "{branch}"',
-                f'echo "$ git fetch {base_remote} {context.base_branch}"',
-                f'git fetch "{base_remote}" "{context.base_branch}"',
-                f'echo "$ git merge {base_remote}/{context.base_branch}"',
-                f'git merge "{base_remote}/{context.base_branch}"',
+                "branch=$(git config --get gimmegit.branch)",
+                "base_remote=$(git config --get gimmegit.baseRemote)",
+                "base_branch=$(git config --get gimmegit.baseBranch)",
+                'echo \\"$ git checkout $branch\\"',
+                "git checkout $branch",
+                'echo \\"$ git fetch $base_remote $base_branch\\"',
+                "git fetch $base_remote $base_branch",
+                'echo \\"$ git merge $base_remote/$base_branch\\"',
+                "git merge $base_remote/$base_branch",
             ]
         )  # Not cross-platform!
         config.set_value(
             "alias",
             "update-branch",
             update_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "branch",
+            context.branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseRemote",
+            base_remote,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseBranch",
+            context.base_branch,
         )
 
 
