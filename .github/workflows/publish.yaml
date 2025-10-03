@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: publish-gimmegit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Build package
         run: uv build
       - name: Attest package provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: "dist/*"
       - name: Publish package
