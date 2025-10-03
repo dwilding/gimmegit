@@ -8,11 +8,10 @@ lint:
   uv run ruff format --diff
   uv run ty check
 
-test: test-unit
+test: test-unit test-functional
 
 test-unit:
   uv run pytest -vv tests/unit
 
-build:
-  uv build
-  uv sync
+test-functional:
+  uv run pytest -vv tests/functional
