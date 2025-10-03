@@ -8,6 +8,7 @@ on:
 jobs:
   functional-token:
     runs-on: ubuntu-latest
+    environment: personal-token
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
