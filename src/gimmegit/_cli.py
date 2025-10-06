@@ -158,19 +158,20 @@ def get_context(args: argparse.Namespace) -> Context:
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
-    # Get clone URLs for origin and upstream.
     clone_url = make_github_clone_url(owner, project)
+    # Check that the repo exists and set the upstream repo.
+    upstream = get_github_upstream(owner, project)
+    # TOOD: Handle errors.
     upstream_owner = None
     upstream_url = None
     if args.upstream_owner:
         upstream_owner = args.upstream_owner
         upstream_url = make_github_clone_url(args.upstream_owner, project)
-    else:
-        upstream = get_github_upstream(owner, project)
-        if upstream:
-            upstream_owner = upstream.owner
-            upstream_url = upstream.remote_url
-            project = upstream.project
+    elif upstream:
+        upstream_owner = upstream.owner
+        upstream_url = upstream.remote_url
+        project = upstream.project
+
     # Decide whether to create a branch.
     create_branch = False
     if not branch:
@@ -269,7 +270,7 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
-    # TODO: Handle branch errors
+    # TODO: Handle branch errors.
     logger.info(f"Cloning {context.clone_url}")
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, multi_options=cloning_args)
     origin = cloned.remotes.origin
