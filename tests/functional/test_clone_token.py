@@ -41,3 +41,14 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
     assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
+
+
+@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
+def test_invalid_repo_token(test_dir, tool_cmd, token_env):
+    result = subprocess.run(
+        tool_cmd + tool_args + ["invalid"],
+        env=token_env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
