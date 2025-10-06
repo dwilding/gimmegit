@@ -253,7 +253,9 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
     try:
         repo = api.get_repo(f"{owner}/{project}")
     except github.UnknownObjectException:
-        raise ValueError(f"Unable to find '{owner}/{project}' on GitHub. Do you have access to the repo?")
+        raise ValueError(
+            f"Unable to find '{owner}/{project}' on GitHub. Do you have access to the repo?"
+        )
     if repo.fork:
         parent = repo.parent
         return Upstream(
