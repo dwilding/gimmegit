@@ -170,7 +170,6 @@ def get_context(args: argparse.Namespace) -> Context:
         upstream_owner = upstream.owner
         upstream_url = upstream.remote_url
         project = upstream.project
-
     # Decide whether to create a branch.
     create_branch = False
     if not branch:
