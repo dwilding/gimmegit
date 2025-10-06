@@ -91,7 +91,18 @@ def main() -> None:
         outcome = "You already have a clone:"
         logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
-    clone(context, cloning_args)
+    try:
+        clone(context, cloning_args)
+    except git.GitCommandError:
+        if SSH:
+            logger.error(
+                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
+            )
+        else:
+            logger.error(
+                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
+            )
+        sys.exit(1)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
     outcome = "Cloned repo:"
@@ -158,19 +169,18 @@ def get_context(args: argparse.Namespace) -> Context:
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
-    # Get clone URLs for origin and upstream.
     clone_url = make_github_clone_url(owner, project)
+    # Check that the repo exists and look for an upstream repo (if a token is set).
+    upstream = get_github_upstream(owner, project)
     upstream_owner = None
     upstream_url = None
     if args.upstream_owner:
         upstream_owner = args.upstream_owner
         upstream_url = make_github_clone_url(args.upstream_owner, project)
-    else:
-        upstream = get_github_upstream(owner, project)
-        if upstream:
-            upstream_owner = upstream.owner
-            upstream_url = upstream.remote_url
-            project = upstream.project
+    elif upstream:
+        upstream_owner = upstream.owner
+        upstream_url = upstream.remote_url
+        project = upstream.project
     # Decide whether to create a branch.
     create_branch = False
     if not branch:
@@ -240,7 +250,12 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
-    repo = api.get_repo(f"{owner}/{project}")
+    try:
+        repo = api.get_repo(f"{owner}/{project}")
+    except github.UnknownObjectException:
+        raise ValueError(
+            f"Unable to find '{owner}/{project}' on GitHub. Do you have access to the repo?"
+        )
     if repo.fork:
         parent = repo.parent
         return Upstream(
@@ -269,7 +284,7 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
-    # TODO: Handle branch errors
+    # TODO: Handle branch errors.
     logger.info(f"Cloning {context.clone_url}")
     cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, multi_options=cloning_args)
     origin = cloned.remotes.origin

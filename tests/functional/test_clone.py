@@ -1,5 +1,8 @@
+import os
 import pathlib
 import subprocess
+
+import pytest
 
 import helpers
 
@@ -69,3 +72,31 @@ You already have a clone:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+
+
+@pytest.fixture()
+def askpass_env():
+    env = os.environ.copy()
+    env["GIT_ASKPASS"] = "/bin/true"
+    return env
+
+
+def test_invalid_repo(test_dir, tool_cmd, askpass_env):
+    result = subprocess.run(
+        tool_cmd + tool_args + ["dwilding/invalid", "my-feature"],
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/invalid.git
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH.
+"""
+    assert result.stderr == expected_stderr
+    assert (pathlib.Path(test_dir) / "invalid").exists()
+    assert not (pathlib.Path(test_dir) / "invalid/dwilding-my-feature").exists()
