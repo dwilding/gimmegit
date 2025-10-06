@@ -159,7 +159,7 @@ def get_context(args: argparse.Namespace) -> Context:
     project = parsed.project
     branch = parsed.branch
     clone_url = make_github_clone_url(owner, project)
-    # Check that the repo exists and set the upstream repo.
+    # Check that the repo exists and look for an upstream repo (if a token is set).
     upstream = get_github_upstream(owner, project)
     upstream_owner = None
     upstream_url = None
