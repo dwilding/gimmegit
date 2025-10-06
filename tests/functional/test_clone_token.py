@@ -60,4 +60,4 @@ Getting repo details
 Error: 'dwilding/invalid' does not exist on GitHub.
 """
     assert result.stderr == expected_stderr
-    assert not (pathlib.Path(test_dir) / "dwilding/invalid").exists()
+    assert not (pathlib.Path(test_dir) / "invalid").exists()
