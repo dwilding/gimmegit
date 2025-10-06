@@ -91,7 +91,18 @@ def main() -> None:
         outcome = "You already have a clone:"
         logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
-    clone(context, cloning_args)
+    try:
+        clone(context, cloning_args)
+    except git.GitCommandError:
+        if SSH:
+            logger.error(
+                "Unable to clone repo. Are you allowed to clone the repo? Is SSH correctly configured?"
+            )
+        else:
+            logger.error(
+                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
+            )
+        sys.exit(1)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
     outcome = "Cloned repo:"
