@@ -96,7 +96,7 @@ def main() -> None:
     except git.GitCommandError:
         if SSH:
             logger.error(
-                "Unable to clone repo. Are you allowed to clone the repo? Is SSH correctly configured?"
+                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
             )
         else:
             logger.error(
@@ -253,7 +253,7 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
     try:
         repo = api.get_repo(f"{owner}/{project}")
     except github.UnknownObjectException:
-        raise ValueError(f"'{owner}/{project}' does not exist on GitHub.")
+        raise ValueError(f"Unable to find '{owner}/{project}' on GitHub. Do you have access to the repo?")
     if repo.fork:
         parent = repo.parent
         return Upstream(

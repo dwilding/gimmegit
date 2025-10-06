@@ -57,7 +57,7 @@ Getting repo details
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: 'dwilding/invalid' does not exist on GitHub.
+Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the repo?
 """
     assert result.stderr == expected_stderr
     assert not (pathlib.Path(test_dir) / "invalid").exists()
