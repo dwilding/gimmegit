@@ -161,7 +161,6 @@ def get_context(args: argparse.Namespace) -> Context:
     clone_url = make_github_clone_url(owner, project)
     # Check that the repo exists and set the upstream repo.
     upstream = get_github_upstream(owner, project)
-    # TOOD: Handle errors.
     upstream_owner = None
     upstream_url = None
     if args.upstream_owner:
@@ -241,7 +240,10 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
-    repo = api.get_repo(f"{owner}/{project}")
+    try:
+        repo = api.get_repo(f"{owner}/{project}")
+    except github.UnknownObjectException:
+        raise ValueError(f"'{owner}/{project}' does not exist on GitHub.")
     if repo.fork:
         parent = repo.parent
         return Upstream(

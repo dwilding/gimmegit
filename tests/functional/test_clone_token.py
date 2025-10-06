@@ -50,5 +50,14 @@ def test_invalid_repo_token(test_dir, tool_cmd, token_env):
         env=token_env,
         capture_output=True,
         text=True,
-        check=True,
     )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: 'dwilding/invalid' does not exist on GitHub.
+"""
+    assert result.stderr == expected_stderr
+    assert not (pathlib.Path(test_dir) / "dwilding/invalid").exists()
