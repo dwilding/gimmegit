@@ -1,23 +1,23 @@
 # gimmegit
 
-> [!WARNING]  
-> gimmegit is in early development. Expect bugs and breaking changes!
+gimmegit is a command-line tool for cloning GitHub repos and creating branches.
 
-gimmegit is a command-line tool for cloning GitHub repos and creating branches. Each time you clone a repo, gimmegit creates a dedicated directory for the clone, based on the repo owner and branch name. For example:
+Each time you clone a repo, gimmegit creates a dedicated directory for the clone, based on the repo owner and branch name. For example, my clones of my [Frogtab](https://github.com/dwilding/frogtab) project might be organized like this:
 
 ```text
 .
 └── frogtab
-   ├── dwilding-my-feature  ← A clone of dwilding/frogtab, on a newly-created branch.
-   │   │                      Created by:
-   │   │                        gimmegit dwilding/frogtab my-feature
+   ├── dwilding-my-feature ← A clone of dwilding/frogtab, on a new branch. Created with:
+   │   │                       gimmegit dwilding/frogtab my-feature
    │   ├── ...
    │
-   └── <buddy>-their-branch ← A clone of <buddy>'s fork of frogtab, on their feature branch.
-       │                      Created by:
-       │                        gimmegit https://github.com/<buddy>/frogtab/tree/their-branch
+   └── <buddy>-custom-feat ← A clone of <buddy>'s fork, on their feature branch. Created with:
+       │                       gimmegit https://github.com/<buddy>/frogtab/tree/custom-feat
        ├── ...
 ```
+
+> [!WARNING]  
+> gimmegit is in early development. Expect bugs and breaking changes!
 
 You might find gimmegit interesting if:
 
