@@ -50,7 +50,9 @@ class ParsedURL:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="A tool for cloning GitHub repos and creating branches.")
+    parser = argparse.ArgumentParser(
+        description="A tool for cloning GitHub repos and creating branches."
+    )
     parser.add_argument(
         "--color",
         choices=["auto", "always", "never"],
