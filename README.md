@@ -1,4 +1,4 @@
-# gimmegit
+# gimmegit — Isolated directories for Git branches
 
 gimmegit is a command-line tool for cloning GitHub repos and creating branches.
 
