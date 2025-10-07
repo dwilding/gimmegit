@@ -16,7 +16,7 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 ```text
 .
 └── frogtab
-   ├── dwilding-my-feature   A clone of dwilding/frogtab, on a new branch. Created with
+   ├── dwilding-my-feature   A clone of the Frogtab repo, on a new branch. Created with
    │   │                       gimmegit dwilding/frogtab my-feature
    │   ├── ...
    │
