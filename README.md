@@ -2,7 +2,7 @@
 
 gimmegit is a command-line tool for cloning GitHub repos and creating branches.
 
-Each time you clone a repo, gimmegit creates a dedicated directory for the clone, based on the repo owner and branch name. For example, my clones of my [Frogtab](https://github.com/dwilding/frogtab) project might be organized like this:
+Each time you clone a repo, gimmegit creates a dedicated directory for the clone, based on the repo owner and branch name. For example, my clones of [Frogtab](https://github.com/dwilding/frogtab) might be organized like this:
 
 ```text
 .
