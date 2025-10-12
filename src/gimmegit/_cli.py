@@ -79,7 +79,7 @@ def main() -> None:
     )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
-    parser.add_argument("repo", help="Repo to clone from GitHub")
+    parser.add_argument("repo", nargs="?", help="Repo to clone from GitHub")
     parser.add_argument("new_branch", nargs="?", help="Name of the branch to create")
     command_args = sys.argv[1:]
     cloning_args = ["--no-tags"]
@@ -185,6 +185,8 @@ def configure_logger() -> None:
 def get_context(args: argparse.Namespace) -> Context:
     logger.info("Getting repo details")
     # Parse the 'repo' arg to get the owner, project, and branch.
+    if not args.repo:
+        raise ValueError("No repo specified. Run 'gimmegit -h' for help.")
     github_url = make_github_url(args.repo)
     parsed = parse_github_url(github_url)
     if not parsed:
