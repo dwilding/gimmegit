@@ -173,3 +173,23 @@ Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH
     assert result.stderr == expected_stderr
     assert (pathlib.Path(test_dir) / "invalid").exists()
     assert not (pathlib.Path(test_dir) / "invalid/dwilding-my-feature").exists()
+
+
+def test_no_repo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert not result.stdout
+    expected_stderr = """\
+Error: No repo specified. Run 'gimmegit -h' for help.
+"""
+    assert result.stderr == expected_stderr

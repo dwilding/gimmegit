@@ -109,6 +109,9 @@ def main() -> None:
                 )
             logger.info("[STATUS DASHBOARD]")
             return
+    if not args.repo:
+        logger.error("No repo specified. Run 'gimmegit -h' for help.")
+        sys.exit(2)
     try:
         context = get_context(args)
     except ValueError as e:
@@ -189,8 +192,6 @@ def configure_logger() -> None:
 def get_context(args: argparse.Namespace) -> Context:
     logger.info("Getting repo details")
     # Parse the 'repo' arg to get the owner, project, and branch.
-    if not args.repo:
-        raise ValueError("No repo specified. Run 'gimmegit -h' for help.")
     github_url = make_github_url(args.repo)
     parsed = parse_github_url(github_url)
     if not parsed:

@@ -28,18 +28,6 @@ def snapshot_name(monkeypatch):
 # https://github.com/dwilding/frogtab/foo
 
 
-def test_no_repo():
-    args = argparse.Namespace(
-        base_branch=None,
-        upstream_owner=None,
-        repo=None,
-        new_branch=None,
-    )
-    with pytest.raises(ValueError) as exc_info:
-        _cli.get_context(args)
-    assert str(exc_info.value) == "No repo specified. Run 'gimmegit -h' for help."
-
-
 @pytest.mark.parametrize(
     "repo, owner, project",
     [
