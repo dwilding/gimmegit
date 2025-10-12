@@ -13,6 +13,8 @@ import urllib.parse
 import git
 import github
 
+from ._status import get_status
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -70,6 +72,11 @@ def main() -> None:
         action="store_true",
         help="Don't try to install pre-commit after cloning",
     )
+    parser.add_argument(
+        "--ignore-outer",
+        action="store_true",
+        help="Try to clone even if the working directory is inside a Git repo",
+    )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
     parser.add_argument("repo", help="Repo to clone from GitHub")
@@ -84,6 +91,20 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
+    if not args.ignore_outer:
+        try:
+            working = git.Repo(search_parent_directories=True)
+        except git.InvalidGitRepositoryError:
+            pass  # We're not inside a Git repo - all is good.
+        else:
+            status = get_status(working)
+            if not status:
+                logger.error(
+                    "The working directory is inside a Git repo that is not supported by gimmegit."
+                )
+                sys.exit(1)
+            logger.info("[STATUS DASHBOARD]")
+            return
     try:
         context = get_context(args)
     except ValueError as e:
@@ -376,8 +397,8 @@ def clone(context: Context, cloning_args: list[str]) -> None:
         )
         config.set_value(
             "gimmegit",
-            "branch",
-            context.branch,
+            "baseBranch",
+            context.base_branch,
         )
         config.set_value(
             "gimmegit",
@@ -386,8 +407,8 @@ def clone(context: Context, cloning_args: list[str]) -> None:
         )
         config.set_value(
             "gimmegit",
-            "baseBranch",
-            context.base_branch,
+            "branch",
+            context.branch,
         )
 
 
