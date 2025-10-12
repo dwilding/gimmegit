@@ -18,10 +18,11 @@ test-functional:
 
 demo:
   #!/bin/sh
+  project_dir="$PWD"
   mkdir -p demo
   cd demo
   rm -rf jubilant/dwilding-my-feature
-  uv run --project .. gimmegit --ignore-outer -u canonical dwilding/jubilant my-feature
+  uv run --project "$project_dir" gimmegit --ignore-outer -u canonical dwilding/jubilant my-feature
   cd jubilant/dwilding-my-feature
   echo
-  uv run --project ../.. gimmegit
+  uv run --project "$project_dir" gimmegit
