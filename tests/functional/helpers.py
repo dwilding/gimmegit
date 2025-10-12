@@ -1,5 +1,9 @@
 import subprocess
 
+uv_run = ["uv", "run", "--directory"]
+no_color = ["--color", "never"]
+no_ssh = ["--ssh", "never"]
+
 
 def get_branch(dir: str):
     result = subprocess.run(

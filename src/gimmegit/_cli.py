@@ -75,7 +75,7 @@ def main() -> None:
     parser.add_argument(
         "--ignore-outer",
         action="store_true",
-        help="Try to clone even if the working directory is inside a Git repo",
+        help="Try to clone even if the working directory is inside a repo",
     )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
@@ -95,12 +95,12 @@ def main() -> None:
         try:
             working = git.Repo(search_parent_directories=True)
         except git.InvalidGitRepositoryError:
-            pass  # We're not inside a Git repo - all is good.
+            pass  # We're not inside a repo - all is good.
         else:
             status = get_status(working)
             if not status:
                 logger.error(
-                    "The working directory is inside a Git repo that is not supported by gimmegit."
+                    "The working directory is inside a repo that is not supported by gimmegit."
                 )
                 sys.exit(1)
             logger.info("[STATUS DASHBOARD]")

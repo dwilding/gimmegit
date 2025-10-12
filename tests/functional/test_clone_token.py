@@ -6,8 +6,6 @@ import pytest
 
 import helpers
 
-tool_args = ["--color", "never", "--ssh", "never"]
-
 
 @pytest.fixture()
 def token_env():
@@ -17,9 +15,18 @@ def token_env():
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_fork_jubilant_token(test_dir, tool_cmd, token_env):
+def test_forked_repo_token(test_dir, token_env):
+    command = [
+        *helpers.uv_run,
+        test_dir,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "jubilant",
+        "my-feature",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["jubilant", "my-feature"],
+        command,
         env=token_env,
         capture_output=True,
         text=True,
@@ -44,9 +51,17 @@ Cloned repo:
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_invalid_repo_token(test_dir, tool_cmd, token_env):
+def test_invalid_repo_token(test_dir, token_env):
+    command = [
+        *helpers.uv_run,
+        test_dir,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "invalid",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["invalid"],
+        command,
         env=token_env,
         capture_output=True,
         text=True,
