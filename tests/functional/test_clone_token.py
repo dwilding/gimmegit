@@ -15,10 +15,9 @@ def token_env():
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_forked_repo_token(test_dir, token_env):
+def test_forked_repo_token(uv_run, test_dir, token_env):
     command = [
-        *helpers.uv_run,
-        test_dir,
+        *uv_run,
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
@@ -27,6 +26,7 @@ def test_forked_repo_token(test_dir, token_env):
     ]
     result = subprocess.run(
         command,
+        cwd=test_dir,
         env=token_env,
         capture_output=True,
         text=True,
@@ -51,10 +51,9 @@ Cloned repo:
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_invalid_repo_token(test_dir, token_env):
+def test_invalid_repo_token(uv_run, test_dir, token_env):
     command = [
-        *helpers.uv_run,
-        test_dir,
+        *uv_run,
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
@@ -62,6 +61,7 @@ def test_invalid_repo_token(test_dir, token_env):
     ]
     result = subprocess.run(
         command,
+        cwd=test_dir,
         env=token_env,
         capture_output=True,
         text=True,

@@ -1,4 +1,11 @@
+import os
+
 import pytest
+
+
+@pytest.fixture(scope="session")
+def uv_run():
+    yield ["uv", "run", "--project", os.getcwd()]
 
 
 @pytest.fixture(scope="module")

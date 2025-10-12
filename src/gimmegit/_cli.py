@@ -103,6 +103,10 @@ def main() -> None:
                     "The working directory is inside a repo that is not supported by gimmegit."
                 )
                 sys.exit(1)
+            if args.repo:
+                logger.warning(
+                    f"Ignoring '{args.repo}' because the working directory is inside a repo."
+                )
             logger.info("[STATUS DASHBOARD]")
             return
     try:
