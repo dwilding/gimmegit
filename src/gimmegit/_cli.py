@@ -95,14 +95,20 @@ def main() -> None:
         try:
             working = git.Repo(search_parent_directories=True)
         except git.InvalidGitRepositoryError:
-            pass  # We're not inside a repo - all is good.
+            # We're not inside a repo. Proceed to the logic for cloning a repo.
+            pass
         else:
             status = get_status(working)
             if not status:
-                logger.error(
-                    "The working directory is inside a repo that is not supported by gimmegit."
-                )
+                # We're inside a repo, but it wasn't created by gimmegit (> 0.0.15).
+                if args.repo:
+                    logger.error("The working directory is inside a repo.")
+                else:
+                    logger.error(
+                        "The working directory is inside a repo that is not supported by gimmegit."
+                    )
                 sys.exit(1)
+            # We're inside a repo that was created by gimmegit (> 0.0.15).
             if args.repo:
                 logger.warning(
                     f"Ignoring '{args.repo}' because the working directory is inside a repo."

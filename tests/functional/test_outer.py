@@ -20,8 +20,26 @@ def test_no_dashboard(uv_run, test_dir):
         text=True,
     )
     assert result.returncode == 1
+    assert not result.stdout
     expected_stderr = """\
 Error: The working directory is inside a repo that is not supported by gimmegit.
+"""
+    assert result.stderr == expected_stderr
+
+
+def test_no_clone(uv_run, test_dir):
+    working_dir = pathlib.Path(test_dir) / "foo"
+    command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert not result.stdout
+    expected_stderr = """\
+Error: The working directory is inside a repo.
 """
     assert result.stderr == expected_stderr
 
