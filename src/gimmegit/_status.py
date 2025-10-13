@@ -12,6 +12,7 @@ class Status:
     base_owner: str
     base_url: str
     branch: str
+    branch_pushed: bool
     owner: str
     project: str
     url: str
@@ -29,22 +30,26 @@ def get_status(working: git.Repo) -> Status | None:
         base_branch = str(config.get_value("gimmegit", "baseBranch"))
         base_remote = str(config.get_value("gimmegit", "baseRemote"))
         branch = str(config.get_value("gimmegit", "branch"))
-        origin = remote_from_url(working.remotes.origin.url)
-        if base_remote == "upstream":
-            base = remote_from_url(working.remotes.upstream.url)
-        elif base_remote == "origin":
-            base = origin
-        else:
-            raise RuntimeError(f"Unexpected base remote '{base_remote}'")
-        return Status(
-            base_branch=base_branch,
-            base_owner=base.owner,
-            base_url=make_branch_url(base.owner, base.project, base_branch),
-            branch=branch,
-            owner=origin.owner,
-            project=base.project,
-            url=make_branch_url(origin.owner, origin.project, branch),
+        branch_pushed = config.has_section(f'branch "{branch}"') and config.has_option(
+            f'branch "{branch}"', "remote"
         )
+    origin = remote_from_url(working.remotes.origin.url)
+    if base_remote == "upstream":
+        base = remote_from_url(working.remotes.upstream.url)
+    elif base_remote == "origin":
+        base = origin
+    else:
+        raise RuntimeError(f"Unexpected base remote '{base_remote}'")
+    return Status(
+        base_branch=base_branch,
+        base_owner=base.owner,
+        base_url=make_branch_url(base.owner, base.project, base_branch),
+        branch=branch,
+        branch_pushed=branch_pushed,
+        owner=origin.owner,
+        project=base.project,
+        url=make_branch_url(origin.owner, origin.project, branch),
+    )
 
 
 def make_branch_url(owner: str, project: str, branch: str) -> str:
