@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+import urllib.parse
 
 import git
 
-# from ._remote import Remote
+from ._remote import remote_from_url
 
 
 @dataclass
@@ -25,15 +26,27 @@ def get_status(working: git.Repo) -> Status | None:
             or not config.has_option("gimmegit", "branch")
         ):
             return None
-        # base_branch = config.get_value("gimmegit", "baseBranch")
-        # base_remote = config.get_value("gimmegit", "baseRemote")
-        # branch = config.get_value("gimmegit", "branch")
+        base_branch = str(config.get_value("gimmegit", "baseBranch"))
+        base_remote = str(config.get_value("gimmegit", "baseRemote"))
+        branch = str(config.get_value("gimmegit", "branch"))
+        origin = remote_from_url(working.remotes.origin.url)
+        if base_remote == "upstream":
+            base = remote_from_url(working.remotes.upstream.url)
+        elif base_remote == "origin":
+            base = origin
+        else:
+            raise RuntimeError(f"Unexpected base remote '{base_remote}'")
         return Status(
-            base_branch="foo",
-            base_owner="foo",
-            base_url="foo",
-            branch="foo",
-            owner="foo",
-            project="foo",
-            url="foo",
+            base_branch=base_branch,
+            base_owner=base.owner,
+            base_url=make_branch_url(base.owner, base.project, base_branch),
+            branch=branch,
+            owner=origin.owner,
+            project=base.project,
+            url=make_branch_url(origin.owner, origin.project, branch),
         )
+
+
+def make_branch_url(owner: str, project: str, branch: str) -> str:
+    branch = urllib.parse.quote(branch)
+    return f"https://github.com/{owner}/{project}/tree/{branch}"
