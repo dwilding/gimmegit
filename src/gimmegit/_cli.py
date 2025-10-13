@@ -107,7 +107,6 @@ def main() -> None:
                 logger.warning(
                     f"Ignoring '{args.repo}' because the working directory is inside a repo."
                 )
-            print(status)
             logger.info("[STATUS DASHBOARD]")
             return
     if not args.repo:
