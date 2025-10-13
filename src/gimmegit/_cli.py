@@ -13,6 +13,7 @@ import urllib.parse
 import git
 import github
 
+from ._remote import Remote
 from ._status import get_status
 
 logger = logging.getLogger(__name__)
@@ -35,13 +36,6 @@ class Context:
     project: str
     upstream_owner: str | None
     upstream_url: str | None
-
-
-@dataclass
-class Upstream:
-    owner: str
-    project: str
-    remote_url: str
 
 
 @dataclass
@@ -215,7 +209,7 @@ def get_context(args: argparse.Namespace) -> Context:
         upstream_url = make_github_clone_url(args.upstream_owner, project)
     elif upstream:
         upstream_owner = upstream.owner
-        upstream_url = upstream.remote_url
+        upstream_url = upstream.url
         project = upstream.project
     # Decide whether to create a branch.
     create_branch = False
@@ -282,7 +276,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> Upstream | None:
+def get_github_upstream(owner: str, project: str) -> Remote | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -294,10 +288,10 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
         )
     if repo.fork:
         parent = repo.parent
-        return Upstream(
-            remote_url=make_github_clone_url(parent.owner.login, parent.name),
+        return Remote(
             owner=parent.owner.login,
             project=parent.name,
+            url=make_github_clone_url(parent.owner.login, parent.name),
         )
 
 
