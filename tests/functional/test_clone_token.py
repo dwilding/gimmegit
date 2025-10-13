@@ -1,12 +1,10 @@
+from pathlib import Path
 import os
-import pathlib
 import subprocess
 
 import pytest
 
 import helpers
-
-tool_args = ["--color", "never", "--ssh", "never"]
 
 
 @pytest.fixture()
@@ -17,15 +15,24 @@ def token_env():
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_fork_jubilant_token(test_dir, tool_cmd, token_env):
+def test_forked_repo_token(uv_run, test_dir, token_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "jubilant",
+        "my-feature",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["jubilant", "my-feature"],
+        command,
+        cwd=test_dir,
         env=token_env,
         capture_output=True,
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -44,9 +51,17 @@ Cloned repo:
 
 
 @pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_invalid_repo_token(test_dir, tool_cmd, token_env):
+def test_invalid_repo_token(uv_run, test_dir, token_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "invalid",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["invalid"],
+        command,
+        cwd=test_dir,
         env=token_env,
         capture_output=True,
         text=True,
@@ -60,4 +75,4 @@ Getting repo details
 Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the repo?
 """
     assert result.stderr == expected_stderr
-    assert not (pathlib.Path(test_dir) / "invalid").exists()
+    assert not (Path(test_dir) / "invalid").exists()
