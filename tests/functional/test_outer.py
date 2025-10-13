@@ -1,4 +1,4 @@
-import pathlib
+from pathlib import Path
 import subprocess
 
 import helpers
@@ -11,7 +11,7 @@ def test_no_dashboard(uv_run, test_dir):
         check=True,
     )
     subprocess.run(["mkdir", "foo"], cwd=test_dir, check=True)
-    working_dir = pathlib.Path(test_dir) / "foo"
+    working_dir = Path(test_dir) / "foo"
     command = [*uv_run, "gimmegit", *helpers.no_color]
     result = subprocess.run(
         command,
@@ -28,7 +28,7 @@ Error: The working directory is inside a repo that is not supported by gimmegit.
 
 
 def test_no_clone(uv_run, test_dir):
-    working_dir = pathlib.Path(test_dir) / "foo"
+    working_dir = Path(test_dir) / "foo"
     command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
     result = subprocess.run(
         command,
@@ -45,7 +45,7 @@ Error: The working directory is inside a repo.
 
 
 def test_ignore_outer_repo(uv_run, test_dir):
-    working_dir = pathlib.Path(test_dir) / "foo"
+    working_dir = Path(test_dir) / "foo"
     command = [
         *uv_run,
         "gimmegit",

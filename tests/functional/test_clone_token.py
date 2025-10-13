@@ -1,5 +1,5 @@
+from pathlib import Path
 import os
-import pathlib
 import subprocess
 
 import pytest
@@ -32,7 +32,7 @@ def test_forked_repo_token(uv_run, test_dir, token_env):
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -75,4 +75,4 @@ Getting repo details
 Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the repo?
 """
     assert result.stderr == expected_stderr
-    assert not (pathlib.Path(test_dir) / "invalid").exists()
+    assert not (Path(test_dir) / "invalid").exists()

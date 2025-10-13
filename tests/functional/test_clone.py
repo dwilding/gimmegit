@@ -1,5 +1,5 @@
+from pathlib import Path
 import os
-import pathlib
 import subprocess
 
 import pytest
@@ -22,7 +22,7 @@ def test_repo_branch(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "operator/canonical-2.23-maintenance"
+    expected_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/operator.git
@@ -57,7 +57,7 @@ def test_forked_repo(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -93,7 +93,7 @@ def test_existing_clone(uv_run, test_dir):
         text=True,
     )
     assert result.returncode == 10
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 You already have a clone:
@@ -103,7 +103,7 @@ You already have a clone:
 
 
 def test_dashboard(uv_run, test_dir):
-    working_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
     command = [*uv_run, "gimmegit", *helpers.no_color]
     result = subprocess.run(
         command,
@@ -119,7 +119,7 @@ def test_dashboard(uv_run, test_dir):
 
 
 def test_dashboard_warning(uv_run, test_dir):
-    working_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
     command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
     result = subprocess.run(
         command,
@@ -171,8 +171,8 @@ Cloning https://github.com/dwilding/invalid.git
 Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
-    assert (pathlib.Path(test_dir) / "invalid").exists()
-    assert not (pathlib.Path(test_dir) / "invalid/dwilding-my-feature").exists()
+    assert (Path(test_dir) / "invalid").exists()
+    assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
 
 
 def test_no_repo(uv_run, test_dir):
