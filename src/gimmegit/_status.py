@@ -12,7 +12,7 @@ class Status:
     base_owner: str
     base_url: str
     branch: str
-    branch_pushed: bool
+    has_remote: bool
     owner: str
     project: str
     url: str
@@ -30,7 +30,7 @@ def get_status(working: git.Repo) -> Status | None:
         base_branch = str(config.get_value("gimmegit", "baseBranch"))
         base_remote = str(config.get_value("gimmegit", "baseRemote"))
         branch = str(config.get_value("gimmegit", "branch"))
-        branch_pushed = config.has_section(f'branch "{branch}"') and config.has_option(
+        has_remote = config.has_section(f'branch "{branch}"') and config.has_option(
             f'branch "{branch}"', "remote"
         )
     origin = remote_from_url(working.remotes.origin.url)
@@ -45,7 +45,7 @@ def get_status(working: git.Repo) -> Status | None:
         base_owner=base.owner,
         base_url=make_branch_url(base.owner, base.project, base_branch),
         branch=branch,
-        branch_pushed=branch_pushed,
+        has_remote=has_remote,
         owner=origin.owner,
         project=base.project,
         url=make_branch_url(origin.owner, origin.project, branch),
