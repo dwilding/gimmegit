@@ -26,14 +26,14 @@ Error: The working directory is inside a repo that is not supported by gimmegit.
     assert result.stderr == expected_stderr
 
 
-def test_ignore_outer(uv_run, test_dir):
+def test_ignore_outer_repo(uv_run, test_dir):
     working_dir = pathlib.Path(test_dir) / "foo"
     command = [
         *uv_run,
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
-        "--ignore-outer",
+        "--ignore-outer-repo",
         "dwilding/frogtab",
         "new-branch",
     ]

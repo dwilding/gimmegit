@@ -73,7 +73,7 @@ def main() -> None:
         help="Don't try to install pre-commit after cloning",
     )
     parser.add_argument(
-        "--ignore-outer",
+        "--ignore-outer-repo",
         action="store_true",
         help="Try to clone even if the working directory is inside a repo",
     )
@@ -91,7 +91,7 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
-    if not args.ignore_outer:
+    if not args.ignore_outer_repo:
         try:
             working = git.Repo(search_parent_directories=True)
         except git.InvalidGitRepositoryError:
