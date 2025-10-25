@@ -432,7 +432,11 @@ def install_pre_commit(clone_dir: Path) -> None:
     if not shutil.which("uvx"):
         return
     logger.info("Installing pre-commit using uvx")
-    subprocess.run(["uvx", "pre-commit", "install"], cwd=clone_dir, check=True)
+    subprocess.run(
+        ["uvx", "pre-commit", "install"],
+        cwd=clone_dir,
+        check=True,
+    )
 
 
 if __name__ == "__main__":

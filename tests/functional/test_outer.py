@@ -10,7 +10,11 @@ def test_no_dashboard(uv_run, test_dir):
         cwd=test_dir,
         check=True,
     )
-    subprocess.run(["mkdir", "foo"], cwd=test_dir, check=True)
+    subprocess.run(
+        ["mkdir", "foo"],
+        cwd=test_dir,
+        check=True,
+    )
     working_dir = Path(test_dir) / "foo"
     command = [*uv_run, "gimmegit", *helpers.no_color]
     result = subprocess.run(

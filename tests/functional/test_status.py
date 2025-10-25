@@ -23,8 +23,6 @@ def test_status(uv_run, test_dir):
     subprocess.run(
         command,
         cwd=test_dir,
-        capture_output=True,
-        text=True,
         check=True,
     )
     expected_status = _status.Status(
