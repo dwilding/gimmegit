@@ -4,7 +4,7 @@ no_color = ["--color", "never"]
 no_ssh = ["--ssh", "never"]
 
 
-def get_branch(dir: str):
+def get_branch(dir: str) -> str:
     result = subprocess.run(
         ["git", "branch", "--show-current"],
         cwd=dir,
@@ -15,7 +15,7 @@ def get_branch(dir: str):
     return result.stdout.strip()
 
 
-def get_config(dir: str, name: str):
+def get_config(dir: str, name: str) -> str:
     result = subprocess.run(
         ["git", "config", "--get", name],
         cwd=dir,
@@ -24,3 +24,11 @@ def get_config(dir: str, name: str):
         check=True,
     )
     return result.stdout.strip()
+
+
+def set_config(dir: str, name: str, value: str) -> None:
+    subprocess.run(
+        ["git", "config", name, value],
+        cwd=dir,
+        check=True,
+    )
