@@ -102,12 +102,12 @@ def main() -> None:
                         "The working directory is inside a repo that is not supported by gimmegit."
                     )
                 sys.exit(1)
-            # We're inside a repo that was created by gimmegit (> 0.0.15).
+            # We're inside a clone that was created by gimmegit (> 0.0.15).
             if args.repo:
                 logger.warning(
-                    f"Ignoring '{args.repo}' because the working directory is inside a repo."
+                    f"Ignoring '{args.repo}' because the working directory is inside a gimmegit clone."
                 )
-            logger.info("[STATUS DASHBOARD]")
+            logger.info("The working directory is inside a gimmegit clone.")
             return
     if not args.repo:
         logger.error("No repo specified. Run 'gimmegit -h' for help.")

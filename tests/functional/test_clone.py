@@ -113,7 +113,7 @@ def test_dashboard(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-[STATUS DASHBOARD]
+The working directory is inside a gimmegit clone.
 """
     assert result.stdout == expected_stdout
 
@@ -129,11 +129,11 @@ def test_dashboard_warning(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-[STATUS DASHBOARD]
+The working directory is inside a gimmegit clone.
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Warning: Ignoring 'some-repo' because the working directory is inside a repo.
+Warning: Ignoring 'some-repo' because the working directory is inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 
