@@ -13,6 +13,9 @@ import urllib.parse
 import git
 import github
 
+from ._remote import Remote
+from ._status import get_status
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -33,13 +36,6 @@ class Context:
     project: str
     upstream_owner: str | None
     upstream_url: str | None
-
-
-@dataclass
-class Upstream:
-    owner: str
-    project: str
-    remote_url: str
 
 
 @dataclass
@@ -70,9 +66,14 @@ def main() -> None:
         action="store_true",
         help="Don't try to install pre-commit after cloning",
     )
+    parser.add_argument(
+        "--ignore-outer-repo",
+        action="store_true",
+        help="Try to clone even if the working directory is inside a repo",
+    )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
-    parser.add_argument("repo", help="Repo to clone from GitHub")
+    parser.add_argument("repo", nargs="?", help="Repo to clone from GitHub")
     parser.add_argument("new_branch", nargs="?", help="Name of the branch to create")
     command_args = sys.argv[1:]
     cloning_args = ["--no-tags"]
@@ -84,6 +85,33 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
+    if not args.ignore_outer_repo:
+        try:
+            working = git.Repo(search_parent_directories=True)
+        except git.InvalidGitRepositoryError:
+            # We're not inside a repo. Proceed to the logic for cloning a repo.
+            pass
+        else:
+            status = get_status(working)
+            if not status:
+                # We're inside a repo, but it wasn't created by gimmegit (> 0.0.15).
+                if args.repo:
+                    logger.error("The working directory is inside a repo.")
+                else:
+                    logger.error(
+                        "The working directory is inside a repo that is not supported by gimmegit."
+                    )
+                sys.exit(1)
+            # We're inside a clone that was created by gimmegit (> 0.0.15).
+            if args.repo:
+                logger.warning(
+                    f"Ignoring '{args.repo}' because the working directory is inside a gimmegit clone."
+                )
+            logger.info("The working directory is inside a gimmegit clone.")
+            return
+    if not args.repo:
+        logger.error("No repo specified. Run 'gimmegit -h' for help.")
+        sys.exit(2)
     try:
         context = get_context(args)
     except ValueError as e:
@@ -181,7 +209,7 @@ def get_context(args: argparse.Namespace) -> Context:
         upstream_url = make_github_clone_url(args.upstream_owner, project)
     elif upstream:
         upstream_owner = upstream.owner
-        upstream_url = upstream.remote_url
+        upstream_url = upstream.url
         project = upstream.project
     # Decide whether to create a branch.
     create_branch = False
@@ -248,7 +276,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> Upstream | None:
+def get_github_upstream(owner: str, project: str) -> Remote | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -260,10 +288,10 @@ def get_github_upstream(owner: str, project: str) -> Upstream | None:
         )
     if repo.fork:
         parent = repo.parent
-        return Upstream(
-            remote_url=make_github_clone_url(parent.owner.login, parent.name),
+        return Remote(
             owner=parent.owner.login,
             project=parent.name,
+            url=make_github_clone_url(parent.owner.login, parent.name),
         )
 
 
@@ -376,8 +404,8 @@ def clone(context: Context, cloning_args: list[str]) -> None:
         )
         config.set_value(
             "gimmegit",
-            "branch",
-            context.branch,
+            "baseBranch",
+            context.base_branch,
         )
         config.set_value(
             "gimmegit",
@@ -386,8 +414,8 @@ def clone(context: Context, cloning_args: list[str]) -> None:
         )
         config.set_value(
             "gimmegit",
-            "baseBranch",
-            context.base_branch,
+            "branch",
+            context.branch,
         )
 
 
@@ -404,7 +432,11 @@ def install_pre_commit(clone_dir: Path) -> None:
     if not shutil.which("uvx"):
         return
     logger.info("Installing pre-commit using uvx")
-    subprocess.run(["uvx", "pre-commit", "install"], cwd=clone_dir, check=True)
+    subprocess.run(
+        ["uvx", "pre-commit", "install"],
+        cwd=clone_dir,
+        check=True,
+    )
 
 
 if __name__ == "__main__":

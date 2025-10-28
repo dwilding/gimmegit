@@ -1,22 +1,28 @@
+from pathlib import Path
 import os
-import pathlib
 import subprocess
 
 import pytest
 
 import helpers
 
-tool_args = ["--color", "never", "--ssh", "never"]
 
-
-def test_operator_branch(test_dir, tool_cmd):
+def test_repo_branch(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "https://github.com/canonical/operator/tree/2.23-maintenance",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["https://github.com/canonical/operator/tree/2.23-maintenance"],
+        command,
+        cwd=test_dir,
         capture_output=True,
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "operator/canonical-2.23-maintenance"
+    expected_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/operator.git
@@ -33,14 +39,25 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
-def test_fork_jubilant(test_dir, tool_cmd):
+def test_forked_repo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-u",
+        "canonical",
+        "dwilding/jubilant",
+        "my-feature",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["-u", "canonical", "dwilding/jubilant", "my-feature"],
+        command,
+        cwd=test_dir,
         capture_output=True,
         text=True,
         check=True,
     )
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -58,20 +75,67 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
-def test_fork_jubilant_exists(test_dir, tool_cmd):
+def test_existing_clone(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-u",
+        "canonical",
+        "dwilding/jubilant",
+        "my-feature",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["-u", "canonical", "dwilding/jubilant", "my-feature"],
+        command,
+        cwd=test_dir,
         capture_output=True,
         text=True,
     )
     assert result.returncode == 10
-    expected_dir = pathlib.Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 You already have a clone:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+
+
+def test_dashboard(uv_run, test_dir):
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    command = [*uv_run, "gimmegit", *helpers.no_color]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_stdout = """\
+The working directory is inside a gimmegit clone.
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_dashboard_warning(uv_run, test_dir):
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_stdout = """\
+The working directory is inside a gimmegit clone.
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Warning: Ignoring 'some-repo' because the working directory is inside a gimmegit clone.
+"""
+    assert result.stderr == expected_stderr
 
 
 @pytest.fixture()
@@ -81,9 +145,18 @@ def askpass_env():
     return env
 
 
-def test_invalid_repo(test_dir, tool_cmd, askpass_env):
+def test_invalid_repo(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "dwilding/invalid",
+        "my-feature",
+    ]
     result = subprocess.run(
-        tool_cmd + tool_args + ["dwilding/invalid", "my-feature"],
+        command,
+        cwd=test_dir,
         env=askpass_env,
         capture_output=True,
         text=True,
@@ -98,5 +171,25 @@ Cloning https://github.com/dwilding/invalid.git
 Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
-    assert (pathlib.Path(test_dir) / "invalid").exists()
-    assert not (pathlib.Path(test_dir) / "invalid/dwilding-my-feature").exists()
+    assert (Path(test_dir) / "invalid").exists()
+    assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
+
+
+def test_no_repo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert not result.stdout
+    expected_stderr = """\
+Error: No repo specified. Run 'gimmegit -h' for help.
+"""
+    assert result.stderr == expected_stderr
