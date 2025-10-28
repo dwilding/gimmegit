@@ -24,11 +24,3 @@ def get_config(dir: str, name: str) -> str:
         check=True,
     )
     return result.stdout.strip()
-
-
-def set_config(dir: str, name: str, value: str) -> None:
-    subprocess.run(
-        ["git", "config", name, value],
-        cwd=dir,
-        check=True,
-    )

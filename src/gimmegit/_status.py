@@ -22,7 +22,7 @@ def get_status(working: git.Repo) -> Status | None:
     with working.config_reader() as config:
         if (
             not config.has_section("gimmegit")
-            or not config.get_value("gimmegit", "baseBranch")
+            or not config.has_option("gimmegit", "baseBranch")
             or not config.has_option("gimmegit", "baseRemote")
             or not config.has_option("gimmegit", "branch")
         ):
