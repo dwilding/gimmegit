@@ -211,7 +211,7 @@ wheels = [
 
 [[package]]
 name = "gimmegit"
-version = "0.0.16.dev0"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "gitpython" },
