@@ -29,17 +29,15 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 
 Clone dwilding's fork of [canonical/jubilant](https://github.com/canonical/jubilant) and create a branch called `my-feature`:
 
-```text
-~/work$ gimmegit -u canonical dwilding/jubilant my-feature
+<pre><b>~/work</b>$ uvx gimmegit -u canonical dwilding/jubilant my-feature
 Getting repo details
 Cloning git@github.com:dwilding/jubilant.git
 Setting upstream to git@github.com:canonical/jubilant.git
-Checking out a new branch my-feature based on canonical:main
+Checking out a new branch <font color="#2aa1b3">my-feature</font> based on <font color="#2aa1b3">canonical:main</font>
 Installing pre-commit using uvx
 pre-commit installed at .git/hooks/pre-commit
-Cloned repo:
-/home/me/work/jubilant/dwilding-my-feature
-```
+<b>Cloned repo:</b>
+/home/david.wilding@canonical.com/work/jubilant/dwilding-my-feature</pre>
 
 **In this README**
 
