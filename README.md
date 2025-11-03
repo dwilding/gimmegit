@@ -17,11 +17,11 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 .
 └── frogtab
    ├── dwilding-my-feature   A clone of the Frogtab repo, on a new branch. Created with
-   │   │                       gimmegit dwilding/frogtab my-feature
+   │   │                     gimmegit dwilding/frogtab my-feature
    │   ├── ...
    │
    └── <buddy>-custom-feat   A clone of <buddy>'s fork, on their feature branch. Created with
-       │                       gimmegit https://github.com/<buddy>/frogtab/tree/custom-feat
+       │                     gimmegit https://github.com/<buddy>/frogtab/tree/custom-feat
        ├── ...
 ```
 
