@@ -86,12 +86,8 @@ def main() -> None:
     set_global_ssh(args.ssh)
     configure_logger()
     if not args.ignore_outer_repo:
-        try:
-            working = git.Repo(search_parent_directories=True)
-        except git.InvalidGitRepositoryError:
-            # We're not inside a repo. Proceed to the logic for cloning a repo.
-            pass
-        else:
+        working = get_outer_repo()
+        if working:
             status = get_status(working)
             if not status:
                 # We're inside a repo, but it wasn't created by gimmegit (> 0.0.15).
@@ -121,6 +117,9 @@ def main() -> None:
         outcome = "You already have a clone:"
         logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
+    if context.clone_dir.parent.exists() and get_repo(context.clone_dir.parent):
+        logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
+        sys.exit(1)
     try:
         clone(context, cloning_args)
     except git.GitCommandError:
@@ -187,6 +186,20 @@ def configure_logger() -> None:
     logger.addHandler(info)
     logger.addHandler(warning)
     logger.addHandler(error)
+
+
+def get_outer_repo() -> git.Repo | None:
+    try:
+        return git.Repo(search_parent_directories=True)
+    except git.InvalidGitRepositoryError:
+        return None
+
+
+def get_repo(dir: Path) -> git.Repo | None:
+    try:
+        return git.Repo(dir)
+    except git.InvalidGitRepositoryError:
+        return None
 
 
 def get_context(args: argparse.Namespace) -> Context:

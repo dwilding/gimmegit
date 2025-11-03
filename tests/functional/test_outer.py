@@ -4,7 +4,7 @@ import subprocess
 import helpers
 
 
-def test_no_dashboard(uv_run, test_dir):
+def test_outer_no_dashboard(uv_run, test_dir):
     subprocess.run(
         ["git", "init"],
         cwd=test_dir,
@@ -31,7 +31,7 @@ Error: The working directory is inside a repo that is not supported by gimmegit.
     assert result.stderr == expected_stderr
 
 
-def test_no_clone(uv_run, test_dir):
+def test_outer_no_clone(uv_run, test_dir):
     working_dir = Path(test_dir) / "foo"
     command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
     result = subprocess.run(
@@ -48,7 +48,7 @@ Error: The working directory is inside a repo.
     assert result.stderr == expected_stderr
 
 
-def test_ignore_outer_repo(uv_run, test_dir):
+def test_outer_ignore(uv_run, test_dir):
     working_dir = Path(test_dir) / "foo"
     command = [
         *uv_run,
