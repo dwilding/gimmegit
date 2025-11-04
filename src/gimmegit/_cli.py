@@ -13,8 +13,7 @@ import urllib.parse
 import git
 import github
 
-from ._remote import Remote
-from ._status import get_status
+from . import _inspect, _remote, _status
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -71,6 +70,11 @@ def main() -> None:
         action="store_true",
         help="Clone the repo even if the clone directory will be inside another repo",
     )
+    parser.add_argument(
+        "--force-project-dir",
+        action="store_true",
+        help="Create the project directory even if the working directory has a gimmegit clone",
+    )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
     parser.add_argument("repo", nargs="?", help="Repo to clone from GitHub")
@@ -86,9 +90,9 @@ def main() -> None:
     set_global_ssh(args.ssh)
     configure_logger()
     if not args.allow_outer_repo:
-        working = get_outer_repo()
+        working = _inspect.get_outer_repo()
         if working:
-            status = get_status(working)
+            status = _status.get_status(working)
             if not status:
                 # We're inside a repo, but it wasn't created by gimmegit (> 0.0.15).
                 if args.repo:
@@ -120,10 +124,17 @@ def main() -> None:
     if (
         not args.allow_outer_repo
         and context.clone_dir.parent.exists()
-        and get_repo(context.clone_dir.parent)
+        and _inspect.get_repo(context.clone_dir.parent)
     ):
         logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
         sys.exit(1)
+    if not args.force_project_dir and not context.clone_dir.parent.exists():
+        candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
+        if candidate and _status.get_status(candidate):
+            logger.error(
+                "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
+            )
+            sys.exit(1)
     try:
         clone(context, cloning_args)
     except git.GitCommandError:
@@ -190,20 +201,6 @@ def configure_logger() -> None:
     logger.addHandler(info)
     logger.addHandler(warning)
     logger.addHandler(error)
-
-
-def get_outer_repo() -> git.Repo | None:
-    try:
-        return git.Repo(search_parent_directories=True)
-    except git.InvalidGitRepositoryError:
-        return None
-
-
-def get_repo(dir: Path) -> git.Repo | None:
-    try:
-        return git.Repo(dir)
-    except git.InvalidGitRepositoryError:
-        return None
 
 
 def get_context(args: argparse.Namespace) -> Context:
@@ -293,7 +290,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> Remote | None:
+def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -305,7 +302,7 @@ def get_github_upstream(owner: str, project: str) -> Remote | None:
         )
     if repo.fork:
         parent = repo.parent
-        return Remote(
+        return _remote.Remote(
             owner=parent.owner.login,
             project=parent.name,
             url=make_github_clone_url(parent.owner.login, parent.name),

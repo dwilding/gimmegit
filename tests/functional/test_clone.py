@@ -138,13 +138,10 @@ Warning: Ignoring 'some-project' because the working directory is inside a gimme
     assert result.stderr == expected_stderr
 
 
-@pytest.mark.xfail
 def test_in_project_dir(uv_run, test_dir):
     # .
     # └── jubilant                  Try running 'gimmegit dwilding/jubilant my-feature'
-    #     ├── dwilding-my-feature   This dir exists from an earlier test
-    #     └── jubilant              These dirs will be created (which isn't great)
-    #         └── dwilding-my-feature
+    #     └── dwilding-my-feature   This dir exists from an earlier test
     working_dir = Path(test_dir) / "jubilant"
     command = [
         *uv_run,
@@ -161,7 +158,49 @@ def test_in_project_dir(uv_run, test_dir):
         text=True,
     )
     assert result.returncode == 1
-    assert not (working_dir / "jubilant/dwilding-my-feature").exists()
+    expected_stdout = """\
+Getting repo details
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The working directory has a gimmegit clone. Try running gimmegit in the parent directory.
+"""
+    assert result.stderr == expected_stderr
+    assert not (working_dir / "jubilant").exists()
+
+
+def test_in_project_dir_force(uv_run, test_dir):
+    # .
+    # └── jubilant                  Try running 'gimmegit dwilding/jubilant my-feature'
+    #     ├── dwilding-my-feature   This dir exists from an earlier test
+    #     └── jubilant              These dirs will be created
+    #         └── dwilding-my-feature
+    working_dir = Path(test_dir) / "jubilant"
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "--force-project-dir",
+        "dwilding/jubilant",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = working_dir / "jubilant/dwilding-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out a new branch my-feature based on dwilding:main
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
 
 
 @pytest.fixture
