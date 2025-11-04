@@ -4,18 +4,18 @@ import subprocess
 import helpers
 
 
-def test_no_dashboard(uv_run, test_dir):
+def test_working_repo_no_dashboard(uv_run, test_dir):
+    # .
+    # └── frogtab   Suppose that this dir is a repo
+    #     └── foo   Try running 'gimmegit'
+    repo_dir = Path(test_dir) / "frogtab"
     subprocess.run(
-        ["git", "init"],
+        ["git", "init", repo_dir],
         cwd=test_dir,
         check=True,
     )
-    subprocess.run(
-        ["mkdir", "foo"],
-        cwd=test_dir,
-        check=True,
-    )
-    working_dir = Path(test_dir) / "foo"
+    working_dir = repo_dir / "foo"
+    working_dir.mkdir()
     command = [*uv_run, "gimmegit", *helpers.no_color]
     result = subprocess.run(
         command,
@@ -31,9 +31,12 @@ Error: The working directory is inside a repo that is not supported by gimmegit.
     assert result.stderr == expected_stderr
 
 
-def test_no_clone(uv_run, test_dir):
-    working_dir = Path(test_dir) / "foo"
-    command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
+def test_working_repo_no_clone(uv_run, test_dir):
+    # .
+    # └── frogtab   Suppose that this dir is a repo
+    #     └── foo   Try running 'gimmegit some-project'
+    working_dir = Path(test_dir) / "frogtab/foo"
+    command = [*uv_run, "gimmegit", *helpers.no_color, "some-project"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -46,18 +49,24 @@ def test_no_clone(uv_run, test_dir):
 Error: The working directory is inside a repo.
 """
     assert result.stderr == expected_stderr
+    assert not (working_dir / "some-project").exists()
 
 
-def test_ignore_outer_repo(uv_run, test_dir):
-    working_dir = Path(test_dir) / "foo"
+def test_working_repo_allow(uv_run, test_dir):
+    # .
+    # └── frogtab           Suppose that this dir is a repo
+    #     └── foo           Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
+    #         └── frogtab   These dirs will be created
+    #             └── dwilding-my-feature
+    working_dir = Path(test_dir) / "frogtab/foo"
     command = [
         *uv_run,
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
-        "--ignore-outer-repo",
+        "--allow-outer-repo",
         "dwilding/frogtab",
-        "new-branch",
+        "my-feature",
     ]
     result = subprocess.run(
         command,
@@ -66,11 +75,71 @@ def test_ignore_outer_repo(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = working_dir / "frogtab/dwilding-new-branch"
+    expected_dir = working_dir / "frogtab/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/frogtab.git
-Checking out a new branch new-branch based on dwilding:main
+Checking out a new branch my-feature based on dwilding:main
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_project_repo_no_clone(uv_run, test_dir):
+    # .             Try running 'gimmegit dwilding/frogtab my-feature'
+    # └── frogtab   Suppose that this dir is a repo
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "dwilding/frogtab",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    project_dir = Path(test_dir) / "frogtab"
+    expected_stout = """\
+Getting repo details
+"""
+    assert result.stdout == expected_stout
+    expected_stderr = f"""\
+Error: '{project_dir}' is a repo.
+"""
+    assert result.stderr == expected_stderr
+    assert not (project_dir / "dwilding-my-feature").exists()
+
+
+def test_project_repo_allow(uv_run, test_dir):
+    # .                             Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
+    # └── frogtab                   Suppose that this dir is a repo
+    #     └── dwilding-my-feature   This dir will be created
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "--allow-outer-repo",
+        "dwilding/frogtab",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    expected_dir = test_dir / "frogtab/dwilding-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/frogtab.git
+Checking out a new branch my-feature based on dwilding:main
 Cloned repo:
 {expected_dir}
 """

@@ -120,7 +120,7 @@ The working directory is inside a gimmegit clone.
 
 def test_dashboard_warning(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", *helpers.no_color, "some-repo"]
+    command = [*uv_run, "gimmegit", *helpers.no_color, "some-project"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -133,12 +133,38 @@ The working directory is inside a gimmegit clone.
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Warning: Ignoring 'some-repo' because the working directory is inside a gimmegit clone.
+Warning: Ignoring 'some-project' because the working directory is inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 
 
-@pytest.fixture()
+@pytest.mark.xfail
+def test_in_project_dir(uv_run, test_dir):
+    # .
+    # └── jubilant                  Try running 'gimmegit dwilding/jubilant my-feature'
+    #     ├── dwilding-my-feature   This dir exists from an earlier test
+    #     └── jubilant              These dirs will be created (which isn't great)
+    #         └── dwilding-my-feature
+    working_dir = Path(test_dir) / "jubilant"
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "dwilding/jubilant",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert not (working_dir / "jubilant/dwilding-my-feature").exists()
+
+
+@pytest.fixture
 def askpass_env():
     env = os.environ.copy()
     env["GIT_ASKPASS"] = "/bin/true"

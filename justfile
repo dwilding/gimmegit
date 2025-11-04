@@ -22,7 +22,7 @@ demo:
   mkdir -p demo
   cd demo
   rm -rf jubilant/dwilding-my-feature
-  uv run --project "$project_dir" gimmegit --ignore-outer-repo -u canonical dwilding/jubilant my-feature
+  uv run --project "$project_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature
   cd jubilant/dwilding-my-feature
   echo
   uv run --project "$project_dir" gimmegit
