@@ -69,7 +69,7 @@ def main() -> None:
     parser.add_argument(
         "--ignore-outer-repo",
         action="store_true",
-        help="Try to clone even if the working directory is inside a repo",
+        help="Clone the repo even if the clone directory will be inside another repo",
     )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
@@ -117,7 +117,11 @@ def main() -> None:
         outcome = "You already have a clone:"
         logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
-    if context.clone_dir.parent.exists() and get_repo(context.clone_dir.parent):
+    if (
+        not args.ignore_outer_repo
+        and context.clone_dir.parent.exists()
+        and get_repo(context.clone_dir.parent)
+    ):
         logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
         sys.exit(1)
     try:
