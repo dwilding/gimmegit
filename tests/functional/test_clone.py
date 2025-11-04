@@ -163,7 +163,7 @@ Getting repo details
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: The working directory has gimmegit clones.
+Error: The working directory has a gimmegit clone. Try running gimmegit in the parent directory.
 """
     assert result.stderr == expected_stderr
     assert not (working_dir / "jubilant").exists()

@@ -73,7 +73,7 @@ def main() -> None:
     parser.add_argument(
         "--force-project-dir",
         action="store_true",
-        help="Create the project directory even if the working directory has gimmegit clones",
+        help="Create the project directory even if the working directory has a gimmegit clone",
     )
     parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
     parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
@@ -131,7 +131,9 @@ def main() -> None:
     if not args.force_project_dir and not context.clone_dir.parent.exists():
         candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
         if candidate and _status.get_status(candidate):
-            logger.error("The working directory has gimmegit clones.")
+            logger.error(
+                "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
+            )
             sys.exit(1)
     try:
         clone(context, cloning_args)
