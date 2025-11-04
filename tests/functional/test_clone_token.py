@@ -7,7 +7,7 @@ import pytest
 import helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def token_env():
     env = os.environ.copy()
     env["GIMMEGIT_GITHUB_TOKEN"] = os.environ["GITHUB_TOKEN"]
