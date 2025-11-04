@@ -52,10 +52,10 @@ Error: The working directory is inside a repo.
     assert not (working_dir / "some-project").exists()
 
 
-def test_working_repo_ignore(uv_run, test_dir):
+def test_working_repo_allow(uv_run, test_dir):
     # .
     # └── frogtab           Suppose that this dir is a repo
-    #     └── foo           Try running 'gimmegit --ignore-outer-repo dwilding/frogtab my-feature'
+    #     └── foo           Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
     #         └── frogtab   These dirs will be created
     #             └── dwilding-my-feature
     working_dir = Path(test_dir) / "frogtab/foo"
@@ -64,7 +64,7 @@ def test_working_repo_ignore(uv_run, test_dir):
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
-        "--ignore-outer-repo",
+        "--allow-outer-repo",
         "dwilding/frogtab",
         "my-feature",
     ]
@@ -116,8 +116,8 @@ Error: '{project_dir}' is a repo.
     assert not (project_dir / "dwilding-my-feature").exists()
 
 
-def test_project_repo_ignore(uv_run, test_dir):
-    # .                             Try running 'gimmegit --ignore-outer-repo dwilding/frogtab my-feature'
+def test_project_repo_allow(uv_run, test_dir):
+    # .                             Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
     # └── frogtab                   Suppose that this dir is a repo
     #     └── dwilding-my-feature   This dir will be created
     command = [
@@ -125,7 +125,7 @@ def test_project_repo_ignore(uv_run, test_dir):
         "gimmegit",
         *helpers.no_color,
         *helpers.no_ssh,
-        "--ignore-outer-repo",
+        "--allow-outer-repo",
         "dwilding/frogtab",
         "my-feature",
     ]

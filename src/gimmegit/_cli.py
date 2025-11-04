@@ -67,7 +67,7 @@ def main() -> None:
         help="Don't try to install pre-commit after cloning",
     )
     parser.add_argument(
-        "--ignore-outer-repo",
+        "--allow-outer-repo",
         action="store_true",
         help="Clone the repo even if the clone directory will be inside another repo",
     )
@@ -85,7 +85,7 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
-    if not args.ignore_outer_repo:
+    if not args.allow_outer_repo:
         working = get_outer_repo()
         if working:
             status = get_status(working)
@@ -118,7 +118,7 @@ def main() -> None:
         logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
     if (
-        not args.ignore_outer_repo
+        not args.allow_outer_repo
         and context.clone_dir.parent.exists()
         and get_repo(context.clone_dir.parent)
     ):
