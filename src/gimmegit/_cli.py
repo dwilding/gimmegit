@@ -234,7 +234,7 @@ def get_context(args: argparse.Namespace) -> Context:
         upstream_url = make_github_clone_url(upstream_owner, project)
         if args.upstream_owner and args.upstream_owner != upstream_owner:
             logger.warning(
-                f"Ignoring upstream owner '{args.upstream_owner}' because the base branch specifies an owner."
+                f"Ignoring upstream owner '{args.upstream_owner}' because the base branch includes an owner."
             )
     elif args.upstream_owner:
         upstream_owner = args.upstream_owner
@@ -252,7 +252,7 @@ def get_context(args: argparse.Namespace) -> Context:
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
-        logger.warning(f"Ignoring '{args.new_branch}' because {args.repo} specifies a branch.")
+        logger.warning(f"Ignoring '{args.new_branch}' because you specified an existing branch.")
     return Context(
         base_branch=parsed_base.branch if parsed_base else None,
         branch=branch,

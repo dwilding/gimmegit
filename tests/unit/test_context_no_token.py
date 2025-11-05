@@ -204,7 +204,10 @@ def test_repo_branch_new_branch(caplog):
     with caplog.at_level(logging.WARNING):
         assert _cli.get_context(args) == expected_context
     assert len(caplog.records) == 1
-    assert caplog.records[0].msg.startswith("Ignoring 'fix-something'")
+    assert (
+        caplog.records[0].msg
+        == "Ignoring 'fix-something' because you specified an existing branch."
+    )
 
 
 @pytest.mark.parametrize(
@@ -312,7 +315,7 @@ def test_base_sets_upstream_owner(caplog):
     assert len(caplog.records) == 1
     assert (
         caplog.records[0].msg
-        == "Ignoring upstream owner 'different-owner' because the base branch specifies an owner."
+        == "Ignoring upstream owner 'different-owner' because the base branch includes an owner."
     )
 
 
