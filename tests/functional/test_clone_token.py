@@ -76,3 +76,71 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
 """
     assert result.stderr == expected_stderr
     assert not (Path(test_dir) / "invalid").exists()
+
+
+@pytest.mark.xfail
+@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
+def test_u_sets_upstream_owner(uv_run, test_dir, token_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-u",
+        "dwilding",
+        "jubilant",
+        "my-feature-2",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=token_env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature-2"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out a new branch my-feature-2 based on dwilding:main
+Installing pre-commit using uvx
+pre-commit installed at .git/hooks/pre-commit
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+
+
+@pytest.mark.xfail
+@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
+def test_b_sets_upstream_owner(uv_run, test_dir, token_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-b",
+        "https://github.com/dwilding/jubilant/tree/main",
+        "jubilant",
+        "my-feature-3",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=token_env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature-3"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out a new branch my-feature-3 based on dwilding:main
+Installing pre-commit using uvx
+pre-commit installed at .git/hooks/pre-commit
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
