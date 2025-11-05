@@ -44,6 +44,13 @@ class ParsedURL:
     project: str
 
 
+@dataclass
+class ParsedBranchSpec:
+    branch: str
+    owner: str | None
+    project: str | None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="A tool for cloning GitHub repos and creating branches."
@@ -218,13 +225,24 @@ def get_context(args: argparse.Namespace) -> Context:
     upstream = get_github_upstream(owner, project)
     upstream_owner = None
     upstream_url = None
-    if args.upstream_owner:
+    parsed_base = None
+    if args.base_branch:
+        parsed_base = parse_github_branch_spec(args.base_branch)
+    if parsed_base and parsed_base.owner:
+        project = parsed_base.project
+        upstream_owner = parsed_base.owner
+        upstream_url = make_github_clone_url(upstream_owner, project)
+        if args.upstream_owner and args.upstream_owner != upstream_owner:
+            logger.warning(
+                f"Ignoring upstream owner '{args.upstream_owner}' because the base branch specifies an owner."
+            )
+    elif args.upstream_owner:
         upstream_owner = args.upstream_owner
-        upstream_url = make_github_clone_url(args.upstream_owner, project)
+        upstream_url = make_github_clone_url(upstream_owner, project)
     elif upstream:
+        project = upstream.project
         upstream_owner = upstream.owner
         upstream_url = upstream.url
-        project = upstream.project
     # Decide whether to create a branch.
     create_branch = False
     if not branch:
@@ -234,9 +252,9 @@ def get_context(args: argparse.Namespace) -> Context:
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
-        logger.warning(f"Ignoring '{args.new_branch}' because {github_url} specifies a branch.")
+        logger.warning(f"Ignoring '{args.new_branch}' because {args.repo} specifies a branch.")
     return Context(
-        base_branch=args.base_branch,
+        base_branch=parsed_base.branch if parsed_base else None,
         branch=branch,
         clone_url=clone_url,
         clone_dir=make_clone_path(owner, project, branch),
@@ -278,10 +296,30 @@ def parse_github_url(url: str) -> ParsedURL | None:
         if branch:
             branch = urllib.parse.unquote(branch)
         return ParsedURL(
+            branch=branch,
             owner=match.group(1),
             project=match.group(2),
-            branch=branch,
         )
+
+
+def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
+    branch_url = branch_spec
+    if branch_url.startswith("github.com/"):
+        branch_url = f"https://{branch_url}"
+    parsed = parse_github_url(branch_url)
+    if not parsed:
+        return ParsedBranchSpec(
+            branch=branch_spec,
+            owner=None,
+            project=None,
+        )
+    if not parsed.branch:
+        raise ValueError(f"'{branch_spec}' does not specify a branch.")
+    return ParsedBranchSpec(
+        branch=parsed.branch,
+        owner=parsed.owner,
+        project=parsed.project,
+    )
 
 
 def get_github_login() -> str:
