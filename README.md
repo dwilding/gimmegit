@@ -127,7 +127,9 @@ git update-branch
 gimmegit https://github.com/<owner>/<project>/tree/<branch>
 ```
 
-This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`. For example:
+This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
+
+### Example
 
 ```sh
 # Clone https://github.com/canonical/postgresql-operator and
@@ -142,7 +144,9 @@ cd postgresql-operator/canonical-fix-something
 
 After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
 
-If the branch wasn't based on the repo's main branch, use `-b` to set the base branch when cloning the repo. For example:
+### Example with a base branch
+
+If the branch wasn't based on the repo's main branch, use `-b` to set the base branch when cloning the repo.
 
 ```sh
 # Clone https://github.com/canonical/postgresql-operator and
@@ -246,7 +250,9 @@ git update-branch
 gimmegit -u <upstream-owner> https://github.com/<owner>/<project>/tree/<branch>
 ```
 
-This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`. For example:
+This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
+
+### Example
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/operator and
@@ -261,7 +267,9 @@ cd operator/dwilding-fix-something
 
 After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
 
-If the branch wasn't based on the upstream repo's main branch, use `-b` to set the upstream base branch when cloning the repo. For example:
+### Example with a base branch
+
+If the branch wasn't based on the upstream repo's main branch, use `-b` to set the upstream base branch when cloning the repo.
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/operator and
