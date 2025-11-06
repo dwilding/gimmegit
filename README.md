@@ -205,6 +205,9 @@ git update-branch
 cd ../..
 gimmegit -b 2.23-maintenance -u canonical dwilding/operator backport-docs
 
+# This does the same thing:
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance dwilding/operator backport-docs
+
 # Change to the second clone directory
 cd operator/dwilding-backport-docs
 
@@ -300,7 +303,10 @@ If the branch wasn't based on the upstream repo's main branch, use `-b` to set t
 # check out the branch backport-fix, setting the base branch to canonical:2.23-maintenance
 gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/tree/backport-fix
 
-# If GIMMEGIT_GITHUB_TOKEN is set, this does the same thing:
+# This does the same thing:
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix
+
+# If GIMMEGIT_GITHUB_TOKEN is set, this also does the same thing:
 # gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix
 
 # Change to the clone directory
