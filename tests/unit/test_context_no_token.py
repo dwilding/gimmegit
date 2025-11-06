@@ -59,7 +59,10 @@ def test_repo(repo: str, project: str, owner: str):
 
 def test_no_owner():
     args = argparse.Namespace(
-        base_branch=None, upstream_owner=None, repo="frogtab", new_branch=None
+        base_branch=None,
+        upstream_owner=None,
+        repo="frogtab",
+        new_branch=None,
     )
     with pytest.raises(ValueError) as exc_info:
         _cli.get_context(args)
@@ -137,10 +140,18 @@ def test_new_branch(branch: str, in_slug: str):
 @pytest.mark.parametrize(
     "repo, branch, in_slug",
     [
-        ("https://github.com/dwilding/frogtab/tree/next-release", "next-release", "next-release"),
-        ("github.com/dwilding/frogtab/tree/next-release", "next-release", "next-release"),
         (
-            "github.com/dwilding/frogtab/tree/releases/next-release",
+            "github.com/dwilding/frogtab/tree/next-release",
+            "next-release",
+            "next-release",
+        ),
+        (
+            "https://github.com/dwilding/frogtab/tree/next-release",
+            "next-release",
+            "next-release",
+        ),
+        (
+            "https://github.com/dwilding/frogtab/tree/releases/next-release",
             "releases/next-release",
             "releases-next-release",
         ),
@@ -193,4 +204,130 @@ def test_repo_branch_new_branch(caplog):
     with caplog.at_level(logging.WARNING):
         assert _cli.get_context(args) == expected_context
     assert len(caplog.records) == 1
-    assert caplog.records[0].msg.startswith("Ignoring 'fix-something'")
+    assert (
+        caplog.records[0].msg
+        == "Ignoring 'fix-something' because you specified an existing branch."
+    )
+
+
+@pytest.mark.parametrize(
+    "base_in, base_out",
+    [
+        (None, None),
+        ("maintenance", "maintenance"),
+        ("github.com/some-org/frogtab/tree/maintenance", "maintenance"),
+        ("https://github.com/some-org/frogtab/tree/maintenance", "maintenance"),
+    ],
+)
+def test_upstream(base_in: str | None, base_out: str | None):
+    args = argparse.Namespace(
+        base_branch=base_in,
+        upstream_owner="some-org",
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch=base_out,
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/frogtab.git",
+        clone_dir=Path("frogtab/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="frogtab",
+        upstream_owner="some-org",
+        upstream_url="https://github.com/some-org/frogtab.git",
+    )
+    assert _cli.get_context(args) == expected_context
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize(
+    "base_in, base_out",
+    [
+        (None, None),
+        ("maintenance", "maintenance"),
+        ("github.com/dwilding/frogtab/tree/maintenance", "maintenance"),
+        ("https://github.com/dwilding/frogtab/tree/maintenance", "maintenance"),
+    ],
+)
+def test_upstream_same_owner(base_in: str | None, base_out: str | None):
+    args = argparse.Namespace(
+        base_branch=base_in,
+        upstream_owner="dwilding",
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch=base_out,
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/frogtab.git",
+        clone_dir=Path("frogtab/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="frogtab",
+        upstream_owner=None,
+        upstream_url=None,
+    )
+    assert _cli.get_context(args) == expected_context
+
+
+def test_base_sets_project():
+    args = argparse.Namespace(
+        base_branch="https://github.com/some-org/frogtab/tree/maintenance",
+        upstream_owner=None,
+        repo="dwilding/frogtab-fork",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch="maintenance",
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/frogtab-fork.git",
+        clone_dir=Path("frogtab/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="frogtab",
+        upstream_owner="some-org",
+        upstream_url="https://github.com/some-org/frogtab.git",
+    )
+    assert _cli.get_context(args) == expected_context
+
+
+def test_base_sets_upstream_owner(caplog):
+    args = argparse.Namespace(
+        base_branch="https://github.com/some-org/frogtab/tree/maintenance",
+        upstream_owner="different-owner",
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch="maintenance",
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/frogtab.git",
+        clone_dir=Path("frogtab/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="frogtab",
+        upstream_owner="some-org",
+        upstream_url="https://github.com/some-org/frogtab.git",
+    )
+    with caplog.at_level(logging.WARNING):
+        assert _cli.get_context(args) == expected_context
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].msg
+        == "Ignoring upstream owner 'different-owner' because the base branch includes an owner."
+    )
+
+
+def test_base_url_no_branch():
+    args = argparse.Namespace(
+        base_branch="https://github.com/dwilding/frogtab",
+        upstream_owner=None,
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    with pytest.raises(ValueError) as exc_info:
+        _cli.get_context(args)
+    assert (
+        str(exc_info.value) == "'https://github.com/dwilding/frogtab' does not specify a branch."
+    )

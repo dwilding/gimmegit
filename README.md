@@ -127,7 +127,11 @@ git update-branch
 gimmegit https://github.com/<owner>/<project>/tree/<branch>
 ```
 
-This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`. For example:
+This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
+
+After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+
+### Example
 
 ```sh
 # Clone https://github.com/canonical/postgresql-operator and
@@ -138,11 +142,14 @@ gimmegit https://github.com/canonical/postgresql-operator/tree/fix-something
 cd postgresql-operator/canonical-fix-something
 
 # Review the branch or work on the branch…
+
+# Merge remote changes from main
+git update-branch
 ```
 
-After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+### Example with a base branch
 
-If the branch wasn't based on the repo's main branch, use `-b` to set the base branch when cloning the repo. For example:
+If the branch wasn't based on the repo's main branch, use `-b` to set the base branch when cloning the repo.
 
 ```sh
 # Clone https://github.com/canonical/postgresql-operator and
@@ -152,7 +159,7 @@ gimmegit -b 16/edge https://github.com/canonical/postgresql-operator/tree/fix-so
 # Change to the clone directory
 cd postgresql-operator/canonical-fix-something-16
 
-# Work on the branch…
+# Review the branch or work on the branch…
 
 # Merge remote changes from 16/edge
 git update-branch
@@ -197,6 +204,9 @@ git update-branch
 # this time based on canonical:2.23-maintenance instead of canonical:main
 cd ../..
 gimmegit -b 2.23-maintenance -u canonical dwilding/operator backport-docs
+
+# This does the same thing:
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance dwilding/operator backport-docs
 
 # Change to the second clone directory
 cd operator/dwilding-backport-docs
@@ -246,7 +256,11 @@ git update-branch
 gimmegit -u <upstream-owner> https://github.com/<owner>/<project>/tree/<branch>
 ```
 
-This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`. For example:
+This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
+
+After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+
+### Example
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/operator and
@@ -256,28 +270,53 @@ gimmegit -u canonical https://github.com/dwilding/operator/tree/fix-something
 # Change to the clone directory
 cd operator/dwilding-fix-something
 
-# Work on the branch…
+# Review the branch or work on the branch…
+
+# Merge changes from canonical:main
+git update-branch
 ```
 
-After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+### Example with a GitHub token
 
-If the branch wasn't based on the upstream repo's main branch, use `-b` to set the upstream base branch when cloning the repo. For example:
+If you create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and put the token in an environment variable called `GIMMEGIT_GITHUB_TOKEN`, gimmegit can automatically find upstream repos. Here's the same example with `GIMMEGIT_GITHUB_TOKEN` set:
+
+```sh
+# Clone dwilding's fork of https://github.com/canonical/operator and
+# check out the branch fix-something
+gimmegit https://github.com/dwilding/operator/tree/fix-something
+
+# Change to the clone directory
+cd operator/dwilding-fix-something
+
+# Review the branch or work on the branch…
+
+# Merge changes from canonical:main
+git update-branch
+```
+
+### Example with a base branch
+
+If the branch wasn't based on the upstream repo's main branch, use `-b` to set the upstream base branch when cloning the repo.
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/operator and
 # check out the branch backport-fix, setting the base branch to canonical:2.23-maintenance
 gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/tree/backport-fix
 
+# This does the same thing:
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix
+
+# If GIMMEGIT_GITHUB_TOKEN is set, this also does the same thing:
+# gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix
+
 # Change to the clone directory
 cd operator/dwilding-backport-fix
 
-# Work on the branch…
+# Review the branch or work on the branch…
 
 # Merge changes from canonical:2.23-maintenance
 git update-branch
 ```
-
-If you create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and put the token in an environment variable called `GIMMEGIT_GITHUB_TOKEN`, you don't need to include `-u <upstream-owner>` because gimmegit can automatically find upstream repos.
 
 ## Provide clone options
 
