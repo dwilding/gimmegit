@@ -6,8 +6,6 @@ import pytest
 
 from gimmegit import _cli
 
-import helpers_unit as helpers
-
 
 @pytest.fixture(autouse=True)
 def no_ssh(monkeypatch):
@@ -242,7 +240,6 @@ def test_upstream(base_in: str | None, base_out: str | None):
     assert _cli.get_context(args) == expected_context
 
 
-@pytest.mark.xfail(**helpers.fail_in_dev)
 @pytest.mark.parametrize(
     "base_in, base_out",
     [
@@ -273,9 +270,16 @@ def test_upstream_same_owner(base_in: str | None, base_out: str | None):
     assert _cli.get_context(args) == expected_context
 
 
-def test_base_sets_project():
+@pytest.mark.parametrize(
+    "upstream_owner",
+    [
+        "some-org",
+        "dwilding",
+    ],
+)
+def test_base_sets_project(upstream_owner: str):
     args = argparse.Namespace(
-        base_branch="https://github.com/some-org/frogtab/tree/maintenance",
+        base_branch=f"https://github.com/{upstream_owner}/frogtab/tree/maintenance",
         upstream_owner=None,
         repo="dwilding/frogtab-fork",
         new_branch=None,
@@ -288,8 +292,8 @@ def test_base_sets_project():
         create_branch=True,
         owner="dwilding",
         project="frogtab",
-        upstream_owner="some-org",
-        upstream_url="https://github.com/some-org/frogtab.git",
+        upstream_owner=upstream_owner,
+        upstream_url=f"https://github.com/{upstream_owner}/frogtab.git",
     )
     assert _cli.get_context(args) == expected_context
 

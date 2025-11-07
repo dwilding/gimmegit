@@ -229,16 +229,18 @@ def get_context(args: argparse.Namespace) -> Context:
     if args.base_branch:
         parsed_base = parse_github_branch_spec(args.base_branch)
     if parsed_base and parsed_base.owner:
-        project = parsed_base.project
-        upstream_owner = parsed_base.owner
-        upstream_url = make_github_clone_url(upstream_owner, project)
-        if args.upstream_owner and args.upstream_owner != upstream_owner:
+        if (parsed_base.owner, parsed_base.project) != (owner, project):
+            project = parsed_base.project
+            upstream_owner = parsed_base.owner
+            upstream_url = make_github_clone_url(upstream_owner, project)
+        if args.upstream_owner and args.upstream_owner != parsed_base.owner:
             logger.warning(
                 f"Ignoring upstream owner '{args.upstream_owner}' because the base branch includes an owner."
             )
     elif args.upstream_owner:
-        upstream_owner = args.upstream_owner
-        upstream_url = make_github_clone_url(upstream_owner, project)
+        if args.upstream_owner != owner:
+            upstream_owner = args.upstream_owner
+            upstream_url = make_github_clone_url(upstream_owner, project)
     elif upstream:
         project = upstream.project
         upstream_owner = upstream.owner
