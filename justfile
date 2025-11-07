@@ -8,13 +8,12 @@ lint:
   uv run ruff format --diff
   uv run ty check
 
-test: test-unit test-functional
+test-unit: (test "tests/unit")
 
-test-unit:
-  uv run pytest -vv tests/unit
+test-functional: (test "tests/functional")
 
-test-functional:
-  uv run pytest -vv tests/functional
+test args="tests/unit tests/functional":
+  uv run pytest -vv {{args}}
 
 demo:
   #!/bin/sh
