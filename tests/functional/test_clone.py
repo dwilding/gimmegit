@@ -4,7 +4,7 @@ import subprocess
 
 import pytest
 
-import helpers
+import helpers_functional as helpers
 
 
 def test_repo_branch(uv_run, test_dir):
