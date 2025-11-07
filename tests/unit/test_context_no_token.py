@@ -6,6 +6,8 @@ import pytest
 
 from gimmegit import _cli
 
+import helpers_unit as helpers
+
 
 @pytest.fixture(autouse=True)
 def no_ssh(monkeypatch):
@@ -240,7 +242,7 @@ def test_upstream(base_in: str | None, base_out: str | None):
     assert _cli.get_context(args) == expected_context
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(**helpers.fail_in_dev)
 @pytest.mark.parametrize(
     "base_in, base_out",
     [

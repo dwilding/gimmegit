@@ -1,21 +1,13 @@
 from pathlib import Path
-import os
 import subprocess
 
 import pytest
 
-import helpers
+import helpers_functional as helpers
 
 
-@pytest.fixture
-def token_env():
-    env = os.environ.copy()
-    env["GIMMEGIT_GITHUB_TOKEN"] = os.environ["GITHUB_TOKEN"]
-    return env
-
-
-@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_forked_repo_token(uv_run, test_dir, token_env):
+@pytest.mark.skipif(**helpers.no_token)
+def test_forked_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -27,7 +19,7 @@ def test_forked_repo_token(uv_run, test_dir, token_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=token_env,
+        env=helpers.token_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -50,8 +42,8 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
-@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_invalid_repo_token(uv_run, test_dir, token_env):
+@pytest.mark.skipif(**helpers.no_token)
+def test_invalid_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -62,7 +54,7 @@ def test_invalid_repo_token(uv_run, test_dir, token_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=token_env,
+        env=helpers.token_env(),
         capture_output=True,
         text=True,
     )
@@ -78,9 +70,9 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (Path(test_dir) / "invalid").exists()
 
 
-@pytest.mark.xfail
-@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_u_sets_upstream_owner(uv_run, test_dir, token_env):
+@pytest.mark.xfail(**helpers.fail_in_dev)
+@pytest.mark.skipif(**helpers.no_token)
+def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -94,7 +86,7 @@ def test_u_sets_upstream_owner(uv_run, test_dir, token_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=token_env,
+        env=helpers.token_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -112,9 +104,9 @@ Cloned repo:
     assert result.stdout == expected_stdout
 
 
-@pytest.mark.xfail
-@pytest.mark.skipif("GITHUB_TOKEN" not in os.environ, reason="GITHUB_TOKEN is not set")
-def test_b_sets_upstream_owner(uv_run, test_dir, token_env):
+@pytest.mark.xfail(**helpers.fail_in_dev)
+@pytest.mark.skipif(**helpers.no_token)
+def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -128,7 +120,7 @@ def test_b_sets_upstream_owner(uv_run, test_dir, token_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=token_env,
+        env=helpers.token_env(),
         capture_output=True,
         text=True,
         check=True,

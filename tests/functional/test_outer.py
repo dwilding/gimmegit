@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess
 
-import helpers
+import helpers_functional as helpers
 
 
 def test_working_repo_no_dashboard(uv_run, test_dir):
