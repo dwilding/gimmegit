@@ -70,7 +70,6 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (Path(test_dir) / "invalid").exists()
 
 
-@pytest.mark.xfail(**helpers.fail_in_dev)
 @pytest.mark.skipif(**helpers.no_token)
 def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
@@ -104,7 +103,6 @@ Cloned repo:
     assert result.stdout == expected_stdout
 
 
-@pytest.mark.xfail(**helpers.fail_in_dev)
 @pytest.mark.skipif(**helpers.no_token)
 def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
