@@ -51,6 +51,10 @@ class ParsedBranchSpec:
     project: str | None
 
 
+class CloneError(RuntimeError):
+    pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="A tool for cloning GitHub repos and creating branches."
@@ -144,15 +148,8 @@ def main() -> None:
             sys.exit(1)
     try:
         clone(context, cloning_args)
-    except git.GitCommandError:
-        if SSH:
-            logger.error(
-                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
-            )
-        else:
-            logger.error(
-                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
-            )
+    except CloneError as e:
+        logger.error(e)
         sys.exit(1)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
@@ -370,7 +367,19 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 def clone(context: Context, cloning_args: list[str]) -> None:
     # TODO: Handle branch errors.
     logger.info(f"Cloning {context.clone_url}")
-    cloned = git.Repo.clone_from(context.clone_url, context.clone_dir, multi_options=cloning_args)
+    try:
+        cloned = git.Repo.clone_from(
+            context.clone_url, context.clone_dir, multi_options=cloning_args
+        )
+    except git.GitCommandError:
+        if SSH:
+            raise CloneError(
+                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
+            )
+        else:
+            raise CloneError(
+                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
+            )
     origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
@@ -378,7 +387,18 @@ def clone(context: Context, cloning_args: list[str]) -> None:
     if context.upstream_url:
         logger.info(f"Setting upstream to {context.upstream_url}")
         upstream = cloned.create_remote("upstream", context.upstream_url)
-        upstream.fetch(no_tags=True)
+        try:
+            upstream.fetch(no_tags=True)
+        except git.CommandError:
+            shutil.rmtree(context.clone_dir)
+            if SSH:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
+                )
+            else:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
+                )
         base_branch_full = f"{context.upstream_owner}:{context.base_branch}"
         base_remote = "upstream"
         if context.create_branch:
