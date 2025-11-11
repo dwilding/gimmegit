@@ -44,6 +44,205 @@ Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH
     assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
 
 
+def test_invalid_branch(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "https://github.com/dwilding/jubilant/tree/invalid",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out dwilding:invalid with base dwilding:main
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The branch dwilding:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+
+
+def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-u",
+        "canonical",
+        "https://github.com/dwilding/jubilant/tree/invalid",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Setting upstream to https://github.com/canonical/jubilant.git
+Checking out dwilding:invalid with base canonical:main
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The branch dwilding:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+
+
+def test_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-b",
+        "invalid",
+        "https://github.com/dwilding/jubilant/tree/main",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out dwilding:main with base dwilding:invalid
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The base branch dwilding:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+
+
+def test_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-b",
+        "invalid",
+        "-u",
+        "canonical",
+        "https://github.com/dwilding/jubilant/tree/main",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Setting upstream to https://github.com/canonical/jubilant.git
+Checking out dwilding:main with base canonical:invalid
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The base branch canonical:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+
+
+def test_new_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-b",
+        "invalid",
+        "dwilding/jubilant",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Checking out a new branch my-feature based on dwilding:invalid
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The base branch dwilding:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+
+
+def test_new_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "-b",
+        "invalid",
+        "-u",
+        "canonical",
+        "dwilding/jubilant",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Setting upstream to https://github.com/canonical/jubilant.git
+Checking out a new branch my-feature based on canonical:invalid
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The base branch canonical:invalid does not exist.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+
+
 def test_invalid_upstream(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
