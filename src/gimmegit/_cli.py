@@ -365,7 +365,6 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
-    # TODO: Handle branch errors.
     logger.info(f"Cloning {context.clone_url}")
     try:
         cloned = git.Repo.clone_from(
@@ -406,6 +405,11 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             logger.info(
                 f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
             )
+            if context.base_branch not in upstream.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(
+                    f"The base branch {format_branch(base_branch_full)} does not exist."
+                )
             branch = cloned.create_head(context.branch, upstream.refs[context.base_branch])
             # Ensure that on first push, a remote branch is created and set as the tracking branch.
             # The remote branch will be created on origin (the default remote).
@@ -425,6 +429,14 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             logger.info(
                 f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
             )
+            if context.base_branch not in upstream.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(
+                    f"The base branch {format_branch(base_branch_full)} does not exist."
+                )
+            if context.branch not in origin.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
@@ -436,6 +448,11 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             logger.info(
                 f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
             )
+            if context.base_branch not in origin.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(
+                    f"The base branch {format_branch(base_branch_full)} does not exist."
+                )
             branch = cloned.create_head(context.branch, origin.refs[context.base_branch])
             # Ensure that on first push, a remote branch is created and set as the tracking branch.
             with cloned.config_writer() as config:
@@ -454,6 +471,14 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             logger.info(
                 f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
             )
+            if context.base_branch not in origin.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(
+                    f"The base branch {format_branch(base_branch_full)} does not exist."
+                )
+            if context.branch not in origin.refs:
+                shutil.rmtree(context.clone_dir)
+                raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
             branch = cloned.create_head(context.branch, origin.refs[context.branch])
             branch.set_tracking_branch(origin.refs[context.branch])
         branch.checkout()
