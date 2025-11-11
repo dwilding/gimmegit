@@ -1,6 +1,6 @@
 [project]
 name = "gimmegit"
-version = "0.2.0.dev0"
+version = "0.2.0"
 description = "A tool for cloning GitHub repos and creating branches."
 authors = [
     { name = "Dave Wilding", email = "tech@dpw.me" },
