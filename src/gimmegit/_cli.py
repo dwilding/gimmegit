@@ -379,10 +379,8 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             raise CloneError(
                 "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
             )
-    origin = cloned.remotes.origin
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
-    branch_full = f"{context.owner}:{context.branch}"
     if context.upstream_url:
         logger.info(f"Setting upstream to {context.upstream_url}")
         upstream = cloned.create_remote("upstream", context.upstream_url)
@@ -398,90 +396,11 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 raise CloneError(
                     "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
                 )
-        base_branch_full = f"{context.upstream_owner}:{context.base_branch}"
         base_remote = "upstream"
-        if context.create_branch:
-            # Create a local branch, starting from the base branch on upstream.
-            logger.info(
-                f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
-            )
-            if context.base_branch not in upstream.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(
-                    f"The base branch {format_branch(base_branch_full)} does not exist."
-                )
-            branch = cloned.create_head(context.branch, upstream.refs[context.base_branch])
-            # Ensure that on first push, a remote branch is created and set as the tracking branch.
-            # The remote branch will be created on origin (the default remote).
-            with cloned.config_writer() as config:
-                config.set_value(
-                    "push",
-                    "default",
-                    "current",
-                )
-                config.set_value(
-                    "push",
-                    "autoSetupRemote",
-                    "true",
-                )
-        else:
-            # Create a local branch that tracks the existing branch on origin.
-            logger.info(
-                f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
-            )
-            if context.base_branch not in upstream.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(
-                    f"The base branch {format_branch(base_branch_full)} does not exist."
-                )
-            if context.branch not in origin.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
-            branch = cloned.create_head(context.branch, origin.refs[context.branch])
-            branch.set_tracking_branch(origin.refs[context.branch])
-        branch.checkout()
+        create_local_branch(cloned, upstream, context)
     else:
-        base_branch_full = f"{context.owner}:{context.base_branch}"
         base_remote = "origin"
-        if context.create_branch:
-            # Create a local branch, starting from the base branch.
-            logger.info(
-                f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
-            )
-            if context.base_branch not in origin.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(
-                    f"The base branch {format_branch(base_branch_full)} does not exist."
-                )
-            branch = cloned.create_head(context.branch, origin.refs[context.base_branch])
-            # Ensure that on first push, a remote branch is created and set as the tracking branch.
-            with cloned.config_writer() as config:
-                config.set_value(
-                    "push",
-                    "default",
-                    "current",
-                )
-                config.set_value(
-                    "push",
-                    "autoSetupRemote",
-                    "true",
-                )
-        else:
-            # Create a local branch that tracks the existing branch.
-            logger.info(
-                f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
-            )
-            if context.base_branch not in origin.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(
-                    f"The base branch {format_branch(base_branch_full)} does not exist."
-                )
-            if context.branch not in origin.refs:
-                shutil.rmtree(context.clone_dir)
-                raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
-            branch = cloned.create_head(context.branch, origin.refs[context.branch])
-            branch.set_tracking_branch(origin.refs[context.branch])
-        branch.checkout()
+        create_local_branch(cloned, None, context)
     with cloned.config_writer() as config:
         update_branch = "!" + " && ".join(
             [
@@ -523,6 +442,54 @@ def get_default_branch(cloned: git.Repo) -> str:
         if ref.name == "origin/HEAD":
             return ref.ref.name.removeprefix("origin/")
     raise RuntimeError("Unable to identify default branch.")
+
+
+def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: Context):
+    origin = cloned.remotes.origin
+    if upstream:
+        base = upstream
+        base_owner = context.upstream_owner
+    else:
+        base = origin
+        base_owner = context.owner
+    base_branch_full = f"{base_owner}:{context.base_branch}"
+    if context.create_branch:
+        # Create a local branch, starting from the base branch.
+        logger.info(
+            f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
+        )
+        if context.base_branch not in base.refs:
+            shutil.rmtree(context.clone_dir)
+            raise CloneError(f"The base branch {format_branch(base_branch_full)} does not exist.")
+        branch = cloned.create_head(context.branch, base.refs[context.base_branch])
+        # Ensure that on first push, a remote branch is created and set as the tracking branch.
+        # The remote branch will be created on origin (the default remote).
+        with cloned.config_writer() as config:
+            config.set_value(
+                "push",
+                "default",
+                "current",
+            )
+            config.set_value(
+                "push",
+                "autoSetupRemote",
+                "true",
+            )
+    else:
+        # Create a local branch that tracks the existing branch on origin.
+        branch_full = f"{context.owner}:{context.branch}"
+        logger.info(
+            f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
+        )
+        if context.base_branch not in base.refs:
+            shutil.rmtree(context.clone_dir)
+            raise CloneError(f"The base branch {format_branch(base_branch_full)} does not exist.")
+        if context.branch not in origin.refs:
+            shutil.rmtree(context.clone_dir)
+            raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
+        branch = cloned.create_head(context.branch, origin.refs[context.branch])
+        branch.set_tracking_branch(origin.refs[context.branch])
+    branch.checkout()
 
 
 def install_pre_commit(clone_dir: Path) -> None:
