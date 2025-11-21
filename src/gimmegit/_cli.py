@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 import argparse
+import json
 import logging
 import re
 import os
@@ -42,6 +43,7 @@ class ParsedURL:
     branch: str | None
     owner: str
     project: str
+    remote_url: str
 
 
 @dataclass
@@ -49,6 +51,7 @@ class ParsedBranchSpec:
     branch: str
     owner: str | None
     project: str | None
+    remote_url: str | None
 
 
 class CloneError(RuntimeError):
@@ -71,6 +74,7 @@ def main() -> None:
         default="auto",
         help="Use SSH for git remotes",
     )
+    parser.add_argument("--parse-url", nargs="?", help="Get a JSON representation of a GitHub URL")
     parser.add_argument(
         "--no-pre-commit",
         action="store_true",
@@ -100,6 +104,17 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
+    if "--parse-url" in command_args and not args.parse_url:
+        logger.error("No GitHub URL specified. Run 'gimmegit -h' for help.")
+        sys.exit(2)
+    elif args.parse_url:
+        parsed_url = parse_github_url(args.parse_url)
+        if parsed_url:
+            logger.info(json.dumps(asdict(parsed_url)))
+            return
+        else:
+            logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
+            sys.exit(1)
     if not args.allow_outer_repo:
         working = _inspect.get_outer_repo()
         if working:
@@ -217,7 +232,7 @@ def get_context(args: argparse.Namespace) -> Context:
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
-    clone_url = make_github_clone_url(owner, project)
+    clone_url = parsed.remote_url
     # Check that the repo exists and look for an upstream repo (if a token is set).
     upstream = get_github_upstream(owner, project)
     upstream_owner = None
@@ -226,10 +241,11 @@ def get_context(args: argparse.Namespace) -> Context:
     if args.base_branch:
         parsed_base = parse_github_branch_spec(args.base_branch)
     if parsed_base and parsed_base.owner:
+        assert parsed_base.project  # For the type checker.
         if (parsed_base.owner, parsed_base.project) != (owner, project):
             project = parsed_base.project
             upstream_owner = parsed_base.owner
-            upstream_url = make_github_clone_url(upstream_owner, project)
+            upstream_url = parsed_base.remote_url
         if args.upstream_owner and args.upstream_owner != parsed_base.owner:
             logger.warning(
                 f"Ignoring upstream owner '{args.upstream_owner}' because the base branch includes an owner."
@@ -266,10 +282,8 @@ def get_context(args: argparse.Namespace) -> Context:
 
 
 def make_github_url(repo: str) -> str:
-    if repo.startswith("https://github.com/"):
+    if repo.startswith(("https://github.com/", "github.com/")):
         return repo
-    if repo.startswith("github.com/"):
-        return f"https://{repo}"
     if repo.count("/") == 1 and not repo.endswith("/"):
         return f"https://github.com/{repo}"
     if repo.endswith("/") or repo.endswith("\\"):
@@ -287,30 +301,29 @@ def make_github_url(repo: str) -> str:
 
 
 def parse_github_url(url: str) -> ParsedURL | None:
-    pattern = r"https://github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
+    pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
     # TODO: Disallow PR URLs.
     match = re.search(pattern, url)
     if match:
-        branch = match.group(4)
+        branch = match.group(5)
         if branch:
             branch = urllib.parse.unquote(branch)
         return ParsedURL(
             branch=branch,
-            owner=match.group(1),
-            project=match.group(2),
+            owner=match.group(2),
+            project=match.group(3),
+            remote_url=make_github_clone_url(match.group(2), match.group(3)),
         )
 
 
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
-    branch_url = branch_spec
-    if branch_url.startswith("github.com/"):
-        branch_url = f"https://{branch_url}"
-    parsed = parse_github_url(branch_url)
+    parsed = parse_github_url(branch_spec)
     if not parsed:
         return ParsedBranchSpec(
             branch=branch_spec,
             owner=None,
             project=None,
+            remote_url=None,
         )
     if not parsed.branch:
         raise ValueError(f"'{branch_spec}' does not specify a branch.")
@@ -318,6 +331,7 @@ def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
         branch=parsed.branch,
         owner=parsed.owner,
         project=parsed.project,
+        remote_url=parsed.remote_url,
     )
 
 

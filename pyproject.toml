@@ -20,7 +20,7 @@ gimmegit = "gimmegit._cli:main"
 dev = [
     "ruff",
     "pytest",
-    "ty",
+    "ty>=0.0.1a27",
 ]
 
 [build-system]

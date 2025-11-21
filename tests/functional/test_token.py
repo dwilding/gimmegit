@@ -6,7 +6,7 @@ import pytest
 import helpers_functional as helpers
 
 
-@pytest.mark.skipif(**helpers.no_token)
+@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
 def test_forked_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -42,7 +42,7 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
 
 
-@pytest.mark.skipif(**helpers.no_token)
+@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
 def test_invalid_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -70,7 +70,7 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (Path(test_dir) / "invalid").exists()
 
 
-@pytest.mark.skipif(**helpers.no_token)
+@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
 def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
@@ -103,7 +103,7 @@ Cloned repo:
     assert result.stdout == expected_stdout
 
 
-@pytest.mark.skipif(**helpers.no_token)
+@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
 def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
