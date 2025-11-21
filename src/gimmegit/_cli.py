@@ -268,10 +268,8 @@ def get_context(args: argparse.Namespace) -> Context:
 
 
 def make_github_url(repo: str) -> str:
-    if repo.startswith("https://github.com/"):
+    if repo.startswith(("https://github.com/", "github.com/")):
         return repo
-    if repo.startswith("github.com/"):
-        return f"https://{repo}"
     if repo.count("/") == 1 and not repo.endswith("/"):
         return f"https://github.com/{repo}"
     if repo.endswith("/") or repo.endswith("\\"):
@@ -289,26 +287,23 @@ def make_github_url(repo: str) -> str:
 
 
 def parse_github_url(url: str) -> ParsedURL | None:
-    pattern = r"https://github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
+    pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
     # TODO: Disallow PR URLs.
     match = re.search(pattern, url)
     if match:
-        branch = match.group(4)
+        branch = match.group(5)
         if branch:
             branch = urllib.parse.unquote(branch)
         return ParsedURL(
             branch=branch,
-            owner=match.group(1),
-            project=match.group(2),
-            remote_url=make_github_clone_url(match.group(1), match.group(2)),
+            owner=match.group(2),
+            project=match.group(3),
+            remote_url=make_github_clone_url(match.group(2), match.group(3)),
         )
 
 
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
-    branch_url = branch_spec
-    if branch_url.startswith("github.com/"):
-        branch_url = f"https://{branch_url}"
-    parsed = parse_github_url(branch_url)
+    parsed = parse_github_url(branch_spec)
     if not parsed:
         return ParsedBranchSpec(
             branch=branch_spec,

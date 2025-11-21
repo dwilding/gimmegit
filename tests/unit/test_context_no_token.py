@@ -105,8 +105,7 @@ def test_repo_invalid_github(repo: str):
     )
     with pytest.raises(ValueError) as exc_info:
         _cli.get_context(args)
-    url = repo if repo.startswith("https://") else f"https://{repo}"
-    assert str(exc_info.value) == f"'{url}' is not a supported GitHub URL."
+    assert str(exc_info.value) == f"'{repo}' is not a supported GitHub URL."
 
 
 @pytest.mark.parametrize(
