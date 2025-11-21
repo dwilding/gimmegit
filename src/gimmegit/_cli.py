@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 import argparse
+import json
 import logging
 import re
 import os
@@ -73,6 +74,7 @@ def main() -> None:
         default="auto",
         help="Use SSH for git remotes",
     )
+    parser.add_argument("--parse-url", help="Get a JSON representation of a GitHub URL")
     parser.add_argument(
         "--no-pre-commit",
         action="store_true",
@@ -102,6 +104,13 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
+    if args.parse_url:
+        parsed_url = parse_github_url(args.parse_url)
+        if not parsed_url:
+            logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
+            sys.exit(1)
+        logger.info(json.dumps(asdict(parsed_url)))
+        sys.exit(0)
     if not args.allow_outer_repo:
         working = _inspect.get_outer_repo()
         if working:
