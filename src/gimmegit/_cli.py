@@ -42,6 +42,7 @@ class ParsedURL:
     branch: str | None
     owner: str
     project: str
+    remote_url: str
 
 
 @dataclass
@@ -49,6 +50,7 @@ class ParsedBranchSpec:
     branch: str
     owner: str | None
     project: str | None
+    remote_url: str | None
 
 
 class CloneError(RuntimeError):
@@ -217,7 +219,7 @@ def get_context(args: argparse.Namespace) -> Context:
     owner = parsed.owner
     project = parsed.project
     branch = parsed.branch
-    clone_url = make_github_clone_url(owner, project)
+    clone_url = parsed.remote_url
     # Check that the repo exists and look for an upstream repo (if a token is set).
     upstream = get_github_upstream(owner, project)
     upstream_owner = None
@@ -229,7 +231,7 @@ def get_context(args: argparse.Namespace) -> Context:
         if (parsed_base.owner, parsed_base.project) != (owner, project):
             project = parsed_base.project
             upstream_owner = parsed_base.owner
-            upstream_url = make_github_clone_url(upstream_owner, project)
+            upstream_url = parsed_base.remote_url
         if args.upstream_owner and args.upstream_owner != parsed_base.owner:
             logger.warning(
                 f"Ignoring upstream owner '{args.upstream_owner}' because the base branch includes an owner."
@@ -298,6 +300,7 @@ def parse_github_url(url: str) -> ParsedURL | None:
             branch=branch,
             owner=match.group(1),
             project=match.group(2),
+            remote_url=make_github_clone_url(match.group(1), match.group(2)),
         )
 
 
@@ -311,6 +314,7 @@ def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
             branch=branch_spec,
             owner=None,
             project=None,
+            remote_url=None,
         )
     if not parsed.branch:
         raise ValueError(f"'{branch_spec}' does not specify a branch.")
@@ -318,6 +322,7 @@ def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
         branch=parsed.branch,
         owner=parsed.owner,
         project=parsed.project,
+        remote_url=parsed.remote_url,
     )
 
 
