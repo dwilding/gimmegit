@@ -28,6 +28,30 @@ def test_parse(uv_run, test_dir):
     }
 
 
+def test_parse_no_branch(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_color,
+        *helpers.no_ssh,
+        "--parse-url",
+        "github.com/canonical/operator",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(result.stdout) == {
+        "branch": None,
+        "owner": "canonical",
+        "project": "operator",
+        "remote_url": "https://github.com/canonical/operator.git",
+    }
+
+
 def test_parse_with_repo(uv_run, test_dir):
     command = [
         *uv_run,
