@@ -106,11 +106,12 @@ def main() -> None:
     configure_logger()
     if args.parse_url:
         parsed_url = parse_github_url(args.parse_url)
-        if not parsed_url:
+        if parsed_url:
+            logger.info(json.dumps(asdict(parsed_url)))
+            return
+        else:
             logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
             sys.exit(1)
-        logger.info(json.dumps(asdict(parsed_url)))
-        sys.exit(0)
     if not args.allow_outer_repo:
         working = _inspect.get_outer_repo()
         if working:
@@ -237,6 +238,7 @@ def get_context(args: argparse.Namespace) -> Context:
     if args.base_branch:
         parsed_base = parse_github_branch_spec(args.base_branch)
     if parsed_base and parsed_base.owner:
+        assert parsed_base.project  # For the type checker.
         if (parsed_base.owner, parsed_base.project) != (owner, project):
             project = parsed_base.project
             upstream_owner = parsed_base.owner
