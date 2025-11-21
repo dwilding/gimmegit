@@ -74,7 +74,7 @@ def main() -> None:
         default="auto",
         help="Use SSH for git remotes",
     )
-    parser.add_argument("--parse-url", help="Get a JSON representation of a GitHub URL")
+    parser.add_argument("--parse-url", nargs="?", help="Get a JSON representation of a GitHub URL")
     parser.add_argument(
         "--no-pre-commit",
         action="store_true",
@@ -104,7 +104,10 @@ def main() -> None:
     set_global_color(args.color)
     set_global_ssh(args.ssh)
     configure_logger()
-    if args.parse_url:
+    if "--parse-url" in command_args and not args.parse_url:
+        logger.error("No GitHub URL specified. Run 'gimmegit -h' for help.")
+        sys.exit(2)
+    elif args.parse_url:
         parsed_url = parse_github_url(args.parse_url)
         if parsed_url:
             logger.info(json.dumps(asdict(parsed_url)))
