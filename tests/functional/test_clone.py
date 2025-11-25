@@ -130,7 +130,7 @@ The working directory is inside a gimmegit clone.
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Warning: Ignoring 'some-project' because the working directory is inside a gimmegit clone.
+Warning: Skipped cloning because the working directory is inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 

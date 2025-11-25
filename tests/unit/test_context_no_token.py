@@ -205,7 +205,7 @@ def test_repo_branch_new_branch(caplog):
     assert len(caplog.records) == 1
     assert (
         caplog.records[0].msg
-        == "Ignoring 'fix-something' because you specified an existing branch."
+        == "Ignored 'fix-something' because you specified an existing branch."
     )
 
 
@@ -320,7 +320,7 @@ def test_base_sets_upstream_owner(caplog):
     assert len(caplog.records) == 1
     assert (
         caplog.records[0].msg
-        == "Ignoring upstream owner 'different-owner' because the base branch includes an owner."
+        == "Ignored upstream owner 'different-owner' because the base branch includes an owner."
     )
 
 
