@@ -58,6 +58,21 @@ class CloneError(RuntimeError):
     pass
 
 
+@dataclass
+class Column:
+    last: bool
+    note: str | None
+    title: str
+    url: str | None
+    value: str
+
+
+@dataclass
+class FormattedStr:
+    formatted: str
+    plain: str
+
+
 def main() -> None:
     command_args = sys.argv[1:]
     cloning_args = ["--no-tags"]
@@ -80,11 +95,12 @@ def main() -> None:
                 if not status:
                     logger.error("The working directory is inside a repo.")
                     sys.exit(1)
-                logger.warning(
-                    "Skipped cloning because the working directory is inside a gimmegit clone."
-                )
-                logger.info("The working directory is inside a gimmegit clone.")
-                return
+                else:
+                    status_usage(status)
+                    logger.warning(
+                        "Skipped cloning because the working directory is inside a gimmegit clone."
+                    )
+                    return
         primary_usage(args, cloning_args)
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
@@ -107,7 +123,8 @@ def main() -> None:
                     "The working directory is inside a repo that is not supported by gimmegit."
                 )
                 sys.exit(1)
-            logger.info("The working directory is inside a gimmegit clone.")
+            else:
+                status_usage(status)
         else:
             logger.error("No repo specified. Run 'gimmegit -h' for help.")
             sys.exit(2)
@@ -122,7 +139,7 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
         sys.exit(1)
     if context.clone_dir.exists():
         outcome = "You already have a clone:"
-        logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
+        logger.info(f"{f_bold(outcome)}\n{context.clone_dir.resolve()}")
         sys.exit(10)
     if (
         not args.allow_outer_repo
@@ -146,7 +163,7 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
     outcome = "Cloned repo:"
-    logger.info(f"{format_outcome(outcome)}\n{context.clone_dir.resolve()}")
+    logger.info(f"{f_bold(outcome)}\n{context.clone_dir.resolve()}")
 
 
 def set_global_color(color_arg: str) -> None:
@@ -157,18 +174,25 @@ def set_global_color(color_arg: str) -> None:
         COLOR = True
 
 
-def format_branch(branch: str) -> str:
+def f_link(value: str, url: str) -> str:
     if COLOR:
-        return f"\033[36m{branch}\033[0m"
+        return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
     else:
-        return branch
+        return value
 
 
-def format_outcome(outcome: str) -> str:
+def f_blue(value: str) -> str:
     if COLOR:
-        return f"\033[1m{outcome}\033[0m"
+        return f"\033[36m{value}\033[0m"
     else:
-        return outcome
+        return value
+
+
+def f_bold(value: str) -> str:
+    if COLOR:
+        return f"\033[1m{value}\033[0m"
+    else:
+        return value
 
 
 def set_global_ssh(ssh_arg: str) -> None:
@@ -447,11 +471,11 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     if context.create_branch:
         # Create a local branch, starting from the base branch.
         logger.info(
-            f"Checking out a new branch {format_branch(context.branch)} based on {format_branch(base_branch_full)}"
+            f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
         )
         if context.base_branch not in base.refs:
             shutil.rmtree(context.clone_dir)
-            raise CloneError(f"The base branch {format_branch(base_branch_full)} does not exist.")
+            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, base.refs[context.base_branch])
         # Ensure that on first push, a remote branch is created and set as the tracking branch.
         # The remote branch will be created on origin (the default remote).
@@ -469,15 +493,13 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     else:
         # Create a local branch that tracks the existing branch on origin.
         branch_full = f"{context.owner}:{context.branch}"
-        logger.info(
-            f"Checking out {format_branch(branch_full)} with base {format_branch(base_branch_full)}"
-        )
+        logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
         if context.base_branch not in base.refs:
             shutil.rmtree(context.clone_dir)
-            raise CloneError(f"The base branch {format_branch(base_branch_full)} does not exist.")
+            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
         if context.branch not in origin.refs:
             shutil.rmtree(context.clone_dir)
-            raise CloneError(f"The branch {format_branch(branch_full)} does not exist.")
+            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
     branch.checkout()
@@ -493,6 +515,84 @@ def install_pre_commit(clone_dir: Path) -> None:
         ["uvx", "pre-commit", "install"],
         cwd=clone_dir,
         check=True,
+    )
+
+
+def status_usage(status: _status.Status) -> None:
+    columns = make_columns(status)
+    logger.info("   ".join([make_title_cell(col) for col in columns]))
+    logger.info("   ".join([make_value_cell(col) for col in columns]))
+
+
+def make_columns(status: _status.Status) -> list[Column]:
+    project = Column(
+        last=False,
+        note=None,
+        title="Project",
+        url=None,
+        value=status.project,
+    )
+    base = Column(
+        last=False,
+        note=None,
+        title="Base branch",
+        url=status.base_url,
+        value=f"{status.base_owner}:{status.base_branch}",
+    )
+    review_note = None
+    if not status.has_remote:
+        review_note = "not created"
+    review = Column(
+        last=True,
+        note=review_note,
+        title="Review branch",
+        url=status.url,
+        value=f"{status.owner}:{status.branch}",
+    )
+    return [project, base, review]
+
+
+def make_title_cell(col: Column) -> str:
+    formatted_title = make_formatted_title(col)
+    if col.last:
+        return formatted_title.formatted
+    formatted_value = make_formatted_value(col)
+    width = max(len(formatted_title.plain), len(formatted_value.plain))
+    padding = " " * (width - len(formatted_title.plain))
+    return f"{formatted_title.formatted}{padding}"
+
+
+def make_value_cell(col: Column) -> str:
+    formatted_value = make_formatted_value(col)
+    if col.last:
+        return formatted_value.formatted
+    formatted_title = make_formatted_title(col)
+    width = max(len(formatted_title.plain), len(formatted_value.plain))
+    padding = " " * (width - len(formatted_value.plain))
+    return f"{formatted_value.formatted}{padding}"
+
+
+def make_formatted_title(col: Column) -> FormattedStr:
+    if col.note:
+        return FormattedStr(
+            formatted=f"{f_bold(col.title)} ({col.note})",
+            plain=f"{col.title} ({col.note})",
+        )
+    return FormattedStr(
+        formatted=f_bold(col.title),
+        plain=col.title,
+    )
+
+
+def make_formatted_value(col: Column) -> FormattedStr:
+    if col.url:
+        return FormattedStr(
+            formatted=f_link(col.value, col.url),
+            plain=col.value,
+        )
+    return FormattedStr(
+        formatted=col.value,
+        plain=col.value,
     )
 
 
