@@ -14,7 +14,7 @@ import urllib.parse
 import git
 import github
 
-from . import _args, _inspect, _remote, _status, _version
+from . import _args, _help, _inspect, _remote, _status, _version
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -87,7 +87,7 @@ def main() -> None:
                 return
         primary_usage(args, cloning_args)
     elif args_with_usage.usage == "help":
-        logger.info("help output TODO")
+        logger.info(_help.help)
     elif args_with_usage.usage == "version":
         logger.info(f"gimmegit {_version.__version__}")
     elif args_with_usage.usage == "tool":
