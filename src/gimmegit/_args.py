@@ -16,12 +16,6 @@ class ArgsWithUsage:
     usage: str
 
 
-@dataclass
-class ReducedArgs:
-    args: argparse.Namespace
-    error: str | None
-
-
 class CustomArgParser(argparse.ArgumentParser):
     def error(self, message):
         raise RuntimeError(message)
@@ -42,53 +36,32 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("--version", action="store_const")
     parser.add_argument("--parse-url", nargs="?")
     args, unknown_args = parser.parse_known_args(args_to_parse)
-    if hasattr(args, "repo"):
-        reduced = parse_as_primary(args, unknown_args)
-        return ArgsWithUsage(
-            args=reduced.args,
-            error=reduced.error,
-            usage="primary",
-        )
-    if hasattr(args, "help"):
-        reduced = parse_as_help(args, unknown_args)
-        return ArgsWithUsage(
-            args=reduced.args,
-            error=reduced.error,
-            usage="help",
-        )
-    if hasattr(args, "version"):
-        reduced = parse_as_version(args, unknown_args)
-        return ArgsWithUsage(
-            args=reduced.args,
-            error=reduced.error,
-            usage="version",
-        )
-    if hasattr(args, "parse_url"):
-        reduced = parse_as_tool(args, unknown_args)
-        return ArgsWithUsage(
-            args=reduced.args,
-            error=reduced.error,
-            usage="tool",
-        )
-    reduced = parse_as_bare(args, unknown_args)
-    return ArgsWithUsage(
-        args=reduced.args,
-        error=reduced.error,
-        usage="bare",
-    )
-
-
-def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ReducedArgs:
-    def done(error: str | None) -> ReducedArgs:
-        return ReducedArgs(args=args, error=error)
-
     # Handle --color.
+    # We use args.color to configure error logging, so make sure it has a proper value.
     if not hasattr(args, "color"):
         args.color = DEFAULT_CHOICE
     elif not args.color:
-        return done(MISSING_COLOR)
+        args.color = DEFAULT_CHOICE
+        return ArgsWithUsage(args=args, error=MISSING_COLOR, usage="")
     elif args.color not in CHOICES:
-        return done(BAD_COLOR)
+        args.color = DEFAULT_CHOICE
+        return ArgsWithUsage(args=args, error=BAD_COLOR, usage="")
+    # Handle usages of the gimmegit command.
+    if hasattr(args, "repo"):
+        return parse_as_primary(args, unknown_args)
+    if hasattr(args, "help"):
+        return parse_as_help(args, unknown_args)
+    if hasattr(args, "version"):
+        return parse_as_version(args, unknown_args)
+    if hasattr(args, "parse_url"):
+        return parse_as_tool(args, unknown_args)
+    return parse_as_bare(args, unknown_args)
+
+
+def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="primary")
+
     # Handle --ssh.
     if not hasattr(args, "ssh"):
         args.ssh = DEFAULT_CHOICE
@@ -118,80 +91,51 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> Reduc
     # Handle unknown args.
     if hasattr(args, "help"):
         unknown_args.append("-h/--help")
-        del args.help
     if hasattr(args, "version"):
         unknown_args.append("--version")
-        del args.version
     if hasattr(args, "parse_url"):
         unknown_args.append("--parse-url")
-        del args.parse_url
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
 
 
-def parse_as_help(args: argparse.Namespace, unknown_args: list[str]) -> ReducedArgs:
-    def done(error: str | None) -> ReducedArgs:
-        return ReducedArgs(args=args, error=error)
+def parse_as_help(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="help")
 
-    # Handle --color.
-    if not hasattr(args, "color"):
-        args.color = DEFAULT_CHOICE
-    elif not args.color:
-        return done(MISSING_COLOR)
-    elif args.color not in CHOICES:
-        return done(BAD_COLOR)
     # Handle unknown args.
     unknown_args = add_non_primary_unknown_args(args, unknown_args)
     if hasattr(args, "ssh"):
         unknown_args.append("--ssh")
-        del args.ssh
     if hasattr(args, "version"):
         unknown_args.append("--version")
-        del args.version
     if hasattr(args, "parse_url"):
         unknown_args.append("--parse-url")
-        del args.parse_url
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
 
 
-def parse_as_version(args: argparse.Namespace, unknown_args: list[str]) -> ReducedArgs:
-    def done(error: str | None) -> ReducedArgs:
-        return ReducedArgs(args=args, error=error)
+def parse_as_version(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="version")
 
-    # Handle --color.
-    if not hasattr(args, "color"):
-        args.color = DEFAULT_CHOICE
-    elif not args.color:
-        return done(MISSING_COLOR)
-    elif args.color not in CHOICES:
-        return done(BAD_COLOR)
     # Handle unknown args.
     unknown_args = add_non_primary_unknown_args(args, unknown_args)
     if hasattr(args, "ssh"):
         unknown_args.append("--ssh")
-        del args.ssh
     if hasattr(args, "parse_url"):
         unknown_args.append("--parse-url")
-        del args.parse_url
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
 
 
-def parse_as_tool(args: argparse.Namespace, unknown_args: list[str]) -> ReducedArgs:
-    def done(error: str | None) -> ReducedArgs:
-        return ReducedArgs(args=args, error=error)
+def parse_as_tool(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="tool")
 
-    # Handle --color.
-    if not hasattr(args, "color"):
-        args.color = DEFAULT_CHOICE
-    elif not args.color:
-        return done(MISSING_COLOR)
-    elif args.color not in CHOICES:
-        return done(BAD_COLOR)
     # Handle --ssh.
     if not hasattr(args, "ssh"):
         args.ssh = DEFAULT_CHOICE
@@ -209,22 +153,14 @@ def parse_as_tool(args: argparse.Namespace, unknown_args: list[str]) -> ReducedA
     return done(None)
 
 
-def parse_as_bare(args: argparse.Namespace, unknown_args: list[str]) -> ReducedArgs:
-    def done(error: str | None) -> ReducedArgs:
-        return ReducedArgs(args=args, error=error)
+def parse_as_bare(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="bare")
 
-    # Handle --color.
-    if not hasattr(args, "color"):
-        args.color = DEFAULT_CHOICE
-    elif not args.color:
-        return done(MISSING_COLOR)
-    elif args.color not in CHOICES:
-        return done(BAD_COLOR)
     # Handle unknown args.
     unknown_args = add_non_primary_unknown_args(args, unknown_args)
     if hasattr(args, "ssh"):
         unknown_args.append("--ssh")
-        del args.ssh
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
@@ -234,17 +170,12 @@ def add_non_primary_unknown_args(args: argparse.Namespace, unknown_args: list[st
     extended = unknown_args.copy()
     if hasattr(args, "force_project_dir"):
         extended.append("--force-project-dir")
-        del args.force_project_dir
     if hasattr(args, "allow_outer_repo"):
         extended.append("--allow-outer-repo")
-        del args.allow_outer_repo
     if hasattr(args, "no_pre_commit"):
         extended.append("--no-pre-commit")
-        del args.no_pre_commit
     if hasattr(args, "base_branch"):
         extended.append("-b/--base-branch")
-        del args.base_branch
     if hasattr(args, "upstream_owner"):
         extended.append("-u/--upstream-owner")
-        del args.upstream_owner
     return extended
