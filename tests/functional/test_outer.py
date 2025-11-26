@@ -16,7 +16,7 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
     )
     working_dir = repo_dir / "foo"
     working_dir.mkdir()
-    command = [*uv_run, "gimmegit", *helpers.no_color]
+    command = [*uv_run, "gimmegit"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -36,7 +36,7 @@ def test_working_repo_no_clone(uv_run, test_dir):
     # └── frogtab   Suppose that this dir is a repo
     #     └── foo   Try running 'gimmegit some-project'
     working_dir = Path(test_dir) / "frogtab/foo"
-    command = [*uv_run, "gimmegit", *helpers.no_color, "some-project"]
+    command = [*uv_run, "gimmegit", "some-project"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -62,7 +62,6 @@ def test_working_repo_allow(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--allow-outer-repo",
         "dwilding/frogtab",
@@ -92,7 +91,6 @@ def test_project_repo_no_clone(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "dwilding/frogtab",
         "my-feature",
@@ -123,7 +121,6 @@ def test_project_repo_allow(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--allow-outer-repo",
         "dwilding/frogtab",

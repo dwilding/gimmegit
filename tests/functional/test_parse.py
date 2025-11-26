@@ -8,7 +8,6 @@ def test_parse(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--parse-url",
         "github.com/canonical/operator/tree/2.23-maintenance",
@@ -32,7 +31,6 @@ def test_parse_no_branch(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--parse-url",
         "github.com/canonical/operator",
@@ -56,7 +54,6 @@ def test_parse_invalid(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--parse-url",
         "github.com/canonical",
