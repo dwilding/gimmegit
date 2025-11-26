@@ -14,7 +14,7 @@ import urllib.parse
 import git
 import github
 
-from . import _args, _inspect, _remote, _status
+from . import _args, _inspect, _remote, _status, _version
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -89,7 +89,7 @@ def main() -> None:
     elif args_with_usage.usage == "help":
         logger.info("help output TODO")
     elif args_with_usage.usage == "version":
-        logger.info("version output TODO")
+        logger.info(f"gimmegit {_version.__version__}")
     elif args_with_usage.usage == "tool":
         set_global_ssh(args.ssh)
         parsed_url = parse_github_url(args.parse_url)
