@@ -97,6 +97,23 @@ You already have a clone:
 
 
 def test_dashboard(uv_run, test_dir):
+    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    command = [*uv_run, "gimmegit"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_stdout = """\
+Project    Base branch      Review branch
+operator   canonical:main   canonical:2.23-maintenance
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_dashboard_no_remote(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
     command = [*uv_run, "gimmegit"]
     result = subprocess.run(
@@ -107,7 +124,8 @@ def test_dashboard(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-The working directory is inside a gimmegit clone.
+Project    Base branch      Review branch (not created)
+jubilant   canonical:main   dwilding:my-feature
 """
     assert result.stdout == expected_stdout
 
@@ -123,7 +141,8 @@ def test_dashboard_warning(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-The working directory is inside a gimmegit clone.
+Project    Base branch      Review branch (not created)
+jubilant   canonical:main   dwilding:my-feature
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\

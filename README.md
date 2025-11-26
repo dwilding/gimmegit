@@ -41,6 +41,15 @@ Cloned repo:
 /home/me/work/jubilant/dwilding-my-feature
 ```
 
+Then change to the clone directory and show status:
+
+```text
+~/work$ cd jubilant/dwilding-my-feature
+~/work/jubilant/dwilding-my-feature$ gimmegit
+Project    Base branch      Review branch (not created)
+jubilant   canonical:main   dwilding:my-feature
+```
+
 **In this README**
 
   - [Install gimmegit](#install-gimmegit)
