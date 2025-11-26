@@ -14,7 +14,7 @@ import urllib.parse
 import git
 import github
 
-from . import _inspect, _remote, _status
+from . import _args, _help, _inspect, _remote, _status, _version
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -59,85 +59,62 @@ class CloneError(RuntimeError):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="A tool for cloning GitHub repos and creating branches."
-    )
-    parser.add_argument(
-        "--color",
-        choices=["auto", "always", "never"],
-        default="auto",
-        help="Use color in the output",
-    )
-    parser.add_argument(
-        "--ssh",
-        choices=["auto", "always", "never"],
-        default="auto",
-        help="Use SSH for git remotes",
-    )
-    parser.add_argument("--parse-url", nargs="?", help="Get a JSON representation of a GitHub URL")
-    parser.add_argument(
-        "--no-pre-commit",
-        action="store_true",
-        help="Don't try to install pre-commit after cloning",
-    )
-    parser.add_argument(
-        "--allow-outer-repo",
-        action="store_true",
-        help="Clone the repo even if the clone directory will be inside another repo",
-    )
-    parser.add_argument(
-        "--force-project-dir",
-        action="store_true",
-        help="Create the project directory even if the working directory has a gimmegit clone",
-    )
-    parser.add_argument("-u", "--upstream-owner", help="Upstream owner in GitHub")
-    parser.add_argument("-b", "--base-branch", help="Base branch of the new or existing branch")
-    parser.add_argument("repo", nargs="?", help="Repo to clone from GitHub")
-    parser.add_argument("new_branch", nargs="?", help="Name of the branch to create")
     command_args = sys.argv[1:]
     cloning_args = ["--no-tags"]
     if "--" in command_args:
         sep_index = command_args.index("--")
         cloning_args.extend(command_args[sep_index + 1 :])
         command_args = command_args[:sep_index]
-    args = parser.parse_args(command_args)
+    args_with_usage = _args.parse_args(command_args)
+    args = args_with_usage.args
     set_global_color(args.color)
-    set_global_ssh(args.ssh)
     configure_logger()
-    if "--parse-url" in command_args and not args.parse_url:
-        logger.error("No GitHub URL specified. Run 'gimmegit -h' for help.")
+    if args_with_usage.error:
+        logger.error(f"{args_with_usage.error} Run 'gimmegit -h' for help.")
         sys.exit(2)
-    elif args.parse_url:
+    if args_with_usage.usage == "primary":
+        if not args.allow_outer_repo:
+            working = _inspect.get_outer_repo()
+            if working:
+                status = _status.get_status(working)
+                if not status:
+                    logger.error("The working directory is inside a repo.")
+                    sys.exit(1)
+                logger.warning(
+                    "Skipped cloning because the working directory is inside a gimmegit clone."
+                )
+                logger.info("The working directory is inside a gimmegit clone.")
+                return
+        primary_usage(args, cloning_args)
+    elif args_with_usage.usage == "help":
+        logger.info(_help.help)
+    elif args_with_usage.usage == "version":
+        logger.info(f"gimmegit {_version.__version__}")
+    elif args_with_usage.usage == "tool":
+        set_global_ssh(args.ssh)
         parsed_url = parse_github_url(args.parse_url)
         if parsed_url:
             logger.info(json.dumps(asdict(parsed_url)))
-            return
         else:
             logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
             sys.exit(1)
-    if not args.allow_outer_repo:
+    elif args_with_usage.usage == "bare":
         working = _inspect.get_outer_repo()
         if working:
             status = _status.get_status(working)
             if not status:
-                # We're inside a repo, but it wasn't created by gimmegit (> 0.0.15).
-                if args.repo:
-                    logger.error("The working directory is inside a repo.")
-                else:
-                    logger.error(
-                        "The working directory is inside a repo that is not supported by gimmegit."
-                    )
-                sys.exit(1)
-            # We're inside a clone that was created by gimmegit (> 0.0.15).
-            if args.repo:
-                logger.warning(
-                    f"Ignoring '{args.repo}' because the working directory is inside a gimmegit clone."
+                logger.error(
+                    "The working directory is inside a repo that is not supported by gimmegit."
                 )
+                sys.exit(1)
             logger.info("The working directory is inside a gimmegit clone.")
-            return
-    if not args.repo:
-        logger.error("No repo specified. Run 'gimmegit -h' for help.")
-        sys.exit(2)
+        else:
+            logger.error("No repo specified. Run 'gimmegit -h' for help.")
+            sys.exit(2)
+
+
+def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
+    set_global_ssh(args.ssh)
     try:
         context = get_context(args)
     except ValueError as e:
@@ -248,7 +225,7 @@ def get_context(args: argparse.Namespace) -> Context:
             upstream_url = parsed_base.remote_url
         if args.upstream_owner and args.upstream_owner != parsed_base.owner:
             logger.warning(
-                f"Ignoring upstream owner '{args.upstream_owner}' because the base branch includes an owner."
+                f"Ignored upstream owner '{args.upstream_owner}' because the base branch includes an owner."
             )
     elif args.upstream_owner:
         if args.upstream_owner != owner:
@@ -267,7 +244,7 @@ def get_context(args: argparse.Namespace) -> Context:
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
-        logger.warning(f"Ignoring '{args.new_branch}' because you specified an existing branch.")
+        logger.warning(f"Ignored '{args.new_branch}' because you specified an existing branch.")
     return Context(
         base_branch=parsed_base.branch if parsed_base else None,
         branch=branch,

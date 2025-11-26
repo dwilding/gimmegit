@@ -18,7 +18,6 @@ def test_invalid_repo(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "dwilding/invalid",
         "my-feature",
@@ -48,7 +47,6 @@ def test_invalid_branch(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "https://github.com/dwilding/jubilant/tree/invalid",
     ]
@@ -78,7 +76,6 @@ def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-u",
         "canonical",
@@ -111,7 +108,6 @@ def test_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-b",
         "invalid",
@@ -143,7 +139,6 @@ def test_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-b",
         "invalid",
@@ -178,7 +173,6 @@ def test_new_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-b",
         "invalid",
@@ -211,7 +205,6 @@ def test_new_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-b",
         "invalid",
@@ -247,7 +240,6 @@ def test_invalid_upstream(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-u",
         "_invalid",

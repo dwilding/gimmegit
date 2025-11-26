@@ -8,7 +8,6 @@ def test_repo_branch(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "https://github.com/canonical/operator/tree/2.23-maintenance",
     ]
@@ -40,7 +39,6 @@ def test_forked_repo(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-u",
         "canonical",
@@ -76,7 +74,6 @@ def test_existing_clone(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-u",
         "canonical",
@@ -101,7 +98,7 @@ You already have a clone:
 
 def test_dashboard(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", *helpers.no_color]
+    command = [*uv_run, "gimmegit"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -117,7 +114,7 @@ The working directory is inside a gimmegit clone.
 
 def test_dashboard_warning(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", *helpers.no_color, "some-project"]
+    command = [*uv_run, "gimmegit", "some-project"]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -130,7 +127,7 @@ The working directory is inside a gimmegit clone.
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Warning: Ignoring 'some-project' because the working directory is inside a gimmegit clone.
+Warning: Skipped cloning because the working directory is inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 
@@ -143,7 +140,6 @@ def test_in_project_dir(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "dwilding/jubilant",
         "my-feature",
@@ -176,7 +172,6 @@ def test_in_project_dir_force(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "--force-project-dir",
         "dwilding/jubilant",

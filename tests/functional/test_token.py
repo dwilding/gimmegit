@@ -11,7 +11,6 @@ def test_forked_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "jubilant",
         "my-feature",
@@ -47,7 +46,6 @@ def test_invalid_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "invalid",
     ]
@@ -75,7 +73,6 @@ def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-u",
         "dwilding",
@@ -108,7 +105,6 @@ def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        *helpers.no_color,
         *helpers.no_ssh,
         "-b",
         "https://github.com/dwilding/jubilant/tree/main",

@@ -6,7 +6,6 @@ import types
 
 from gimmegit import _version
 
-no_color = ["--color", "never"]
 no_ssh = ["--ssh", "never"]
 
 fail_in_dev = types.SimpleNamespace(
