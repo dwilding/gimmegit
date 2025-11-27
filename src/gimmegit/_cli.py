@@ -16,10 +16,16 @@ import github
 
 from . import _args, _help, _inspect, _remote, _status, _version
 
+DATA_LEVEL = 19
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(DATA_LEVEL)
 
-COLOR = False
+INFO_TO = "stdout"
+COLOR = {
+    "stdout": False,
+    "stderr": False,
+}
+
 SSH = False
 
 GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
@@ -83,10 +89,17 @@ def main() -> None:
     args_with_usage = _args.parse_args(command_args)
     args = args_with_usage.args
     set_global_color(args.color)
-    configure_logger()
+    configure_logger_error()
+    configure_logger_warning()
     if args_with_usage.error:
         logger.error(f"{args_with_usage.error} Run 'gimmegit -h' for help.")
         sys.exit(2)
+    if hasattr(args, "return_dir"):
+        set_global_info(args.return_dir)
+    configure_logger_info()
+    configure_logger_data()
+    if hasattr(args, "ssh"):
+        set_global_ssh(args.ssh)
     if args_with_usage.usage == "primary":
         if not args.allow_outer_repo:
             working = _inspect.get_outer_repo()
@@ -105,12 +118,11 @@ def main() -> None:
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
     elif args_with_usage.usage == "version":
-        logger.info(f"gimmegit {_version.__version__}")
+        logger.log(DATA_LEVEL, f"gimmegit {_version.__version__}")
     elif args_with_usage.usage == "tool":
-        set_global_ssh(args.ssh)
         parsed_url = parse_github_url(args.parse_url)
         if parsed_url:
-            logger.info(json.dumps(asdict(parsed_url)))
+            logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
         else:
             logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
             sys.exit(1)
@@ -131,15 +143,16 @@ def main() -> None:
 
 
 def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
-    set_global_ssh(args.ssh)
     try:
         context = get_context(args)
     except ValueError as e:
         logger.error(e)
         sys.exit(1)
     if context.clone_dir.exists():
-        outcome = "You already have a clone:"
-        logger.info(f"{f_bold(outcome)}\n{context.clone_dir.resolve()}")
+        logger.info(f_bold("You already have a clone:"))
+        logger.info(context.clone_dir.resolve())
+        if INFO_TO == "stderr":
+            logger.log(DATA_LEVEL, context.clone_dir.resolve())
         sys.exit(10)
     if (
         not args.allow_outer_repo
@@ -162,37 +175,47 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
         sys.exit(1)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
-    outcome = "Cloned repo:"
-    logger.info(f"{f_bold(outcome)}\n{context.clone_dir.resolve()}")
-
-
-def set_global_color(color_arg: str) -> None:
-    global COLOR
-    if color_arg == "auto":
-        COLOR = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
-    elif color_arg == "always":
-        COLOR = True
+    logger.info(f_bold("Cloned repo:"))
+    logger.info(context.clone_dir.resolve())
+    if INFO_TO == "stderr":
+        logger.log(DATA_LEVEL, context.clone_dir.resolve())
 
 
 def f_link(value: str, url: str) -> str:
-    if COLOR:
+    if COLOR[INFO_TO]:
         return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
     else:
         return value
 
 
 def f_blue(value: str) -> str:
-    if COLOR:
+    if COLOR[INFO_TO]:
         return f"\033[36m{value}\033[0m"
     else:
         return value
 
 
 def f_bold(value: str) -> str:
-    if COLOR:
+    if COLOR[INFO_TO]:
         return f"\033[1m{value}\033[0m"
     else:
         return value
+
+
+def set_global_color(color_arg: str) -> None:
+    global COLOR
+    if color_arg == "auto":
+        COLOR["stdout"] = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
+        COLOR["stderr"] = os.isatty(sys.stderr.fileno()) and not bool(os.getenv("NO_COLOR"))
+    elif color_arg == "always":
+        COLOR["stdout"] = True
+        COLOR["stderr"] = True
+
+
+def set_global_info(return_dir_arg: bool) -> None:
+    global INFO_TO
+    if return_dir_arg:
+        INFO_TO = "stderr"
 
 
 def set_global_ssh(ssh_arg: str) -> None:
@@ -204,22 +227,40 @@ def set_global_ssh(ssh_arg: str) -> None:
         SSH = True
 
 
-def configure_logger() -> None:
-    info = logging.StreamHandler(sys.stdout)
+def configure_logger_data() -> None:
+    retval = logging.StreamHandler(sys.stdout)
+    retval.setFormatter(logging.Formatter("%(message)s"))
+    retval.addFilter(lambda _: _.levelno == DATA_LEVEL)
+    logger.addHandler(retval)
+
+
+def configure_logger_info() -> None:
+    if INFO_TO == "stdout":
+        info = logging.StreamHandler(sys.stdout)
+    else:
+        info = logging.StreamHandler(sys.stderr)
     info.setFormatter(logging.Formatter("%(message)s"))
+    info.addFilter(lambda _: _.levelno == logging.INFO)
+    logger.addHandler(info)
+
+
+def configure_logger_warning() -> None:
     warning = logging.StreamHandler(sys.stderr)
-    error = logging.StreamHandler(sys.stderr)
-    if COLOR:
+    if COLOR["stderr"]:
         warning.setFormatter(logging.Formatter("\033[33mWarning:\033[0m %(message)s"))
-        error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
     else:
         warning.setFormatter(logging.Formatter("Warning: %(message)s"))
-        error.setFormatter(logging.Formatter("Error: %(message)s"))
-    info.addFilter(lambda _: _.levelno == logging.INFO)
     warning.addFilter(lambda _: _.levelno == logging.WARNING)
-    error.addFilter(lambda _: _.levelno == logging.ERROR)
-    logger.addHandler(info)
     logger.addHandler(warning)
+
+
+def configure_logger_error() -> None:
+    error = logging.StreamHandler(sys.stderr)
+    if COLOR["stderr"]:
+        error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
+    else:
+        error.setFormatter(logging.Formatter("Error: %(message)s"))
+    error.addFilter(lambda _: _.levelno == logging.ERROR)
     logger.addHandler(error)
 
 
@@ -511,11 +552,14 @@ def install_pre_commit(clone_dir: Path) -> None:
     if not shutil.which("uvx"):
         return
     logger.info("Installing pre-commit using uvx")
-    subprocess.run(
+    result = subprocess.run(
         ["uvx", "pre-commit", "install"],
         cwd=clone_dir,
+        capture_output=True,
+        text=True,
         check=True,
     )
+    logger.info(result.stdout.rstrip())
 
 
 def status_usage(status: _status.Status) -> None:

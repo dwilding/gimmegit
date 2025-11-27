@@ -281,8 +281,12 @@ def test_status_unexpected(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
+        "--return-dir",
         "--ssh",
         "always",
+        "--force-project-dir",
+        "--allow-outer-repo",
+        "--no-pre-commit",
         "-b",
         "2.23-maintenance",
         "-u",
@@ -297,6 +301,6 @@ def test_status_unexpected(uv_run, test_dir):
     assert result.returncode == 2
     assert not result.stdout
     expected_stderr = """\
-Error: Unexpected options: -b/--base-branch, -u/--upstream-owner, --ssh. Run 'gimmegit -h' for help.
+Error: Unexpected options: --return-dir, --force-project-dir, --allow-outer-repo, --no-pre-commit, -b/--base-branch, -u/--upstream-owner, --ssh. Run 'gimmegit -h' for help.
 """
     assert result.stderr == expected_stderr
