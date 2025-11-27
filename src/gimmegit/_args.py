@@ -24,6 +24,7 @@ class CustomArgParser(argparse.ArgumentParser):
 def parse_args(args_to_parse) -> ArgsWithUsage:
     parser = CustomArgParser(add_help=False, argument_default=argparse.SUPPRESS)
     parser.add_argument("--color", nargs="?")
+    parser.add_argument("--return-dir", action="store_true")
     parser.add_argument("--ssh", nargs="?")
     parser.add_argument("--force-project-dir", action="store_true")
     parser.add_argument("--allow-outer-repo", action="store_true")
@@ -62,6 +63,9 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
     def done(error: str | None) -> ArgsWithUsage:
         return ArgsWithUsage(args=args, error=error, usage="primary")
 
+    # Handle --return-dir.
+    if not hasattr(args, "return_dir"):
+        args.return_dir = False
     # Handle --ssh.
     if not hasattr(args, "ssh"):
         args.ssh = DEFAULT_CHOICE
@@ -168,6 +172,8 @@ def parse_as_bare(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWith
 
 def add_non_primary_unknown_args(args: argparse.Namespace, unknown_args: list[str]) -> list[str]:
     extended = unknown_args.copy()
+    if hasattr(args, "return_dir"):
+        extended.append("--return-dir")
     if hasattr(args, "force_project_dir"):
         extended.append("--force-project-dir")
     if hasattr(args, "allow_outer_repo"):
