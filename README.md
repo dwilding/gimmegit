@@ -27,28 +27,7 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 
 **Demo**
 
-Clone dwilding's fork of [canonical/jubilant](https://github.com/canonical/jubilant) and create a branch called `my-feature`:
-
-```text
-~/work$ gimmegit -u canonical dwilding/jubilant my-feature
-Getting repo details
-Cloning git@github.com:dwilding/jubilant.git
-Setting upstream to git@github.com:canonical/jubilant.git
-Checking out a new branch my-feature based on canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
-Cloned repo:
-/home/me/work/jubilant/dwilding-my-feature
-```
-
-Then change to the clone directory and show status:
-
-```text
-~/work$ cd jubilant/dwilding-my-feature
-~/work/jubilant/dwilding-my-feature$ gimmegit
-Project    Base branch      Review branch (not created)
-jubilant   canonical:main   dwilding:my-feature
-```
+[![Demo of gimmegit](https://asciinema.org/a/758641.svg)](https://asciinema.org/a/758641)
 
 **In this README**
 
