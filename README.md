@@ -27,7 +27,7 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 
 **Demo**
 
-[![Demo of gimmegit](https://asciinema.org/a/758641.svg)](https://asciinema.org/a/758641)
+[![Demo of gimmegit](https://asciinema.org/a/758746.svg)](https://asciinema.org/a/758746)
 
 **In this README**
 
