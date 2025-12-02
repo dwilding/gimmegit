@@ -435,6 +435,10 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             raise CloneError(
                 "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
             )
+    origin = cloned.remotes.origin
+    if context.create_branch and context.branch in origin.refs:
+        shutil.rmtree(context.clone_dir)
+        raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
     if context.upstream_url:
