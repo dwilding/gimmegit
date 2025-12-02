@@ -43,6 +43,35 @@ Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH
     assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
 
 
+def test_branch_exists(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "dwilding/jubilant",
+        "main",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The branch main already exists.
+"""
+    assert result.stderr == expected_stderr
+    assert (Path(test_dir) / "jubilant").exists()
+    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+
+
 def test_invalid_branch(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
