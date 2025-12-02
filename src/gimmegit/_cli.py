@@ -171,6 +171,7 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
     try:
         clone(context, cloning_args)
     except CloneError as e:
+        shutil.rmtree(context.clone_dir, ignore_errors=True)
         logger.error(e)
         sys.exit(1)
     if not args.no_pre_commit:
@@ -437,7 +438,6 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             )
     origin = cloned.remotes.origin
     if context.create_branch and context.branch in origin.refs:
-        shutil.rmtree(context.clone_dir)
         raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
@@ -447,7 +447,6 @@ def clone(context: Context, cloning_args: list[str]) -> None:
         try:
             upstream.fetch(no_tags=True)
         except git.CommandError:
-            shutil.rmtree(context.clone_dir)
             if SSH:
                 raise CloneError(
                     "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
@@ -519,7 +518,6 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
             f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
         )
         if context.base_branch not in base.refs:
-            shutil.rmtree(context.clone_dir)
             raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, base.refs[context.base_branch])
         # Ensure that on first push, a remote branch is created and set as the tracking branch.
@@ -540,10 +538,8 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         branch_full = f"{context.owner}:{context.branch}"
         logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
         if context.base_branch not in base.refs:
-            shutil.rmtree(context.clone_dir)
             raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
         if context.branch not in origin.refs:
-            shutil.rmtree(context.clone_dir)
             raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
