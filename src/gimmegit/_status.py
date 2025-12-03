@@ -3,7 +3,7 @@ import urllib.parse
 
 import git
 
-from . import _remote
+from . import _models
 
 
 @dataclass
@@ -33,9 +33,9 @@ def get_status(working: git.Repo) -> Status | None:
         has_remote = config.has_section(f'branch "{branch}"') and config.has_option(
             f'branch "{branch}"', "remote"
         )
-    origin = _remote.remote_from_url(working.remotes.origin.url)
+    origin = _models.remote_from_url(working.remotes.origin.url)
     if base_remote == "upstream":
-        base = _remote.remote_from_url(working.remotes.upstream.url)
+        base = _models.remote_from_url(working.remotes.upstream.url)
     elif base_remote == "origin":
         base = origin
     else:
