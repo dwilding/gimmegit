@@ -11,6 +11,8 @@ class Remote:
 
 
 def is_valid_branch_name(branch: str) -> bool:
+    # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
+    # Such references should be flagged as invalid, so we run the Git command in an empty dir.
     with tempfile.TemporaryDirectory() as empty_dir:
         command = ["git", "check-ref-format", "--branch", branch]
         result = subprocess.run(
