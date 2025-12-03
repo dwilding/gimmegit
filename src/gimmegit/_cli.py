@@ -14,7 +14,7 @@ import urllib.parse
 import git
 import github
 
-from . import _args, _help, _inspect, _models, _remote, _status, _version
+from . import _args, _help, _inspect, _models, _status, _version
 
 DATA_LEVEL = 19
 logger = logging.getLogger(__name__)
@@ -388,7 +388,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
+def get_github_upstream(owner: str, project: str) -> _models.Remote | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -400,7 +400,7 @@ def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
         )
     if repo.fork:
         parent = repo.parent
-        return _remote.Remote(
+        return _models.Remote(
             owner=parent.owner.login,
             project=parent.name,
             url=make_github_clone_url(parent.owner.login, parent.name),
