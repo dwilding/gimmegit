@@ -14,7 +14,7 @@ import urllib.parse
 import git
 import github
 
-from . import _args, _help, _inspect, _remote, _status, _version
+from . import _args, _help, _inspect, _models, _remote, _status, _version
 
 DATA_LEVEL = 19
 logger = logging.getLogger(__name__)
@@ -307,6 +307,8 @@ def get_context(args: argparse.Namespace) -> Context:
         create_branch = True
         if args.new_branch:
             branch = args.new_branch
+            if not _models.is_valid_branch_name(branch):
+                raise ValueError(f"'{branch}' is not a valid branch name.")
         else:
             branch = make_snapshot_name()
     elif args.new_branch:
@@ -362,6 +364,8 @@ def parse_github_url(url: str) -> ParsedURL | None:
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
     parsed = parse_github_url(branch_spec)
     if not parsed:
+        if not _models.is_valid_branch_name(branch_spec):
+            raise ValueError(f"'{branch_spec}' is not a valid branch name.")
         return ParsedBranchSpec(
             branch=branch_spec,
             owner=None,

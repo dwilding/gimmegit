@@ -136,6 +136,18 @@ def test_new_branch(branch: str, in_slug: str):
     assert _cli.get_context(args) == expected_context
 
 
+def test_new_branch_invalid():
+    args = argparse.Namespace(
+        base_branch=None,
+        upstream_owner=None,
+        repo="dwilding/frogtab",
+        new_branch="fix:something",
+    )
+    with pytest.raises(ValueError) as exc_info:
+        _cli.get_context(args)
+    assert str(exc_info.value) == "'fix:something' is not a valid branch name."
+
+
 @pytest.mark.parametrize(
     "repo, branch, in_slug",
     [
@@ -207,6 +219,39 @@ def test_repo_branch_new_branch(caplog):
         caplog.records[0].msg
         == "Ignored 'fix-something' because you specified an existing branch."
     )
+
+
+def test_base():
+    args = argparse.Namespace(
+        base_branch="fix-something",
+        upstream_owner=None,
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    expected_context = _cli.Context(
+        base_branch="fix-something",
+        branch="snapshot0801",
+        clone_url="https://github.com/dwilding/frogtab.git",
+        clone_dir=Path("frogtab/dwilding-snapshot0801"),
+        create_branch=True,
+        owner="dwilding",
+        project="frogtab",
+        upstream_owner=None,
+        upstream_url=None,
+    )
+    assert _cli.get_context(args) == expected_context
+
+
+def test_base_invalid():
+    args = argparse.Namespace(
+        base_branch="fix:something",
+        upstream_owner=None,
+        repo="dwilding/frogtab",
+        new_branch=None,
+    )
+    with pytest.raises(ValueError) as exc_info:
+        _cli.get_context(args)
+    assert str(exc_info.value) == "'fix:something' is not a valid branch name."
 
 
 @pytest.mark.parametrize(
