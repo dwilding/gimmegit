@@ -11,11 +11,11 @@ class Remote:
 
 
 def is_valid_branch_name(branch: str) -> bool:
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory() as empty_dir:
         command = ["git", "check-ref-format", "--branch", branch]
         result = subprocess.run(
             command,
-            cwd=tmpdir,
+            cwd=empty_dir,
             capture_output=True,
             text=True,
         )
