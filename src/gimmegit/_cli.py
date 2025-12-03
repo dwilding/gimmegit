@@ -171,7 +171,8 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
     try:
         clone(context, cloning_args)
     except CloneError as e:
-        shutil.rmtree(context.clone_dir, ignore_errors=True)
+        if context.clone_dir.exists():
+            shutil.rmtree(context.clone_dir, ignore_errors=True)
         logger.error(e)
         sys.exit(1)
     if not args.no_pre_commit:
