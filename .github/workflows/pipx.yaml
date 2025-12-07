@@ -16,7 +16,9 @@ jobs:
           sudo apt-get install -y pipx
       - name: Run gimmegit
         run: |
+          set -e
           mkdir -p demo
           cd demo
           result=$(pipx run --spec .. gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)
-          grep --quiet --fixed-strings "Cloned repo" <<< "$result"
+          grep --quiet --fixed-strings 'Cloned repo:' <<< "$result"
+          grep --quiet --fixed-strings '/jubilant/dwilding-my-feature' <<< "$result"
