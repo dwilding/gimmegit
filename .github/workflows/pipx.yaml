@@ -15,4 +15,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pipx
       - name: Run gimmegit
-        run: pipx run --spec . gimmegit --version
+        run: |
+          mkdir -p demo
+          cd demo
+          pipx run --spec .. gimmegit --version
