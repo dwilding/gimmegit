@@ -554,18 +554,26 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
 def install_pre_commit(clone_dir: Path) -> None:
     if not (clone_dir / ".pre-commit-config.yaml").exists():
         return
-    if not shutil.which("uvx"):
-        return
-    logger.info("Installing pre-commit using uvx")
-    result = subprocess.run(
-        ["uvx", "pre-commit", "install"],
-        cwd=clone_dir,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    logger.info(result.stdout.rstrip())
-
+    if shutil.which("uvx"):
+        logger.info("Installing pre-commit using uvx")
+        result = subprocess.run(
+            ["uvx", "pre-commit", "install"],
+            cwd=clone_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        logger.info(result.stdout.rstrip())
+    elif shutil.which("pipx"):
+        logger.info("Installing pre-commit using pipx")
+        result = subprocess.run(
+            ["pipx", "run", "pre-commit", "install"],
+            cwd=clone_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        logger.info(result.stdout.rstrip())
 
 def status_usage(status: _status.Status) -> None:
     columns = make_columns(status)
