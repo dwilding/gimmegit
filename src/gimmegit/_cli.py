@@ -575,6 +575,7 @@ def install_pre_commit(clone_dir: Path) -> None:
         )
         logger.info(result.stdout.rstrip())
 
+
 def status_usage(status: _status.Status) -> None:
     columns = make_columns(status)
     logger.info("   ".join([make_title_cell(col) for col in columns]))
