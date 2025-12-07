@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Install pipx
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pipx
       - name: Run gimmegit
         run: |
           set -ex
