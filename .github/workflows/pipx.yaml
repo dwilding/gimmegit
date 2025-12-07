@@ -20,6 +20,8 @@ jobs:
           mkdir -p demo
           cd demo
           result="$(pipx run --spec "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
+          grep --quiet -F 'Installing pre-commit using pipx' <<< "$result"
+          grep --quiet -F 'pre-commit installed at .git/hooks/pre-commit' <<< "$result"
           grep --quiet -F 'Cloned repo:' <<< "$result"
           grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
           cd jubilant/dwilding-my-feature
