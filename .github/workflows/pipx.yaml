@@ -18,4 +18,5 @@ jobs:
         run: |
           mkdir -p demo
           cd demo
-          pipx run --spec .. gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature
+          result=$(pipx run --spec .. gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)
+          grep --quiet --fixed-strings "Cloned repo" <<< "$result"
