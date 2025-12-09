@@ -1,0 +1,28 @@
+name: Run using uvx
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  uvx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run gimmegit
+        run: |
+          set -ex
+          package_dir="$PWD"
+          mkdir -p demo
+          cd demo
+          result="$(uvx --from "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
+          grep --quiet -F 'Installing pre-commit hook' <<< "$result"
+          grep --quiet -F 'Cloned repo:' <<< "$result"
+          grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
+          cd jubilant/dwilding-my-feature
+          status="$(uvx --from "$package_dir" gimmegit)"
+          grep --quiet -F 'jubilant   canonical:main   dwilding:my-feature' <<< "$status"
