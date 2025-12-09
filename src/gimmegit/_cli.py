@@ -556,7 +556,7 @@ def install_pre_commit(clone_dir: Path) -> None:
         return
     # The pre-commit package should have been installed in gimmegit's venv.
     # AFAIK, pre-commit doesn't expose a stable Python API, so we'll run the executable.
-    logger.info("Installing pre-commit hooks")
+    logger.info("Installing pre-commit hook")
     if not shutil.which("pre-commit"):
         raise RuntimeError("Unable to find pre-commit executable.")
     subprocess.run(
