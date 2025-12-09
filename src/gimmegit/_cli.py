@@ -554,26 +554,17 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
 def install_pre_commit(clone_dir: Path) -> None:
     if not (clone_dir / ".pre-commit-config.yaml").exists():
         return
-    if shutil.which("uvx"):
-        logger.info("Installing pre-commit using uvx")
-        result = subprocess.run(
-            ["uvx", "pre-commit", "install"],
-            cwd=clone_dir,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        logger.info(result.stdout.rstrip())
-    elif shutil.which("pipx"):
-        logger.info("Installing pre-commit using pipx")
-        result = subprocess.run(
-            ["pipx", "run", "pre-commit", "install"],
-            cwd=clone_dir,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        logger.info(result.stdout.rstrip())
+    # The pre-commit package should have been installed in gimmegit's venv.
+    # AFAIK, pre-commit doesn't expose a stable Python API, so we'll run the executable.
+    logger.info("Installing pre-commit hooks")
+    if not shutil.which("pre-commit"):
+        raise RuntimeError("Unable to find pre-commit executable.")
+    subprocess.run(
+        ["pre-commit", "install"],
+        cwd=clone_dir,
+        capture_output=True,
+        check=True,
+    )
 
 
 def status_usage(status: _status.Status) -> None:
