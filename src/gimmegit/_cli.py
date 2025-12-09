@@ -562,7 +562,8 @@ def install_pre_commit(clone_dir: Path) -> None:
     subprocess.run(
         ["pre-commit", "install"],
         cwd=clone_dir,
-        capture_output=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         check=True,
     )
 
