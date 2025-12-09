@@ -29,8 +29,7 @@ Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Setting upstream to https://github.com/canonical/jubilant.git
 Checking out a new branch my-feature based on canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -92,8 +91,7 @@ def test_u_sets_upstream_owner(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Checking out a new branch my-feature-2 based on dwilding:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -124,8 +122,7 @@ def test_b_sets_upstream_owner(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Checking out a new branch my-feature-3 based on dwilding:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """

@@ -23,8 +23,7 @@ def test_repo_branch(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/canonical/operator.git
 Checking out canonical:2.23-maintenance with base canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -58,8 +57,7 @@ Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Setting upstream to https://github.com/canonical/jubilant.git
 Checking out a new branch my-feature based on canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -208,8 +206,7 @@ def test_in_project_dir_force(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Checking out a new branch my-feature based on dwilding:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """

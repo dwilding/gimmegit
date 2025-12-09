@@ -1,4 +1,4 @@
-name: Run using pipx
+name: Run using uvx
 
 on:
   pull_request:
@@ -9,20 +9,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  pipx:
+  uvx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
       - name: Run gimmegit
         run: |
           set -ex
           package_dir="$PWD"
           mkdir -p demo
           cd demo
-          result="$(pipx run --spec "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
+          result="$(uvx --from "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
           grep --quiet -F 'Installing pre-commit hook' <<< "$result"
           grep --quiet -F 'Cloned repo:' <<< "$result"
           grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
           cd jubilant/dwilding-my-feature
-          status="$(pipx run --spec "$package_dir" gimmegit)"
+          status="$(uvx --from "$package_dir" gimmegit)"
           grep --quiet -F 'jubilant   canonical:main   dwilding:my-feature' <<< "$status"
