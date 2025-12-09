@@ -11,10 +11,10 @@ on:
 jobs:
   uvx:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
       - name: Run gimmegit
         run: |
           set -ex
