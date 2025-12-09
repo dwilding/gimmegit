@@ -12,6 +12,7 @@ class Status:
     base_owner: str
     base_url: str
     branch: str
+    compare_url: str
     has_remote: bool
     owner: str
     project: str
@@ -40,11 +41,15 @@ def get_status(working: git.Repo) -> Status | None:
         base = origin
     else:
         raise RuntimeError(f"Unexpected base remote '{base_remote}'.")
+    compare_target = make_compare_target(base.owner, base.project, base_branch)
+    compare_source = make_compare_source(origin.owner, origin.project, branch)
+    compare_url = f"https://github.com/{compare_target}...{compare_source}?expand=1"
     return Status(
         base_branch=base_branch,
         base_owner=base.owner,
         base_url=make_branch_url(base.owner, base.project, base_branch),
         branch=branch,
+        compare_url=compare_url,
         has_remote=has_remote,
         owner=origin.owner,
         project=base.project,
@@ -55,3 +60,13 @@ def get_status(working: git.Repo) -> Status | None:
 def make_branch_url(owner: str, project: str, branch: str) -> str:
     branch = urllib.parse.quote(branch)
     return f"https://github.com/{owner}/{project}/tree/{branch}"
+
+
+def make_compare_target(owner: str, project: str, branch: str) -> str:
+    branch = urllib.parse.quote(branch)
+    return f"{owner}/{project}/compare/{branch}"
+
+
+def make_compare_source(owner: str, project: str, branch: str) -> str:
+    branch = urllib.parse.quote(branch)
+    return f"{owner}:{project}:{branch}"
