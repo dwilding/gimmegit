@@ -82,7 +82,7 @@ def test_status_base_invalid(test_dir):
     set_config(test_dir, "gimmegit.branch", "my-feature")
     with pytest.raises(RuntimeError) as exc_info:
         print(_status.get_status(git.Repo(test_dir)))
-    assert str(exc_info.value) == "Unexpected base remote 'invalid'"
+    assert str(exc_info.value) == "Unexpected base remote 'invalid'."
 
 
 def test_status_not_gimmegit(test_dir):

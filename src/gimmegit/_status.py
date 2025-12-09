@@ -39,7 +39,7 @@ def get_status(working: git.Repo) -> Status | None:
     elif base_remote == "origin":
         base = origin
     else:
-        raise RuntimeError(f"Unexpected base remote '{base_remote}'")
+        raise RuntimeError(f"Unexpected base remote '{base_remote}'.")
     return Status(
         base_branch=base_branch,
         base_owner=base.owner,
