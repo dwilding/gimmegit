@@ -67,6 +67,6 @@ def make_compare_target(owner: str, project: str, branch: str) -> str:
     return f"{owner}/{project}/compare/{branch}"
 
 
-def make_compare_source(owner: str, project: str, branch: str):
+def make_compare_source(owner: str, project: str, branch: str) -> str:
     branch = urllib.parse.quote(branch)
     return f"{owner}:{project}:{branch}"
