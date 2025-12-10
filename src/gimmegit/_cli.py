@@ -9,12 +9,13 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.parse
 
 import git
 import github
 
-from . import _args, _help, _inspect, _models, _status, _version
+from . import _args, _help, _inspect, _remote, _status, _version
 
 DATA_LEVEL = 19
 logger = logging.getLogger(__name__)
@@ -60,10 +61,6 @@ class ParsedBranchSpec:
     remote_url: str | None
 
 
-class CloneError(RuntimeError):
-    pass
-
-
 @dataclass
 class Column:
     last: bool
@@ -77,6 +74,10 @@ class Column:
 class FormattedStr:
     formatted: str
     plain: str
+
+
+class CloneError(RuntimeError):
+    pass
 
 
 def main() -> None:
@@ -140,6 +141,20 @@ def main() -> None:
         else:
             logger.error("No repo specified. Run 'gimmegit -h' for help.")
             sys.exit(2)
+
+
+def is_valid_branch_name(branch: str) -> bool:
+    # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
+    # Such references should be flagged as invalid, so we run the Git command in an empty dir.
+    with tempfile.TemporaryDirectory() as empty_dir:
+        command = ["git", "check-ref-format", "--branch", branch]
+        result = subprocess.run(
+            command,
+            cwd=empty_dir,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
 
 
 def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
@@ -308,7 +323,7 @@ def get_context(args: argparse.Namespace) -> Context:
         create_branch = True
         if args.new_branch:
             branch = args.new_branch
-            if not _models.is_valid_branch_name(branch):
+            if not is_valid_branch_name(branch):
                 raise ValueError(f"'{branch}' is not a valid branch name.")
         else:
             branch = make_snapshot_name()
@@ -365,7 +380,7 @@ def parse_github_url(url: str) -> ParsedURL | None:
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
     parsed = parse_github_url(branch_spec)
     if not parsed:
-        if not _models.is_valid_branch_name(branch_spec):
+        if not is_valid_branch_name(branch_spec):
             raise ValueError(f"'{branch_spec}' is not a valid branch name.")
         return ParsedBranchSpec(
             branch=branch_spec,
@@ -389,7 +404,7 @@ def get_github_login() -> str:
     return user.login
 
 
-def get_github_upstream(owner: str, project: str) -> _models.Remote | None:
+def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
     if not GITHUB_TOKEN:
         return None
     api = github.Github(GITHUB_TOKEN)
@@ -401,7 +416,7 @@ def get_github_upstream(owner: str, project: str) -> _models.Remote | None:
         )
     if repo.fork:
         parent = repo.parent
-        return _models.Remote(
+        return _remote.Remote(
             owner=parent.owner.login,
             project=parent.name,
             url=make_github_clone_url(parent.owner.login, parent.name),
