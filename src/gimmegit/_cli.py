@@ -315,7 +315,7 @@ def f_bold(value: str) -> str:
 
 def f_link(value: str, url: str) -> str:
     if COLOR[INFO_TO]:
-        return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
+        return f"\033]8;;{url}\a{value}\033]8;;\a"
     else:
         return value
 
@@ -492,7 +492,7 @@ def make_formatted_value(col: Column) -> FormattedStr:
     formatted = col.value
     plain = col.value
     if col.url:
-        formatted = f_link(col.value, col.url)
+        formatted = f_link(f_blue(col.value), col.url)
     if col.note:
         if col.note_url:
             formatted = f"{formatted} ({f_link(col.note, col.note_url)})"
