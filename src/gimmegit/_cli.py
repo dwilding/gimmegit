@@ -496,7 +496,7 @@ def make_formatted_value(col: Column) -> FormattedStr:
     if col.note:
         if col.note_url:
             formatted = f"{formatted} ({f_link(col.note, col.note_url)})"
-            # Don't change plain. The note is only useful if we can show a link.
+            # Don't change 'plain'. The note is only useful if we can show a link.
         else:
             formatted = f"{formatted} ({col.note})"
             plain = f"{plain} ({col.note})"
