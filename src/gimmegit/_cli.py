@@ -520,33 +520,21 @@ def make_snapshot_name() -> str:
 def make_title_cell(col: Column) -> str:
     formatted_title = make_formatted_title(col)
     if col.last:
-        if COLOR[INFO_TO]:
-            return formatted_title.formatted
-        else:
-            return formatted_title.plain
+        return formatted_title.formatted
     formatted_value = make_formatted_value(col)
     width = max(len(formatted_title.plain), len(formatted_value.plain))
     padding = " " * (width - len(formatted_title.plain))
-    if COLOR[INFO_TO]:
-        return f"{formatted_title.formatted}{padding}"
-    else:
-        return f"{formatted_title.plain}{padding}"
+    return f"{formatted_title.formatted}{padding}"
 
 
 def make_value_cell(col: Column) -> str:
     formatted_value = make_formatted_value(col)
     if col.last:
-        if COLOR[INFO_TO]:
-            return formatted_value.formatted
-        else:
-            return formatted_value.plain
+        return formatted_value.formatted
     formatted_title = make_formatted_title(col)
     width = max(len(formatted_title.plain), len(formatted_value.plain))
     padding = " " * (width - len(formatted_value.plain))
-    if COLOR[INFO_TO]:
-        return f"{formatted_value.formatted}{padding}"
-    else:
-        return f"{formatted_value.plain}{padding}"
+    return f"{formatted_value.formatted}{padding}"
 
 
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
