@@ -36,6 +36,7 @@ GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 class Column:
     last: bool
     note: str | None
+    note_url: str | None
     title: str
     url: str | None
     value: str
@@ -450,6 +451,7 @@ def make_columns(status: _status.Status) -> list[Column]:
     project = Column(
         last=False,
         note=None,
+        note_url=None,
         title="Project",
         url=None,
         value=status.project,
@@ -457,16 +459,21 @@ def make_columns(status: _status.Status) -> list[Column]:
     base = Column(
         last=False,
         note=None,
+        note_url=None,
         title="Base branch",
         url=status.base_url,
         value=f"{status.base_owner}:{status.base_branch}",
     )
-    review_note = None
-    if not status.has_remote:
+    if status.has_remote:
+        review_note = "compare"
+        review_note_url = status.compare_url
+    else:
         review_note = "not created"
+        review_note_url = None
     review = Column(
         last=True,
         note=review_note,
+        note_url=review_note_url,
         title="Review branch",
         url=status.url,
         value=f"{status.owner}:{status.branch}",
@@ -487,8 +494,12 @@ def make_formatted_value(col: Column) -> FormattedStr:
     if col.url:
         formatted = f_link(col.value, col.url)
     if col.note:
-        formatted = f"{formatted} ({col.note})"
-        plain = f"{plain} ({col.note})"
+        if col.note_url:
+            formatted = f"{formatted} ({f_link(col.note, col.note_url)})"
+            # Don't change plain. The note is only useful if we can show a link.
+        else:
+            formatted = f"{formatted} ({col.note})"
+            plain = f"{plain} ({col.note})"
     return FormattedStr(
         formatted=formatted,
         plain=plain,
@@ -530,21 +541,33 @@ def make_snapshot_name() -> str:
 def make_title_cell(col: Column) -> str:
     formatted_title = make_formatted_title(col)
     if col.last:
-        return formatted_title.formatted
+        if COLOR[INFO_TO]:
+            return formatted_title.formatted
+        else:
+            return formatted_title.plain
     formatted_value = make_formatted_value(col)
     width = max(len(formatted_title.plain), len(formatted_value.plain))
     padding = " " * (width - len(formatted_title.plain))
-    return f"{formatted_title.formatted}{padding}"
+    if COLOR[INFO_TO]:
+        return f"{formatted_title.formatted}{padding}"
+    else:
+        return f"{formatted_title.plain}{padding}"
 
 
 def make_value_cell(col: Column) -> str:
     formatted_value = make_formatted_value(col)
     if col.last:
-        return formatted_value.formatted
+        if COLOR[INFO_TO]:
+            return formatted_value.formatted
+        else:
+            return formatted_value.plain
     formatted_title = make_formatted_title(col)
     width = max(len(formatted_title.plain), len(formatted_value.plain))
     padding = " " * (width - len(formatted_value.plain))
-    return f"{formatted_value.formatted}{padding}"
+    if COLOR[INFO_TO]:
+        return f"{formatted_value.formatted}{padding}"
+    else:
+        return f"{formatted_value.plain}{padding}"
 
 
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
