@@ -475,14 +475,16 @@ def make_formatted_title(col: Column) -> FormattedStr:
 
 
 def make_formatted_value(col: Column) -> FormattedStr:
-    formatted = col.value
-    plain = col.value
     if col.url:
-        formatted = f_link(col.value, col.url)
-    return FormattedStr(
-        formatted=formatted,
-        plain=plain,
-    )
+        return FormattedStr(
+            formatted=f_link(col.value, col.url),
+            plain=col.value,
+        )
+    else:
+        return FormattedStr(
+            formatted=col.value,
+            plain=col.value,
+        )
 
 
 def make_github_clone_url(owner: str, project: str) -> str:
