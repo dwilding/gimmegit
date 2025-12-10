@@ -35,8 +35,6 @@ GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 @dataclass
 class Column:
     last: bool
-    note: str | None
-    note_url: str | None
     title: str
     url: str | None
     value: str
@@ -450,30 +448,18 @@ def make_clone_path(owner: str, project: str, branch: str) -> Path:
 def make_columns(status: _status.Status) -> list[Column]:
     project = Column(
         last=False,
-        note=None,
-        note_url=None,
         title="Project",
         url=None,
         value=status.project,
     )
     base = Column(
         last=False,
-        note=None,
-        note_url=None,
         title="Base branch",
         url=status.base_url,
         value=f"{status.base_owner}:{status.base_branch}",
     )
-    if status.has_remote:
-        review_note = "compare"
-        review_note_url = status.compare_url
-    else:
-        review_note = "not created"
-        review_note_url = None
     review = Column(
         last=True,
-        note=review_note,
-        note_url=review_note_url,
         title="Review branch",
         url=status.url,
         value=f"{status.owner}:{status.branch}",
@@ -493,13 +479,6 @@ def make_formatted_value(col: Column) -> FormattedStr:
     plain = col.value
     if col.url:
         formatted = f_link(f_blue(col.value), col.url)
-    if col.note:
-        if col.note_url:
-            formatted = f"{formatted} ({f_link(col.note, col.note_url)})"
-            # Don't change 'plain'. The note is only useful if we can show a link.
-        else:
-            formatted = f"{formatted} ({col.note})"
-            plain = f"{plain} ({col.note})"
     return FormattedStr(
         formatted=formatted,
         plain=plain,
@@ -676,7 +655,10 @@ def set_global_ssh(ssh_arg: str) -> None:
 def status_usage(status: _status.Status) -> None:
     columns = make_columns(status)
     logger.info("   ".join([make_title_cell(col) for col in columns]))
-    logger.info("   ".join([make_value_cell(col) for col in columns]))
+    values = "   ".join([make_value_cell(col) for col in columns])
+    if not status.has_remote:
+        values = f"{values} (not created)"
+    logger.info(values)
 
 
 if __name__ == "__main__":
