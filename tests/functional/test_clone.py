@@ -122,8 +122,8 @@ def test_dashboard_no_remote(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-Project    Base branch      Review branch (not created)
-jubilant   canonical:main   dwilding:my-feature
+Project    Base branch      Review branch
+jubilant   canonical:main   dwilding:my-feature (not created)
 """
     assert result.stdout == expected_stdout
 
@@ -139,8 +139,8 @@ def test_dashboard_warning(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-Project    Base branch      Review branch (not created)
-jubilant   canonical:main   dwilding:my-feature
+Project    Base branch      Review branch
+jubilant   canonical:main   dwilding:my-feature (not created)
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
