@@ -1,18 +1,16 @@
-These instructions are for the Copilot code reviewer.
+# Instructions for Copilot code reviewer
 
-After finishing your review, when writing your summary comment:
-- Don't include headings
-- Don't summarize the changes (the user knows what they changed)
-- Don't include a per-file summary of what changed (ditto)
+## Structure of Python files in `src/gimmegit`
 
-The user expects your summary comment to be concise and free of noise. If you have no general opinions about the changes, don't say anything.
+Each file must be organized in this order:
 
-Here's the standard format you should follow:
+1. Imports
+2. Variable definitions
+3. Dataclasses, in alphabetical order
+4. Other classes, in alphabetical order
+5. Functions, in alphabetical order
 
-```
-Copilot reviewed the pull request and generated <count> comments.
+Exceptions for `_cli.py`:
 
-[General opinions about the changes, if any]
-```
-
-For the general opinions, teach the user what they're doing well or not well. Statements that begin "I like that you ...", "Try to avoid ...", and "Have you considered ... ?" would be really appreciated by the user.
+- The `main()` function must be first in the list of functions
+- The `if __name__ == "__main__"` block must be at the end of the file
