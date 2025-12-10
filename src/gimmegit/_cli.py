@@ -475,11 +475,6 @@ def make_columns(status: _status.Status) -> list[Column]:
 
 
 def make_formatted_title(col: Column) -> FormattedStr:
-    if col.note:
-        return FormattedStr(
-            formatted=f"{f_bold(col.title)} ({col.note})",
-            plain=f"{col.title} ({col.note})",
-        )
     return FormattedStr(
         formatted=f_bold(col.title),
         plain=col.title,
@@ -487,14 +482,16 @@ def make_formatted_title(col: Column) -> FormattedStr:
 
 
 def make_formatted_value(col: Column) -> FormattedStr:
+    formatted = col.value
+    plain = col.value
     if col.url:
-        return FormattedStr(
-            formatted=f_link(col.value, col.url),
-            plain=col.value,
-        )
+        formatted = f_link(col.value, col.url)
+    if col.note:
+        formatted = f"{formatted} ({col.note})"
+        plain = f"{plain} ({col.note})"
     return FormattedStr(
-        formatted=col.value,
-        plain=col.value,
+        formatted=formatted,
+        plain=plain,
     )
 
 
