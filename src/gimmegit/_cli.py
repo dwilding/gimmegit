@@ -143,105 +143,79 @@ def main() -> None:
             sys.exit(2)
 
 
-def is_valid_branch_name(branch: str) -> bool:
-    # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
-    # Such references should be flagged as invalid, so we run the Git command in an empty dir.
-    with tempfile.TemporaryDirectory() as empty_dir:
-        command = ["git", "check-ref-format", "--branch", branch]
-        result = subprocess.run(
-            command,
-            cwd=empty_dir,
-            capture_output=True,
-            text=True,
+def clone(context: Context, cloning_args: list[str]) -> None:
+    logger.info(f"Cloning {context.clone_url}")
+    try:
+        cloned = git.Repo.clone_from(
+            context.clone_url, context.clone_dir, multi_options=cloning_args
         )
-        return result.returncode == 0
-
-
-def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
-    try:
-        context = get_context(args)
-    except ValueError as e:
-        logger.error(e)
-        sys.exit(1)
-    if context.clone_dir.exists():
-        logger.info(f_bold("You already have a clone:"))
-        logger.info(context.clone_dir.resolve())
-        if INFO_TO == "stderr":
-            logger.log(DATA_LEVEL, context.clone_dir.resolve())
-        sys.exit(10)
-    if (
-        not args.allow_outer_repo
-        and context.clone_dir.parent.exists()
-        and _inspect.get_repo(context.clone_dir.parent)
-    ):
-        logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
-        sys.exit(1)
-    if not args.force_project_dir and not context.clone_dir.parent.exists():
-        candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
-        if candidate and _status.get_status(candidate):
-            logger.error(
-                "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
+    except git.GitCommandError:
+        if SSH:
+            raise CloneError(
+                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
             )
-            sys.exit(1)
-    try:
-        clone(context, cloning_args)
-    except CloneError as e:
-        if context.clone_dir.exists():
-            shutil.rmtree(context.clone_dir, ignore_errors=True)
-        logger.error(e)
-        sys.exit(1)
-    if not args.no_pre_commit:
-        install_pre_commit(context.clone_dir)
-    logger.info(f_bold("Cloned repo:"))
-    logger.info(context.clone_dir.resolve())
-    if INFO_TO == "stderr":
-        logger.log(DATA_LEVEL, context.clone_dir.resolve())
-
-
-def f_link(value: str, url: str) -> str:
-    if COLOR[INFO_TO]:
-        return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
+        else:
+            raise CloneError(
+                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
+            )
+    origin = cloned.remotes.origin
+    if context.create_branch and context.branch in origin.refs:
+        raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
+    if not context.base_branch:
+        context.base_branch = get_default_branch(cloned)
+    if context.upstream_url:
+        logger.info(f"Setting upstream to {context.upstream_url}")
+        upstream = cloned.create_remote("upstream", context.upstream_url)
+        try:
+            upstream.fetch(no_tags=True)
+        except git.CommandError:
+            if SSH:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
+                )
+            else:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
+                )
+        base_remote = "upstream"
+        create_local_branch(cloned, upstream, context)
     else:
-        return value
-
-
-def f_blue(value: str) -> str:
-    if COLOR[INFO_TO]:
-        return f"\033[36m{value}\033[0m"
-    else:
-        return value
-
-
-def f_bold(value: str) -> str:
-    if COLOR[INFO_TO]:
-        return f"\033[1m{value}\033[0m"
-    else:
-        return value
-
-
-def set_global_color(color_arg: str) -> None:
-    global COLOR
-    if color_arg == "auto":
-        COLOR["stdout"] = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
-        COLOR["stderr"] = os.isatty(sys.stderr.fileno()) and not bool(os.getenv("NO_COLOR"))
-    elif color_arg == "always":
-        COLOR["stdout"] = True
-        COLOR["stderr"] = True
-
-
-def set_global_info(return_dir_arg: bool) -> None:
-    global INFO_TO
-    if return_dir_arg:
-        INFO_TO = "stderr"
-
-
-def set_global_ssh(ssh_arg: str) -> None:
-    global SSH
-    if ssh_arg == "auto":
-        ssh_dir = Path.home() / ".ssh"
-        SSH = any(ssh_dir.glob("id_*"))
-    elif ssh_arg == "always":
-        SSH = True
+        base_remote = "origin"
+        create_local_branch(cloned, None, context)
+    with cloned.config_writer() as config:
+        update_branch = "!" + " && ".join(
+            [
+                "branch=$(git config --get gimmegit.branch)",
+                "base_remote=$(git config --get gimmegit.baseRemote)",
+                "base_branch=$(git config --get gimmegit.baseBranch)",
+                'echo "$ git checkout $branch"',
+                "git checkout $branch",
+                'echo "$ git fetch $base_remote $base_branch"',
+                "git fetch $base_remote $base_branch",
+                'echo "$ git merge $base_remote/$base_branch"',
+                "git merge $base_remote/$base_branch",
+            ]
+        )  # Not cross-platform!
+        config.set_value(
+            "alias",
+            "update-branch",
+            update_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseBranch",
+            context.base_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseRemote",
+            base_remote,
+        )
+        config.set_value(
+            "gimmegit",
+            "branch",
+            context.branch,
+        )
 
 
 def configure_logger_data() -> None:
@@ -249,6 +223,16 @@ def configure_logger_data() -> None:
     retval.setFormatter(logging.Formatter("%(message)s"))
     retval.addFilter(lambda _: _.levelno == DATA_LEVEL)
     logger.addHandler(retval)
+
+
+def configure_logger_error() -> None:
+    error = logging.StreamHandler(sys.stderr)
+    if COLOR["stderr"]:
+        error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
+    else:
+        error.setFormatter(logging.Formatter("Error: %(message)s"))
+    error.addFilter(lambda _: _.levelno == logging.ERROR)
+    logger.addHandler(error)
 
 
 def configure_logger_info() -> None:
@@ -271,14 +255,68 @@ def configure_logger_warning() -> None:
     logger.addHandler(warning)
 
 
-def configure_logger_error() -> None:
-    error = logging.StreamHandler(sys.stderr)
-    if COLOR["stderr"]:
-        error.setFormatter(logging.Formatter("\033[1;31mError:\033[0m %(message)s"))
+def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: Context):
+    origin = cloned.remotes.origin
+    if upstream:
+        base = upstream
+        base_owner = context.upstream_owner
     else:
-        error.setFormatter(logging.Formatter("Error: %(message)s"))
-    error.addFilter(lambda _: _.levelno == logging.ERROR)
-    logger.addHandler(error)
+        base = origin
+        base_owner = context.owner
+    base_branch_full = f"{base_owner}:{context.base_branch}"
+    if context.create_branch:
+        # Create a local branch, starting from the base branch.
+        logger.info(
+            f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
+        )
+        if context.base_branch not in base.refs:
+            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
+        branch = cloned.create_head(context.branch, base.refs[context.base_branch])
+        # Ensure that on first push, a remote branch is created and set as the tracking branch.
+        # The remote branch will be created on origin (the default remote).
+        with cloned.config_writer() as config:
+            config.set_value(
+                "push",
+                "default",
+                "current",
+            )
+            config.set_value(
+                "push",
+                "autoSetupRemote",
+                "true",
+            )
+    else:
+        # Create a local branch that tracks the existing branch on origin.
+        branch_full = f"{context.owner}:{context.branch}"
+        logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
+        if context.base_branch not in base.refs:
+            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
+        if context.branch not in origin.refs:
+            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
+        branch = cloned.create_head(context.branch, origin.refs[context.branch])
+        branch.set_tracking_branch(origin.refs[context.branch])
+    branch.checkout()
+
+
+def f_blue(value: str) -> str:
+    if COLOR[INFO_TO]:
+        return f"\033[36m{value}\033[0m"
+    else:
+        return value
+
+
+def f_bold(value: str) -> str:
+    if COLOR[INFO_TO]:
+        return f"\033[1m{value}\033[0m"
+    else:
+        return value
+
+
+def f_link(value: str, url: str) -> str:
+    if COLOR[INFO_TO]:
+        return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
+    else:
+        return value
 
 
 def get_context(args: argparse.Namespace) -> Context:
@@ -342,60 +380,11 @@ def get_context(args: argparse.Namespace) -> Context:
     )
 
 
-def make_github_url(repo: str) -> str:
-    if repo.startswith(("https://github.com/", "github.com/")):
-        return repo
-    if repo.count("/") == 1 and not repo.endswith("/"):
-        return f"https://github.com/{repo}"
-    if repo.endswith("/") or repo.endswith("\\"):
-        project = repo[:-1]  # The user might have tab-completed a project dir.
-    else:
-        project = repo
-    if "/" not in project:
-        if not GITHUB_TOKEN:
-            raise ValueError(
-                "GIMMEGIT_GITHUB_TOKEN is not set. For the repo, use '<owner>/<project>' or a GitHub URL."
-            )
-        github_login = get_github_login()
-        return f"https://github.com/{github_login}/{project}"
-    raise ValueError(f"'{repo}' is not a supported repo.")
-
-
-def parse_github_url(url: str) -> ParsedURL | None:
-    pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
-    # TODO: Disallow PR URLs.
-    match = re.search(pattern, url)
-    if match:
-        branch = match.group(5)
-        if branch:
-            branch = urllib.parse.unquote(branch)
-        return ParsedURL(
-            branch=branch,
-            owner=match.group(2),
-            project=match.group(3),
-            remote_url=make_github_clone_url(match.group(2), match.group(3)),
-        )
-
-
-def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
-    parsed = parse_github_url(branch_spec)
-    if not parsed:
-        if not is_valid_branch_name(branch_spec):
-            raise ValueError(f"'{branch_spec}' is not a valid branch name.")
-        return ParsedBranchSpec(
-            branch=branch_spec,
-            owner=None,
-            project=None,
-            remote_url=None,
-        )
-    if not parsed.branch:
-        raise ValueError(f"'{branch_spec}' does not specify a branch.")
-    return ParsedBranchSpec(
-        branch=parsed.branch,
-        owner=parsed.owner,
-        project=parsed.project,
-        remote_url=parsed.remote_url,
-    )
+def get_default_branch(cloned: git.Repo) -> str:
+    for ref in cloned.remotes.origin.refs:
+        if ref.name == "origin/HEAD":
+            return ref.ref.name.removeprefix("origin/")
+    raise RuntimeError("Unable to identify default branch.")
 
 
 def get_github_login() -> str:
@@ -423,149 +412,6 @@ def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
         )
 
 
-def make_github_clone_url(owner: str, project: str) -> str:
-    if SSH:
-        return f"git@github.com:{owner}/{project}.git"
-    else:
-        return f"https://github.com/{owner}/{project}.git"
-
-
-def make_snapshot_name() -> str:
-    today = datetime.now()
-    today_formatted = today.strftime("%m%d")
-    return f"snapshot{today_formatted}"
-
-
-def make_clone_path(owner: str, project: str, branch: str) -> Path:
-    branch_slug = branch.replace("/", "-")
-    return Path(f"{project}/{owner}-{branch_slug}")
-
-
-def clone(context: Context, cloning_args: list[str]) -> None:
-    logger.info(f"Cloning {context.clone_url}")
-    try:
-        cloned = git.Repo.clone_from(
-            context.clone_url, context.clone_dir, multi_options=cloning_args
-        )
-    except git.GitCommandError:
-        if SSH:
-            raise CloneError(
-                "Unable to clone repo. Do you have access to the repo? Is SSH correctly configured?"
-            )
-        else:
-            raise CloneError(
-                "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
-            )
-    origin = cloned.remotes.origin
-    if context.create_branch and context.branch in origin.refs:
-        raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
-    if not context.base_branch:
-        context.base_branch = get_default_branch(cloned)
-    if context.upstream_url:
-        logger.info(f"Setting upstream to {context.upstream_url}")
-        upstream = cloned.create_remote("upstream", context.upstream_url)
-        try:
-            upstream.fetch(no_tags=True)
-        except git.CommandError:
-            if SSH:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
-                )
-            else:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
-                )
-        base_remote = "upstream"
-        create_local_branch(cloned, upstream, context)
-    else:
-        base_remote = "origin"
-        create_local_branch(cloned, None, context)
-    with cloned.config_writer() as config:
-        update_branch = "!" + " && ".join(
-            [
-                "branch=$(git config --get gimmegit.branch)",
-                "base_remote=$(git config --get gimmegit.baseRemote)",
-                "base_branch=$(git config --get gimmegit.baseBranch)",
-                'echo \\"$ git checkout $branch\\"',
-                "git checkout $branch",
-                'echo \\"$ git fetch $base_remote $base_branch\\"',
-                "git fetch $base_remote $base_branch",
-                'echo \\"$ git merge $base_remote/$base_branch\\"',
-                "git merge $base_remote/$base_branch",
-            ]
-        )  # Not cross-platform!
-        config.set_value(
-            "alias",
-            "update-branch",
-            update_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseBranch",
-            context.base_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseRemote",
-            base_remote,
-        )
-        config.set_value(
-            "gimmegit",
-            "branch",
-            context.branch,
-        )
-
-
-def get_default_branch(cloned: git.Repo) -> str:
-    for ref in cloned.remotes.origin.refs:
-        if ref.name == "origin/HEAD":
-            return ref.ref.name.removeprefix("origin/")
-    raise RuntimeError("Unable to identify default branch.")
-
-
-def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: Context):
-    origin = cloned.remotes.origin
-    if upstream:
-        base = upstream
-        base_owner = context.upstream_owner
-    else:
-        base = origin
-        base_owner = context.owner
-    base_branch_full = f"{base_owner}:{context.base_branch}"
-    if context.create_branch:
-        # Create a local branch, starting from the base branch.
-        logger.info(
-            f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
-        )
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
-        branch = cloned.create_head(context.branch, base.refs[context.base_branch])
-        # Ensure that on first push, a remote branch is created and set as the tracking branch.
-        # The remote branch will be created on origin (the default remote).
-        with cloned.config_writer() as config:
-            config.set_value(
-                "push",
-                "default",
-                "current",
-            )
-            config.set_value(
-                "push",
-                "autoSetupRemote",
-                "true",
-            )
-    else:
-        # Create a local branch that tracks the existing branch on origin.
-        branch_full = f"{context.owner}:{context.branch}"
-        logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
-        if context.branch not in origin.refs:
-            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
-        branch = cloned.create_head(context.branch, origin.refs[context.branch])
-        branch.set_tracking_branch(origin.refs[context.branch])
-    branch.checkout()
-
-
 def install_pre_commit(clone_dir: Path) -> None:
     if not (clone_dir / ".pre-commit-config.yaml").exists():
         return
@@ -581,10 +427,23 @@ def install_pre_commit(clone_dir: Path) -> None:
     )
 
 
-def status_usage(status: _status.Status) -> None:
-    columns = make_columns(status)
-    logger.info("   ".join([make_title_cell(col) for col in columns]))
-    logger.info("   ".join([make_value_cell(col) for col in columns]))
+def is_valid_branch_name(branch: str) -> bool:
+    # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
+    # Such references should be flagged as invalid, so we run the Git command in an empty dir.
+    with tempfile.TemporaryDirectory() as empty_dir:
+        command = ["git", "check-ref-format", "--branch", branch]
+        result = subprocess.run(
+            command,
+            cwd=empty_dir,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
+
+
+def make_clone_path(owner: str, project: str, branch: str) -> Path:
+    branch_slug = branch.replace("/", "-")
+    return Path(f"{project}/{owner}-{branch_slug}")
 
 
 def make_columns(status: _status.Status) -> list[Column]:
@@ -615,26 +474,6 @@ def make_columns(status: _status.Status) -> list[Column]:
     return [project, base, review]
 
 
-def make_title_cell(col: Column) -> str:
-    formatted_title = make_formatted_title(col)
-    if col.last:
-        return formatted_title.formatted
-    formatted_value = make_formatted_value(col)
-    width = max(len(formatted_title.plain), len(formatted_value.plain))
-    padding = " " * (width - len(formatted_title.plain))
-    return f"{formatted_title.formatted}{padding}"
-
-
-def make_value_cell(col: Column) -> str:
-    formatted_value = make_formatted_value(col)
-    if col.last:
-        return formatted_value.formatted
-    formatted_title = make_formatted_title(col)
-    width = max(len(formatted_title.plain), len(formatted_value.plain))
-    padding = " " * (width - len(formatted_value.plain))
-    return f"{formatted_value.formatted}{padding}"
-
-
 def make_formatted_title(col: Column) -> FormattedStr:
     if col.note:
         return FormattedStr(
@@ -657,6 +496,167 @@ def make_formatted_value(col: Column) -> FormattedStr:
         formatted=col.value,
         plain=col.value,
     )
+
+
+def make_github_clone_url(owner: str, project: str) -> str:
+    if SSH:
+        return f"git@github.com:{owner}/{project}.git"
+    else:
+        return f"https://github.com/{owner}/{project}.git"
+
+
+def make_github_url(repo: str) -> str:
+    if repo.startswith(("https://github.com/", "github.com/")):
+        return repo
+    if repo.count("/") == 1 and not repo.endswith("/"):
+        return f"https://github.com/{repo}"
+    if repo.endswith("/") or repo.endswith("\\"):
+        project = repo[:-1]  # The user might have tab-completed a project dir.
+    else:
+        project = repo
+    if "/" not in project:
+        if not GITHUB_TOKEN:
+            raise ValueError(
+                "GIMMEGIT_GITHUB_TOKEN is not set. For the repo, use '<owner>/<project>' or a GitHub URL."
+            )
+        github_login = get_github_login()
+        return f"https://github.com/{github_login}/{project}"
+    raise ValueError(f"'{repo}' is not a supported repo.")
+
+
+def make_snapshot_name() -> str:
+    today = datetime.now()
+    today_formatted = today.strftime("%m%d")
+    return f"snapshot{today_formatted}"
+
+
+def make_title_cell(col: Column) -> str:
+    formatted_title = make_formatted_title(col)
+    if col.last:
+        return formatted_title.formatted
+    formatted_value = make_formatted_value(col)
+    width = max(len(formatted_title.plain), len(formatted_value.plain))
+    padding = " " * (width - len(formatted_title.plain))
+    return f"{formatted_title.formatted}{padding}"
+
+
+def make_value_cell(col: Column) -> str:
+    formatted_value = make_formatted_value(col)
+    if col.last:
+        return formatted_value.formatted
+    formatted_title = make_formatted_title(col)
+    width = max(len(formatted_title.plain), len(formatted_value.plain))
+    padding = " " * (width - len(formatted_value.plain))
+    return f"{formatted_value.formatted}{padding}"
+
+
+def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
+    parsed = parse_github_url(branch_spec)
+    if not parsed:
+        if not is_valid_branch_name(branch_spec):
+            raise ValueError(f"'{branch_spec}' is not a valid branch name.")
+        return ParsedBranchSpec(
+            branch=branch_spec,
+            owner=None,
+            project=None,
+            remote_url=None,
+        )
+    if not parsed.branch:
+        raise ValueError(f"'{branch_spec}' does not specify a branch.")
+    return ParsedBranchSpec(
+        branch=parsed.branch,
+        owner=parsed.owner,
+        project=parsed.project,
+        remote_url=parsed.remote_url,
+    )
+
+
+def parse_github_url(url: str) -> ParsedURL | None:
+    pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
+    # TODO: Disallow PR URLs.
+    match = re.search(pattern, url)
+    if match:
+        branch = match.group(5)
+        if branch:
+            branch = urllib.parse.unquote(branch)
+        return ParsedURL(
+            branch=branch,
+            owner=match.group(2),
+            project=match.group(3),
+            remote_url=make_github_clone_url(match.group(2), match.group(3)),
+        )
+
+
+def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
+    try:
+        context = get_context(args)
+    except ValueError as e:
+        logger.error(e)
+        sys.exit(1)
+    if context.clone_dir.exists():
+        logger.info(f_bold("You already have a clone:"))
+        logger.info(context.clone_dir.resolve())
+        if INFO_TO == "stderr":
+            logger.log(DATA_LEVEL, context.clone_dir.resolve())
+        sys.exit(10)
+    if (
+        not args.allow_outer_repo
+        and context.clone_dir.parent.exists()
+        and _inspect.get_repo(context.clone_dir.parent)
+    ):
+        logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
+        sys.exit(1)
+    if not args.force_project_dir and not context.clone_dir.parent.exists():
+        candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
+        if candidate and _status.get_status(candidate):
+            logger.error(
+                "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
+            )
+            sys.exit(1)
+    try:
+        clone(context, cloning_args)
+    except CloneError as e:
+        if context.clone_dir.exists():
+            shutil.rmtree(context.clone_dir, ignore_errors=True)
+        logger.error(e)
+        sys.exit(1)
+    if not args.no_pre_commit:
+        install_pre_commit(context.clone_dir)
+    logger.info(f_bold("Cloned repo:"))
+    logger.info(context.clone_dir.resolve())
+    if INFO_TO == "stderr":
+        logger.log(DATA_LEVEL, context.clone_dir.resolve())
+
+
+def set_global_color(color_arg: str) -> None:
+    global COLOR
+    if color_arg == "auto":
+        COLOR["stdout"] = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
+        COLOR["stderr"] = os.isatty(sys.stderr.fileno()) and not bool(os.getenv("NO_COLOR"))
+    elif color_arg == "always":
+        COLOR["stdout"] = True
+        COLOR["stderr"] = True
+
+
+def set_global_info(return_dir_arg: bool) -> None:
+    global INFO_TO
+    if return_dir_arg:
+        INFO_TO = "stderr"
+
+
+def set_global_ssh(ssh_arg: str) -> None:
+    global SSH
+    if ssh_arg == "auto":
+        ssh_dir = Path.home() / ".ssh"
+        SSH = any(ssh_dir.glob("id_*"))
+    elif ssh_arg == "always":
+        SSH = True
+
+
+def status_usage(status: _status.Status) -> None:
+    columns = make_columns(status)
+    logger.info("   ".join([make_title_cell(col) for col in columns]))
+    logger.info("   ".join([make_value_cell(col) for col in columns]))
 
 
 if __name__ == "__main__":
