@@ -6,11 +6,7 @@ Each file must be organized in this order:
 
 1. Imports
 2. Variable definitions
-3. Dataclasses, in alphabetical order
-4. Other classes, in alphabetical order
-5. Functions, in alphabetical order
-
-Exceptions for `_cli.py`:
-
-- The `main()` function must be first in the list of functions
-- The `if __name__ == "__main__"` block must be at the end of the file
+3. Dataclasses
+4. Other classes
+5. Functions
+6. (`_cli.py` only) The `if __name__ == "__main__"` block
