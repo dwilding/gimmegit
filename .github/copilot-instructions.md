@@ -10,7 +10,7 @@ The user expects your summary comment to be concise and free of noise. If you ha
 Here's the standard format you should follow:
 
 ```
-Copilot reviewed the pull request and generated X comments.
+Copilot reviewed the pull request and generated <count> comments.
 
 [General opinions about the changes, if any]
 ```
