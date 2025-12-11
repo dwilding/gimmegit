@@ -109,48 +109,44 @@ def main() -> None:
                 if not status:
                     logger.error("The working directory is inside a repo.")
                     sys.exit(1)
-                else:
-                    status_usage(status)
-                    logger.warning(
-                        "Skipped cloning because the working directory is inside a gimmegit clone."
-                    )
-                    return
+                assert status  # For the type checker.
+                status_usage(status)
+                logger.warning(
+                    "Skipped cloning because the working directory is inside a gimmegit clone."
+                )
+                return
         primary_usage(args, cloning_args)
     elif args_with_usage.usage == "compare":
         working = _inspect.get_outer_repo()
-        if working:
-            status = _status.get_status(working)
-            if not status:
-                logger.error("The working directory is not inside a gimmegit clone.")
-                sys.exit(1)
-            else:
-                compare_usage(status)
-        else:
+        status = _status.get_status(working) if working else None
+        if not status:
             logger.error("The working directory is not inside a gimmegit clone.")
             sys.exit(1)
+        assert status  # For the type checker.
+        compare_usage(status)
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
     elif args_with_usage.usage == "version":
         logger.log(DATA_LEVEL, f"gimmegit {_version.__version__}")
     elif args_with_usage.usage == "tool":
         parsed_url = parse_github_url(args.parse_url)
-        if parsed_url:
-            logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
-        else:
+        if not parsed_url:
             logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
             sys.exit(1)
+        assert parsed_url  # For the type checker.
+        logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
     elif args_with_usage.usage == "bare":
         working = _inspect.get_outer_repo()
-        if working:
-            status = _status.get_status(working)
-            if not status:
-                logger.error("The working directory is not inside a gimmegit clone.")
-                sys.exit(1)
-            else:
-                status_usage(status)
-        else:
+        if not working:
             logger.error("No repo specified. Run 'gimmegit -h' for help.")
             sys.exit(2)
+        assert working  # For the type checker.
+        status = _status.get_status(working)
+        if not status:
+            logger.error("The working directory is not inside a gimmegit clone.")
+            sys.exit(1)
+        assert status  # For the type checker.
+        status_usage(status)
 
 
 def clone(context: Context, cloning_args: list[str]) -> None:
