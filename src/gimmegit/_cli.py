@@ -248,7 +248,7 @@ def compare_usage(status: _status.Status) -> None:
         return
     try:
         opened = webbrowser.open(status.compare_url, new=2)
-    except Exception:
+    except webbrowser.Error:
         logger.log(DATA_LEVEL, status.compare_url)
     else:
         if not opened:
