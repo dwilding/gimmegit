@@ -96,7 +96,10 @@ You already have a clone:
 
 def test_dashboard(uv_run, test_dir):
     working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -113,7 +116,10 @@ operator   canonical:main   canonical:2.23-maintenance
 
 def test_dashboard_no_remote(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -130,7 +136,11 @@ jubilant   canonical:main   dwilding:my-feature (not created)
 
 def test_dashboard_warning(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", "some-project"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "some-project",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -145,6 +155,48 @@ jubilant   canonical:main   dwilding:my-feature (not created)
     assert result.stdout == expected_stdout
     expected_stderr = """\
 Warning: Skipped cloning because the working directory is inside a gimmegit clone.
+"""
+    assert result.stderr == expected_stderr
+
+
+def test_compare(uv_run, test_dir):
+    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # Normally 'gimmegit -c' opens the URL, but if the output isn't going to a terminal
+    # then gimmegit outputs the URL instead.
+    expected_stdout = """\
+https://github.com/canonical/operator/compare/main...canonical:operator:2.23-maintenance?expand=1
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_compare_no_remote(uv_run, test_dir):
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert not result.stdout
+    expected_stderr = """\
+Error: The review branch has not been created.
 """
     assert result.stderr == expected_stderr
 

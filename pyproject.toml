@@ -21,7 +21,7 @@ gimmegit = "gimmegit._cli:main"
 dev = [
     "ruff",
     "pytest",
-    "ty>=0.0.1a27",
+    "ty>=0.0.1a33",
 ]
 
 [build-system]

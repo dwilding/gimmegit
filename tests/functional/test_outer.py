@@ -16,7 +16,10 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
     )
     working_dir = repo_dir / "foo"
     working_dir.mkdir()
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -26,7 +29,31 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
     assert result.returncode == 1
     assert not result.stdout
     expected_stderr = """\
-Error: The working directory is inside a repo that is not supported by gimmegit.
+Error: The working directory is not inside a gimmegit clone.
+"""
+    assert result.stderr == expected_stderr
+
+
+def test_working_repo_no_compare(uv_run, test_dir):
+    # .
+    # └── frogtab   Suppose that this dir is a repo
+    #     └── foo   Try running 'gimmegit -c'
+    working_dir = Path(test_dir) / "frogtab/foo"
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert not result.stdout
+    expected_stderr = """\
+Error: The working directory is not inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 
@@ -36,7 +63,11 @@ def test_working_repo_no_clone(uv_run, test_dir):
     # └── frogtab   Suppose that this dir is a repo
     #     └── foo   Try running 'gimmegit some-project'
     working_dir = Path(test_dir) / "frogtab/foo"
-    command = [*uv_run, "gimmegit", "some-project"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "some-project",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,

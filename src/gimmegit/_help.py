@@ -7,6 +7,9 @@ Show status:
   gimmegit [--color {auto,always,never}]
 
 Additional commands:
+  gimmegit -c
+  gimmegit --compare
+
   gimmegit -h
   gimmegit --help
 
