@@ -96,7 +96,10 @@ You already have a clone:
 
 def test_dashboard(uv_run, test_dir):
     working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -113,7 +116,10 @@ operator   canonical:main   canonical:2.23-maintenance
 
 def test_dashboard_no_remote(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -130,7 +136,11 @@ jubilant   canonical:main   dwilding:my-feature (not created)
 
 def test_dashboard_warning(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", "some-project"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "some-project",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -151,7 +161,11 @@ Warning: Skipped cloning because the working directory is inside a gimmegit clon
 
 def test_compare(uv_run, test_dir):
     working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
-    command = [*uv_run, "gimmegit", "-c"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -169,7 +183,11 @@ https://github.com/canonical/operator/compare/main...canonical:operator:2.23-mai
 
 def test_compare_no_remote(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", "-c"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
