@@ -31,6 +31,26 @@ Error: The working directory is not inside a gimmegit clone.
     assert result.stderr == expected_stderr
 
 
+def test_working_repo_no_compare(uv_run, test_dir):
+    # .
+    # └── frogtab   Suppose that this dir is a repo
+    #     └── foo   Try running 'gimmegit -c'
+    working_dir = Path(test_dir) / "frogtab/foo"
+    command = [*uv_run, "gimmegit", "-c"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert not result.stdout
+    expected_stderr = """\
+Error: The working directory is not inside a gimmegit clone.
+"""
+    assert result.stderr == expected_stderr
+
+
 def test_working_repo_no_clone(uv_run, test_dir):
     # .
     # └── frogtab   Suppose that this dir is a repo

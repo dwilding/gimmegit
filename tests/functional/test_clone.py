@@ -176,7 +176,7 @@ def test_compare_no_remote(uv_run, test_dir):
         capture_output=True,
         text=True,
     )
-    assert result.stdout == ""
+    assert not result.stdout
     expected_stderr = """\
 Error: The review branch has not been created.
 """
