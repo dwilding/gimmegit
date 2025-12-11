@@ -149,6 +149,40 @@ Warning: Skipped cloning because the working directory is inside a gimmegit clon
     assert result.stderr == expected_stderr
 
 
+def test_compare(uv_run, test_dir):
+    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    command = [*uv_run, "gimmegit", "-c"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # Normally 'gimmegit -c' opens the URL, but if the output isn't going to a terminal
+    # then gimmegit outputs the URL instead.
+    expected_stdout = """\
+https://github.com/canonical/operator/compare/main...canonical:operator:2.23-maintenance?expand=1
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_compare_no_remote(uv_run, test_dir):
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    command = [*uv_run, "gimmegit", "-c"]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout == ""
+    expected_stderr = """\
+Error: The review branch has not been created.
+"""
+    assert result.stderr == expected_stderr
+
+
 def test_in_project_dir(uv_run, test_dir):
     # .
     # └── jubilant                  Try running 'gimmegit dwilding/jubilant my-feature'

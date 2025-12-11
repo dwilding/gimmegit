@@ -26,7 +26,7 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
     assert result.returncode == 1
     assert not result.stdout
     expected_stderr = """\
-Error: The working directory is inside a repo that is not supported by gimmegit.
+Error: The working directory is not inside a gimmegit clone.
 """
     assert result.stderr == expected_stderr
 

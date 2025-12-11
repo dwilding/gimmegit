@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.parse
+import webbrowser
 
 import git
 import github
@@ -115,6 +116,18 @@ def main() -> None:
                     )
                     return
         primary_usage(args, cloning_args)
+    elif args_with_usage.usage == "compare":
+        working = _inspect.get_outer_repo()
+        if working:
+            status = _status.get_status(working)
+            if not status:
+                logger.error("The working directory is not inside a gimmegit clone.")
+                sys.exit(1)
+            else:
+                compare_usage(status)
+        else:
+            logger.error("The working directory is not inside a gimmegit clone.")
+            sys.exit(1)
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
     elif args_with_usage.usage == "version":
@@ -131,9 +144,7 @@ def main() -> None:
         if working:
             status = _status.get_status(working)
             if not status:
-                logger.error(
-                    "The working directory is inside a repo that is not supported by gimmegit."
-                )
+                logger.error("The working directory is not inside a gimmegit clone.")
                 sys.exit(1)
             else:
                 status_usage(status)
@@ -215,6 +226,33 @@ def clone(context: Context, cloning_args: list[str]) -> None:
             "branch",
             context.branch,
         )
+
+
+def compare_usage(status: _status.Status) -> None:
+    if not status.has_remote:
+        logger.error("The review branch has not been created.")
+        sys.exit(1)
+    if not os.isatty(sys.stdout.fileno()):
+        logger.log(DATA_LEVEL, status.compare_url)
+        return
+    # Try xdg-open first, to suppress a Linux/snap/Firefox error message:
+    # Gtk-Message: ... Not loading module "atk-bridge"...
+    if shutil.which("xdg-open"):
+        result = subprocess.run(
+            ["xdg-open", status.compare_url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode:
+            logger.log(DATA_LEVEL, status.compare_url)
+        return
+    try:
+        opened = webbrowser.open(status.compare_url, new=2)
+    except Exception:
+        logger.log(DATA_LEVEL, status.compare_url)
+    else:
+        if not opened:
+            logger.log(DATA_LEVEL, status.compare_url)
 
 
 def configure_logger_data() -> None:
