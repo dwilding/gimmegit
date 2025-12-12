@@ -40,8 +40,6 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 
 ## Install gimmegit
 
-## Install gimmegit
-
 | Using [uv](https://docs.astral.sh/uv/)<br/>`uv tool install gimmegit` | | Using [pipx](https://pipx.pypa.io/stable/)<br/>`pipx install gimmegit` |
 |-|-|-|
 | To run gimmegit without installing it,<br/>use `uvx gimmegit <args>` instead. | | To run gimmegit without installing it,<br/>use `pipx run gimmegit <args>` instead. |
