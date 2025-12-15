@@ -51,7 +51,7 @@ For new branches:
 --force-project-dir            Create the project directory even if gimmegit finds a gimmegit
                                clone in the working directory.
 --ssh auto|always|never        Controls whether Git remotes use SSH or HTTPS.
-                               Default: auto - use SSH if ~/.ssh contains a SSH key.
+                               Default: auto - use SSH if ~/.ssh contains an SSH key.
 --color auto|always|never      Controls whether the output has colored text.
                                Default: auto - use colors if the NO_COLOR environment variable is
                                empty and the output is going to a terminal.
