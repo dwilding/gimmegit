@@ -148,6 +148,27 @@ Error: The value of --ssh must be 'auto', 'always', or 'never'. Run 'gimmegit -h
     assert result.stderr == expected_stderr
 
 
+def test_repo_with_compare(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+        "dwilding/jubilant",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert not result.stdout
+    expected_stderr = """\
+Error: Unexpected options: -c/--compare. Run 'gimmegit -h' for help.
+"""
+    assert result.stderr == expected_stderr
+
+
 def test_repo_with_help(uv_run, test_dir):
     command = [
         *uv_run,

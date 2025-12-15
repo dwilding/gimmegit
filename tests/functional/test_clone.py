@@ -23,8 +23,7 @@ def test_repo_branch(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/canonical/operator.git
 Checking out canonical:2.23-maintenance with base canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -58,8 +57,7 @@ Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Setting upstream to https://github.com/canonical/jubilant.git
 Checking out a new branch my-feature based on canonical:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -98,7 +96,10 @@ You already have a clone:
 
 def test_dashboard(uv_run, test_dir):
     working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -115,7 +116,10 @@ operator   canonical:main   canonical:2.23-maintenance
 
 def test_dashboard_no_remote(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit"]
+    command = [
+        *uv_run,
+        "gimmegit",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -124,15 +128,19 @@ def test_dashboard_no_remote(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-Project    Base branch      Review branch (not created)
-jubilant   canonical:main   dwilding:my-feature
+Project    Base branch      Review branch
+jubilant   canonical:main   dwilding:my-feature (not created)
 """
     assert result.stdout == expected_stdout
 
 
 def test_dashboard_warning(uv_run, test_dir):
     working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
-    command = [*uv_run, "gimmegit", "some-project"]
+    command = [
+        *uv_run,
+        "gimmegit",
+        "some-project",
+    ]
     result = subprocess.run(
         command,
         cwd=working_dir,
@@ -141,12 +149,54 @@ def test_dashboard_warning(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
-Project    Base branch      Review branch (not created)
-jubilant   canonical:main   dwilding:my-feature
+Project    Base branch      Review branch
+jubilant   canonical:main   dwilding:my-feature (not created)
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
 Warning: Skipped cloning because the working directory is inside a gimmegit clone.
+"""
+    assert result.stderr == expected_stderr
+
+
+def test_compare(uv_run, test_dir):
+    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # Normally 'gimmegit -c' opens the URL, but if the output isn't going to a terminal
+    # then gimmegit outputs the URL instead.
+    expected_stdout = """\
+https://github.com/canonical/operator/compare/main...canonical:operator:2.23-maintenance?expand=1
+"""
+    assert result.stdout == expected_stdout
+
+
+def test_compare_no_remote(uv_run, test_dir):
+    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    command = [
+        *uv_run,
+        "gimmegit",
+        "-c",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert not result.stdout
+    expected_stderr = """\
+Error: The review branch has not been created.
 """
     assert result.stderr == expected_stderr
 
@@ -208,8 +258,7 @@ def test_in_project_dir_force(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Checking out a new branch my-feature based on dwilding:main
-Installing pre-commit using uvx
-pre-commit installed at .git/hooks/pre-commit
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """

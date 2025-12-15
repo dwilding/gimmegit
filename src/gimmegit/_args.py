@@ -33,6 +33,7 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("-u", "--upstream-owner", nargs="?")
     parser.add_argument("repo", nargs="?")
     parser.add_argument("new_branch", nargs="?")
+    parser.add_argument("-c", "--compare", action="store_const")
     parser.add_argument("-h", "--help", action="store_const")
     parser.add_argument("--version", action="store_const")
     parser.add_argument("--parse-url", nargs="?")
@@ -50,6 +51,8 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     # Handle usages of the gimmegit command.
     if hasattr(args, "repo"):
         return parse_as_primary(args, unknown_args)
+    if hasattr(args, "compare"):
+        return parse_as_compare(args, unknown_args)
     if hasattr(args, "help"):
         return parse_as_help(args, unknown_args)
     if hasattr(args, "version"):
@@ -93,6 +96,27 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
     if not hasattr(args, "new_branch"):
         args.new_branch = None
     # Handle unknown args.
+    if hasattr(args, "compare"):
+        unknown_args.append("-c/--compare")
+    if hasattr(args, "help"):
+        unknown_args.append("-h/--help")
+    if hasattr(args, "version"):
+        unknown_args.append("--version")
+    if hasattr(args, "parse_url"):
+        unknown_args.append("--parse-url")
+    if unknown_args:
+        return done(f"Unexpected options: {', '.join(unknown_args)}.")
+    return done(None)
+
+
+def parse_as_compare(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
+    def done(error: str | None) -> ArgsWithUsage:
+        return ArgsWithUsage(args=args, error=error, usage="compare")
+
+    # Handle unknown args.
+    unknown_args = add_non_primary_unknown_args(args, unknown_args)
+    if hasattr(args, "ssh"):
+        unknown_args.append("--ssh")
     if hasattr(args, "help"):
         unknown_args.append("-h/--help")
     if hasattr(args, "version"):

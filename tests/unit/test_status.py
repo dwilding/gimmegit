@@ -39,6 +39,7 @@ def test_status_base_upstream(test_dir):
         base_owner="canonical",
         base_url="https://github.com/canonical/jubilant/tree/main",
         branch="my-feature",
+        compare_url="https://github.com/canonical/jubilant/compare/main...dwilding:forked-jubilant:my-feature?expand=1",
         has_remote=False,
         owner="dwilding",
         project="jubilant",
@@ -62,6 +63,7 @@ def test_status_base_origin(test_dir):
         base_owner="dwilding",
         base_url="https://github.com/dwilding/jubilant/tree/main",
         branch="my-feature",
+        compare_url="https://github.com/dwilding/jubilant/compare/main...dwilding:jubilant:my-feature?expand=1",
         has_remote=False,
         owner="dwilding",
         project="jubilant",
@@ -82,7 +84,7 @@ def test_status_base_invalid(test_dir):
     set_config(test_dir, "gimmegit.branch", "my-feature")
     with pytest.raises(RuntimeError) as exc_info:
         print(_status.get_status(git.Repo(test_dir)))
-    assert str(exc_info.value) == "Unexpected base remote 'invalid'"
+    assert str(exc_info.value) == "Unexpected base remote 'invalid'."
 
 
 def test_status_not_gimmegit(test_dir):

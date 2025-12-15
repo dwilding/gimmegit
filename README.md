@@ -2,8 +2,7 @@
 
 gimmegit is a command-line tool for cloning GitHub repos and creating branches.
 
-> [!WARNING]  
-> gimmegit is in early development. Expect bugs and breaking changes!
+[![Demo of gimmegit](https://asciinema.org/a/761708.svg)](https://asciinema.org/a/761708)
 
 You might find gimmegit interesting if:
 
@@ -25,11 +24,7 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
         ├── ...
 ```
 
-**Demo**
-
-[![Demo of gimmegit](https://asciinema.org/a/758746.svg)](https://asciinema.org/a/758746)
-
-**In this README**
+In this README:
 
   - [Install gimmegit](#install-gimmegit)
   - [Clone a repo and create a branch](#clone-a-repo-and-create-a-branch)
@@ -40,25 +35,9 @@ Each time you clone a repo, gimmegit creates a dedicated directory for the clone
 
 ## Install gimmegit
 
- 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/). On Ubuntu, you can run:
-
-    ```text
-    sudo snap install astral-uv --classic
-    ```
-
- 2. Run:
-
-    ```text
-    uv tool update-shell
-    ```
-
- 3. Restart your terminal.
-
- 4. Run:
-
-    ```text
-    uv tool install gimmegit
-    ```
+| Using [uv](https://docs.astral.sh/uv/)<br/>`uv tool install gimmegit` | | Using [pipx](https://pipx.pypa.io/stable/)<br/>`pipx install gimmegit` |
+|-|-|-|
+| To run gimmegit without installing it,<br/>use `uvx gimmegit <args>` instead. | | To run gimmegit without installing it,<br/>use `pipx run gimmegit <args>` instead. |
 
 ## Clone a repo and create a branch
 
