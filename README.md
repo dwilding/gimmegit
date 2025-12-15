@@ -76,7 +76,7 @@ The new branch is based on the repo's main branch. To specify the base branch, u
 gimmegit -b <base-branch> <owner>/<project> <new-branch>
 ```
 
-After working on the new branch for a while, you might want to merge remote changes from the base branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+After working on the new branch for a while, you might want to merge remote changes from the base branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
 
 ### Example
 
@@ -117,7 +117,7 @@ gimmegit https://github.com/<owner>/<project>/tree/<branch>
 
 This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
 
-After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
 
 ### Example
 
@@ -169,7 +169,7 @@ The new branch is based on the upstream repo's main branch. (Technically, it's b
 gimmegit -b <upstream-base-branch> -u <upstream-owner> <owner>/<project> <new-branch>
 ```
 
-After working on the new branch for a while, you might want to merge changes from the upstream base branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+After working on the new branch for a while, you might want to merge changes from the upstream base branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
 
 ### Example
 
@@ -194,7 +194,8 @@ cd ../..
 gimmegit -b 2.23-maintenance -u canonical dwilding/operator backport-docs
 
 # This does the same thing:
-# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance dwilding/operator backport-docs
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance \
+#   dwilding/operator backport-docs
 
 # Change to the second clone directory
 cd operator/dwilding-backport-docs
@@ -246,7 +247,7 @@ gimmegit -u <upstream-owner> https://github.com/<owner>/<project>/tree/<branch>
 
 This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
 
-After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a git alias that gimmegit created.
+After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
 
 ### Example
 
@@ -292,7 +293,8 @@ If the branch wasn't based on the upstream repo's main branch, use `-b` to set t
 gimmegit -b 2.23-maintenance -u canonical https://github.com/dwilding/operator/tree/backport-fix
 
 # This does the same thing:
-# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix
+# gimmegit -b https://github.com/canonical/operator/tree/2.23-maintenance \
+#   https://github.com/dwilding/operator/tree/backport-fix
 
 # If GIMMEGIT_GITHUB_TOKEN is set, this also does the same thing:
 # gimmegit -b 2.23-maintenance https://github.com/dwilding/operator/tree/backport-fix

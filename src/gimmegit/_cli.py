@@ -165,7 +165,7 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
         candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
         if candidate and _status.get_status(candidate):
             logger.error(
-                "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
+                "The working directory contains a gimmegit clone. Try running gimmegit in the parent directory."
             )
             sys.exit(1)
     try:
