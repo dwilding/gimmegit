@@ -35,6 +35,11 @@ GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 
 
 @dataclass
+class BranchName:
+    branch: str
+
+
+@dataclass
 class Column:
     last: bool
     title: str
@@ -62,11 +67,10 @@ class FormattedStr:
 
 
 @dataclass
-class ParsedBranchSpec:
-    branch: str
-    owner: str | None
-    project: str | None
-    remote_url: str | None
+class ParsedBranchSpec(BranchName):
+    owner: str
+    project: str
+    remote_url: str
 
 
 @dataclass
@@ -373,8 +377,7 @@ def get_context(args: argparse.Namespace) -> Context:
     parsed_base = None
     if args.base_branch:
         parsed_base = parse_github_branch_spec(args.base_branch)
-    if parsed_base and parsed_base.owner:
-        assert parsed_base.project  # For the type checker.
+    if parsed_base and isinstance(parsed_base, ParsedBranchSpec):
         if (parsed_base.owner, parsed_base.project) != (owner, project):
             project = parsed_base.project
             upstream_owner = parsed_base.owner
@@ -581,16 +584,13 @@ def make_value_cell(col: Column) -> str:
     return f"{formatted_value.formatted}{padding}"
 
 
-def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
+def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | BranchName | None:
     parsed = parse_github_url(branch_spec)
     if not parsed:
         if not is_valid_branch_name(branch_spec):
             raise ValueError(f"'{branch_spec}' is not a valid branch name.")
-        return ParsedBranchSpec(
+        return BranchName(
             branch=branch_spec,
-            owner=None,
-            project=None,
-            remote_url=None,
         )
     if not parsed.branch:
         raise ValueError(f"'{branch_spec}' does not specify a branch.")
