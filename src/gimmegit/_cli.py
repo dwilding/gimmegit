@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Never
 import argparse
 import json
 import logging
@@ -42,6 +43,32 @@ class Column:
 
 
 @dataclass
+class FormattedStr:
+    formatted: str
+    plain: str
+
+
+@dataclass
+class BranchName:
+    branch: str
+
+
+@dataclass
+class ParsedBranchSpec(BranchName):
+    owner: str
+    project: str
+    remote_url: str
+
+
+@dataclass
+class ParsedURL:
+    branch: str | None
+    owner: str
+    project: str
+    remote_url: str
+
+
+@dataclass
 class Context:
     base_branch: str | None
     branch: str
@@ -52,28 +79,6 @@ class Context:
     project: str
     upstream_owner: str | None
     upstream_url: str | None
-
-
-@dataclass
-class FormattedStr:
-    formatted: str
-    plain: str
-
-
-@dataclass
-class ParsedBranchSpec:
-    branch: str
-    owner: str | None
-    project: str | None
-    remote_url: str | None
-
-
-@dataclass
-class ParsedURL:
-    branch: str | None
-    owner: str
-    project: str
-    remote_url: str
 
 
 class CloneError(RuntimeError):
@@ -107,9 +112,8 @@ def main() -> None:
             if working:
                 status = _status.get_status(working)
                 if not status:
-                    logger.error("The working directory is inside a repo.")
-                    sys.exit(1)
-                assert status  # For the type checker.
+                    exit_with_error("The working directory is inside a repo.")
+                assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
                 status_usage(status)
                 logger.warning(
                     "Skipped cloning because the working directory is inside a gimmegit clone."
@@ -120,9 +124,8 @@ def main() -> None:
         working = _inspect.get_outer_repo()
         status = _status.get_status(working) if working else None
         if not status:
-            logger.error("The working directory is not inside a gimmegit clone.")
-            sys.exit(1)
-        assert status  # For the type checker.
+            exit_with_error("The working directory is not inside a gimmegit clone.")
+        assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
         compare_usage(status)
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
@@ -131,21 +134,18 @@ def main() -> None:
     elif args_with_usage.usage == "tool":
         parsed_url = parse_github_url(args.parse_url)
         if not parsed_url:
-            logger.error(f"'{args.parse_url}' is not a supported GitHub URL.")
-            sys.exit(1)
-        assert parsed_url  # For the type checker.
+            exit_with_error(f"'{args.parse_url}' is not a supported GitHub URL.")
+        assert parsed_url  # Needed because of https://github.com/astral-sh/ty/issues/690.
         logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
     elif args_with_usage.usage == "bare":
         working = _inspect.get_outer_repo()
         if not working:
-            logger.error("No repo specified. Run 'gimmegit -h' for help.")
-            sys.exit(2)
-        assert working  # For the type checker.
+            exit_with_error("No repo specified. Run 'gimmegit -h' for help.", 2)
+        assert working  # Needed because of https://github.com/astral-sh/ty/issues/690.
         status = _status.get_status(working)
         if not status:
-            logger.error("The working directory is not inside a gimmegit clone.")
-            sys.exit(1)
-        assert status  # For the type checker.
+            exit_with_error("The working directory is not inside a gimmegit clone.")
+        assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
         status_usage(status)
 
 
@@ -183,51 +183,14 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 raise CloneError(
                     "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
                 )
-        base_remote = "upstream"
         create_local_branch(cloned, upstream, context)
     else:
-        base_remote = "origin"
         create_local_branch(cloned, None, context)
-    with cloned.config_writer() as config:
-        update_branch = "!" + " && ".join(
-            [
-                "branch=$(git config --get gimmegit.branch)",
-                "base_remote=$(git config --get gimmegit.baseRemote)",
-                "base_branch=$(git config --get gimmegit.baseBranch)",
-                'echo \\"$ git checkout $branch\\"',
-                "git checkout $branch",
-                'echo \\"$ git fetch $base_remote $base_branch\\"',
-                "git fetch $base_remote $base_branch",
-                'echo \\"$ git merge $base_remote/$base_branch\\"',
-                "git merge $base_remote/$base_branch",
-            ]
-        )  # Not cross-platform!
-        config.set_value(
-            "alias",
-            "update-branch",
-            update_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseBranch",
-            context.base_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseRemote",
-            base_remote,
-        )
-        config.set_value(
-            "gimmegit",
-            "branch",
-            context.branch,
-        )
 
 
 def compare_usage(status: _status.Status) -> None:
     if not status.has_remote:
-        logger.error("The review branch has not been created.")
-        sys.exit(1)
+        exit_with_error("The review branch has not been created.")
     if not os.isatty(sys.stdout.fileno()):
         logger.log(DATA_LEVEL, status.compare_url)
         return
@@ -289,13 +252,17 @@ def configure_logger_warning() -> None:
 
 
 def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: Context):
+    """Create the local branch and define the ``update-branch`` alias. ``context.base_branch`` cannot be ``None``."""
+    assert context.base_branch
     origin = cloned.remotes.origin
     if upstream:
-        base = upstream
         base_owner = context.upstream_owner
+        base_remote = "upstream"
+        base = upstream
     else:
-        base = origin
         base_owner = context.owner
+        base_remote = "origin"
+        base = origin
     base_branch_full = f"{base_owner}:{context.base_branch}"
     if context.create_branch:
         # Create a local branch, starting from the base branch.
@@ -329,6 +296,46 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
     branch.checkout()
+    # Define the 'update-branch' alias.
+    with cloned.config_writer() as config:
+        update_branch = "!" + " && ".join(
+            [
+                "branch=$(git config --get gimmegit.branch)",
+                "base_remote=$(git config --get gimmegit.baseRemote)",
+                "base_branch=$(git config --get gimmegit.baseBranch)",
+                'echo \\"$ git checkout $branch\\"',
+                "git checkout $branch",
+                'echo \\"$ git fetch $base_remote $base_branch\\"',
+                "git fetch $base_remote $base_branch",
+                'echo \\"$ git merge $base_remote/$base_branch\\"',
+                "git merge $base_remote/$base_branch",
+            ]
+        )  # Not cross-platform!
+        config.set_value(
+            "alias",
+            "update-branch",
+            update_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseBranch",
+            context.base_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseRemote",
+            base_remote,
+        )
+        config.set_value(
+            "gimmegit",
+            "branch",
+            context.branch,
+        )
+
+
+def exit_with_error(error: Exception | str, code: int = 1) -> Never:
+    logger.error(error)
+    sys.exit(code)
 
 
 def f_blue(value: str) -> str:
@@ -370,8 +377,7 @@ def get_context(args: argparse.Namespace) -> Context:
     parsed_base = None
     if args.base_branch:
         parsed_base = parse_github_branch_spec(args.base_branch)
-    if parsed_base and parsed_base.owner:
-        assert parsed_base.project  # For the type checker.
+    if parsed_base and isinstance(parsed_base, ParsedBranchSpec):
         if (parsed_base.owner, parsed_base.project) != (owner, project):
             project = parsed_base.project
             upstream_owner = parsed_base.owner
@@ -578,16 +584,13 @@ def make_value_cell(col: Column) -> str:
     return f"{formatted_value.formatted}{padding}"
 
 
-def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | None:
+def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | BranchName | None:
     parsed = parse_github_url(branch_spec)
     if not parsed:
         if not is_valid_branch_name(branch_spec):
             raise ValueError(f"'{branch_spec}' is not a valid branch name.")
-        return ParsedBranchSpec(
+        return BranchName(
             branch=branch_spec,
-            owner=None,
-            project=None,
-            remote_url=None,
         )
     if not parsed.branch:
         raise ValueError(f"'{branch_spec}' does not specify a branch.")
@@ -619,8 +622,7 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
     try:
         context = get_context(args)
     except ValueError as e:
-        logger.error(e)
-        sys.exit(1)
+        exit_with_error(e)
     if context.clone_dir.exists():
         logger.info(f_bold("You already have a clone:"))
         logger.info(context.clone_dir.resolve())
@@ -632,22 +634,19 @@ def primary_usage(args: argparse.Namespace, cloning_args: list[str]) -> None:
         and context.clone_dir.parent.exists()
         and _inspect.get_repo(context.clone_dir.parent)
     ):
-        logger.error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
-        sys.exit(1)
+        exit_with_error(f"'{context.clone_dir.parent.resolve()}' is a repo.")
     if not args.force_project_dir and not context.clone_dir.parent.exists():
         candidate = _inspect.get_repo_from_latest_dir(Path.cwd())
         if candidate and _status.get_status(candidate):
-            logger.error(
+            exit_with_error(
                 "The working directory has a gimmegit clone. Try running gimmegit in the parent directory."
             )
-            sys.exit(1)
     try:
         clone(context, cloning_args)
     except CloneError as e:
         if context.clone_dir.exists():
             shutil.rmtree(context.clone_dir, ignore_errors=True)
-        logger.error(e)
-        sys.exit(1)
+        exit_with_error(e)
     if not args.no_pre_commit:
         install_pre_commit(context.clone_dir)
     logger.info(f_bold("Cloned repo:"))
