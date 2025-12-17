@@ -113,7 +113,7 @@ def main() -> None:
                 status = _status.get_status(working)
                 if not status:
                     exit_with_error("The working directory is inside a repo.")
-                assert status  # Needed becuase of https://github.com/astral-sh/ty/issues/690.
+                assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
                 status_usage(status)
                 logger.warning(
                     "Skipped cloning because the working directory is inside a gimmegit clone."
@@ -125,7 +125,7 @@ def main() -> None:
         status = _status.get_status(working) if working else None
         if not status:
             exit_with_error("The working directory is not inside a gimmegit clone.")
-        assert status  # Needed becuase of https://github.com/astral-sh/ty/issues/690.
+        assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
         compare_usage(status)
     elif args_with_usage.usage == "help":
         logger.info(_help.help)
@@ -135,17 +135,17 @@ def main() -> None:
         parsed_url = parse_github_url(args.parse_url)
         if not parsed_url:
             exit_with_error(f"'{args.parse_url}' is not a supported GitHub URL.")
-        assert parsed_url  # Needed becuase of https://github.com/astral-sh/ty/issues/690.
+        assert parsed_url  # Needed because of https://github.com/astral-sh/ty/issues/690.
         logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
     elif args_with_usage.usage == "bare":
         working = _inspect.get_outer_repo()
         if not working:
             exit_with_error("No repo specified. Run 'gimmegit -h' for help.", 2)
-        assert working  # Needed becuase of https://github.com/astral-sh/ty/issues/690.
+        assert working  # Needed because of https://github.com/astral-sh/ty/issues/690.
         status = _status.get_status(working)
         if not status:
             exit_with_error("The working directory is not inside a gimmegit clone.")
-        assert status  # Needed becuase of https://github.com/astral-sh/ty/issues/690.
+        assert status  # Needed because of https://github.com/astral-sh/ty/issues/690.
         status_usage(status)
 
 
