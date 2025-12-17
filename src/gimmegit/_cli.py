@@ -183,45 +183,9 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 raise CloneError(
                     "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
                 )
-        base_remote = "upstream"
         create_local_branch(cloned, upstream, context)
     else:
-        base_remote = "origin"
         create_local_branch(cloned, None, context)
-    with cloned.config_writer() as config:
-        update_branch = "!" + " && ".join(
-            [
-                "branch=$(git config --get gimmegit.branch)",
-                "base_remote=$(git config --get gimmegit.baseRemote)",
-                "base_branch=$(git config --get gimmegit.baseBranch)",
-                'echo \\"$ git checkout $branch\\"',
-                "git checkout $branch",
-                'echo \\"$ git fetch $base_remote $base_branch\\"',
-                "git fetch $base_remote $base_branch",
-                'echo \\"$ git merge $base_remote/$base_branch\\"',
-                "git merge $base_remote/$base_branch",
-            ]
-        )  # Not cross-platform!
-        config.set_value(
-            "alias",
-            "update-branch",
-            update_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseBranch",
-            context.base_branch,
-        )
-        config.set_value(
-            "gimmegit",
-            "baseRemote",
-            base_remote,
-        )
-        config.set_value(
-            "gimmegit",
-            "branch",
-            context.branch,
-        )
 
 
 def compare_usage(status: _status.Status) -> None:
@@ -289,13 +253,17 @@ def configure_logger_warning() -> None:
 
 
 def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: Context):
+    """Create the local branch and define the ``update-branch`` alias. ``context.base_branch`` cannot be ``None``."""
+    assert context.base_branch
     origin = cloned.remotes.origin
     if upstream:
-        base = upstream
         base_owner = context.upstream_owner
+        base_remote = "upstream"
+        base = upstream
     else:
-        base = origin
         base_owner = context.owner
+        base_remote = "origin"
+        base = origin
     base_branch_full = f"{base_owner}:{context.base_branch}"
     if context.create_branch:
         # Create a local branch, starting from the base branch.
@@ -329,6 +297,41 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
     branch.checkout()
+    # Define the 'update-branch' alias.
+    with cloned.config_writer() as config:
+        update_branch = "!" + " && ".join(
+            [
+                "branch=$(git config --get gimmegit.branch)",
+                "base_remote=$(git config --get gimmegit.baseRemote)",
+                "base_branch=$(git config --get gimmegit.baseBranch)",
+                'echo \\"$ git checkout $branch\\"',
+                "git checkout $branch",
+                'echo \\"$ git fetch $base_remote $base_branch\\"',
+                "git fetch $base_remote $base_branch",
+                'echo \\"$ git merge $base_remote/$base_branch\\"',
+                "git merge $base_remote/$base_branch",
+            ]
+        )  # Not cross-platform!
+        config.set_value(
+            "alias",
+            "update-branch",
+            update_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseBranch",
+            context.base_branch,
+        )
+        config.set_value(
+            "gimmegit",
+            "baseRemote",
+            base_remote,
+        )
+        config.set_value(
+            "gimmegit",
+            "branch",
+            context.branch,
+        )
 
 
 def f_blue(value: str) -> str:
