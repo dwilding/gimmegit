@@ -35,11 +35,6 @@ GITHUB_TOKEN = os.getenv("GIMMEGIT_GITHUB_TOKEN") or None
 
 
 @dataclass
-class BranchName:
-    branch: str
-
-
-@dataclass
 class Column:
     last: bool
     title: str
@@ -48,22 +43,14 @@ class Column:
 
 
 @dataclass
-class Context:
-    base_branch: str | None
-    branch: str
-    clone_url: str
-    clone_dir: Path
-    create_branch: bool
-    owner: str
-    project: str
-    upstream_owner: str | None
-    upstream_url: str | None
-
-
-@dataclass
 class FormattedStr:
     formatted: str
     plain: str
+
+
+@dataclass
+class BranchName:
+    branch: str
 
 
 @dataclass
@@ -79,6 +66,19 @@ class ParsedURL:
     owner: str
     project: str
     remote_url: str
+
+
+@dataclass
+class Context:
+    base_branch: str | None
+    branch: str
+    clone_url: str
+    clone_dir: Path
+    create_branch: bool
+    owner: str
+    project: str
+    upstream_owner: str | None
+    upstream_url: str | None
 
 
 class CloneError(RuntimeError):
