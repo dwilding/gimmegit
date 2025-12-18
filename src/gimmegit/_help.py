@@ -23,9 +23,9 @@ gimmegit [<options>] <branch-url> [-- <git-options>]            (2)
 ▶ DIRECTORY STRUCTURE
 
 When you clone a repo, gimmegit creates a dedicated directory for the clone:
-  .
-  └── <project>              The project directory. For example, 'frogtab'.
-      └── <owner>-<branch>   The clone directory. For example, 'dwilding-my-feature'.
+   .
+   └── <project>              The project directory. For example, 'frogtab'.
+       └── <owner>-<branch>   The clone directory. For example, 'dwilding-my-feature'.
 
 If the clone directory already exists, gimmegit skips cloning. If the clone directory would
 be inside an existing repo, gimmegit exits with an error. gimmegit also exits with an error
@@ -76,8 +76,8 @@ For new branches:
 
 ▶ GIT OPTIONS
 
-gimmegit sets --no-tags when cloning. To provide extra clone options, use '-- <git-options>'.
-For example, to clone tags, use '-- --tags'.
+gimmegit sets --no-tags when cloning. Use '-- <git-options>' to provide extra clone options.
+For example, use '-- --tags' to clone tags.
 
 
 ▶ PRE-COMMIT
