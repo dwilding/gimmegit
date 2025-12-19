@@ -371,7 +371,6 @@ For new branches:
 --return-dir                   Output the clone directory path to stdout and send full
                                progress to stderr.
 
-
 ▶ GIT OPTIONS
 
 gimmegit sets --no-tags when cloning. Use '-- <git-options>' to provide extra clone options.
