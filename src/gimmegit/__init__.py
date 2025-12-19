@@ -1,5 +1,5 @@
-from . import _version
+from ._version import __version__
 
 __all__ = [
-    _version.__version__,
+    "__version__",
 ]
