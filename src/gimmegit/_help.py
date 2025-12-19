@@ -2,7 +2,6 @@ help = """\
 gimmegit is a tool for cloning GitHub repos and creating branches. gimmegit puts each clone
 in a dedicated directory, based on the project, owner, and branch name.
 
-
 ▶ USAGE
 
 gimmegit [<options>] <repo> [<new-branch>] [-- <git-options>]   (1)
@@ -19,7 +18,6 @@ gimmegit [<options>] <branch-url> [-- <git-options>]            (2)
 2. Clone a GitHub repo and check out an existing branch.
    <branch-url> is a URL such as 'https://github.com/dwilding/frogtab/tree/fix-something'.
 
-
 ▶ DIRECTORY STRUCTURE
 
 When you clone a repo, gimmegit creates a dedicated directory for the clone:
@@ -32,7 +30,6 @@ be inside an existing repo, gimmegit exits with an error. gimmegit also exits wi
 if it detects that the working directory is a project directory (specifically, if the latest
 modified subdirectory is a gimmegit clone).
 
-
 ▶ BRANCH MAPPING
 
 gimmegit creates a Git alias 'update-branch' that merges remote changes from the base branch.
@@ -42,7 +39,6 @@ set, the base branch is the upstream version of the repo's main branch.
 For new branches:
  • gimmegit branches off the base branch.
  • gimmegit doesn't push the branch to GitHub.
-
 
 ▶ OPTIONS
 
@@ -79,12 +75,10 @@ For new branches:
 gimmegit sets --no-tags when cloning. Use '-- <git-options>' to provide extra clone options.
 For example, use '-- --tags' to clone tags.
 
-
 ▶ PRE-COMMIT
 
 If the repo contains a file '.pre-commit-config.yaml', gimmegit installs a pre-commit hook
 after cloning the repo. For more information, see https://pre-commit.com/.
-
 
 ▶ ADDITIONAL COMMANDS
 
@@ -99,7 +93,6 @@ gimmegit [--ssh auto|always|never] --parse-url <url>   (5)
 3. Display a summary of how to use gimmegit.
 4. Display the installed version of gimmegit.
 5. Display a JSON representation of a GitHub URL. Intended for extensions to gimmegit.
-
 
 ▶ EXAMPLES
 
