@@ -40,7 +40,7 @@ def get_actual_help_output() -> str:
             text=True,
             check=True,
         )
-        return result.stdout.rstrip()
+        return result.stdout.rstrip('\n')
     except subprocess.CalledProcessError as e:
         print(f"Error running 'uv run gimmegit -h': {e}")
         print(f"stdout: {e.stdout}")

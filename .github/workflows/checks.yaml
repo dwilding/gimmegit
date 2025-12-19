@@ -24,4 +24,4 @@ jobs:
       - name: Run unit tests
         run: uvx --from rust-just just test-unit
       - name: Check help consistency
-        run: python3 scripts/check_help_consistency.py
+        run: uv run python scripts/check_help_consistency.py
