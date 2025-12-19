@@ -16,3 +16,9 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: just-check-command-reference
+        name: Run 'just check-command-reference'
+        entry: just check-command-reference
+        language: system
+        pass_filenames: false
+        always_run: true
