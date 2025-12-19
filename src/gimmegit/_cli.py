@@ -190,7 +190,7 @@ def clone(context: Context, cloning_args: list[str]) -> None:
 
 def compare_usage(status: _status.Status) -> None:
     if not status.has_remote:
-        exit_with_error("The review branch has not been created.")
+        exit_with_error("The review branch has not been created. Push to GitHub first.")
     if not os.isatty(sys.stdout.fileno()):
         logger.log(DATA_LEVEL, status.compare_url)
         return
