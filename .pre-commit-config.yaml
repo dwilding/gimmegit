@@ -10,9 +10,15 @@ repos:
       - id: check-toml
   - repo: local
     hooks:
-      - id: just-default
-        name: Run default 'just' recipe
+      - id: just
+        name: Run 'just'
         entry: just
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: just-check-command-reference
+        name: Run 'just check-command-reference'
+        entry: just check-command-reference
         language: system
         pass_filenames: false
         always_run: true

@@ -15,8 +15,12 @@ test-functional: (test "tests/functional")
 test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
+check-command-reference:
+  #!/bin/bash
+  diff <(uv run .scripts/extract_command_reference.py) <(uv run gimmegit -h)
+
 demo:
-  #!/bin/sh
+  #!/bin/bash
   package_dir="$PWD"
   mkdir -p demo
   cd demo

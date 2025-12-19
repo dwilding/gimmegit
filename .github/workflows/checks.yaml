@@ -23,3 +23,5 @@ jobs:
         run: uvx --from rust-just just lint
       - name: Run unit tests
         run: uvx --from rust-just just test-unit
+      - name: Check the command reference
+        run: uvx --from rust-just just check-command-reference
