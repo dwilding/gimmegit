@@ -23,3 +23,5 @@ jobs:
         run: uvx --from rust-just just lint
       - name: Run unit tests
         run: uvx --from rust-just just test-unit
+      - name: Check help consistency
+        run: python3 scripts/check_help_consistency.py
