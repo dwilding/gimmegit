@@ -10,8 +10,8 @@ repos:
       - id: check-toml
   - repo: local
     hooks:
-      - id: just-default
-        name: Run default 'just' recipe
+      - id: just
+        name: Run 'just'
         entry: just
         language: system
         pass_filenames: false
