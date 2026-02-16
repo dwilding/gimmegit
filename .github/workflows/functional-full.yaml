@@ -1,16 +1,19 @@
-name: Functional tests (anonymous)
+name: Full functional tests
 
 on:
-  pull_request:
-  workflow_call:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  functional:
+  functional-full:
     runs-on: ubuntu-latest
+    environment: personal-token
     steps:
       - uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Run functional tests
         run: uvx --from rust-just just test-functional
+        env:
+          GITHUB_TOKEN: ${{ secrets.DWILDING_GITHUB_TOKEN }}
