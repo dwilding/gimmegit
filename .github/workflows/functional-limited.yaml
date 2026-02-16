@@ -2,8 +2,6 @@ name: Limited functional tests
 
 on:
   pull_request:
-  workflow_call:
-  workflow_dispatch:
 
 jobs:
   functional-limited:
