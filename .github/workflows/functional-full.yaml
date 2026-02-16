@@ -8,12 +8,20 @@ on:
 jobs:
   functional-full:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - '3.11'
+          - '3.12'
+          - '3.13'
+          - '3.14'
     environment: personal-token
     steps:
       - uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Run functional tests
-        run: uvx --from rust-just just test-functional
         env:
+          UV_PYTHON: ${{ matrix.python-version }}
           GITHUB_TOKEN: ${{ secrets.DWILDING_GITHUB_TOKEN }}
+        run: uvx --from rust-just just test-functional
