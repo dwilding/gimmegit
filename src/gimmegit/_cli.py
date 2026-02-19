@@ -451,10 +451,9 @@ def get_context(args: argparse.Namespace) -> Context:
 
 
 def get_default_branch(cloned: git.Repo) -> str:
-    for ref in cloned.remotes.origin.refs:
-        if ref.name == "origin/HEAD":
-            return ref.ref.name.removeprefix("origin/")
-    raise RuntimeError("Unable to identify default branch.")
+    if "HEAD" not in cloned.remotes.origin.refs:
+        raise RuntimeError("Unable to identify default branch.")
+    return cloned.remotes.origin.refs["HEAD"].ref.name.removeprefix("origin/")
 
 
 def get_github_login() -> str:
