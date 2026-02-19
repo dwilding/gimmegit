@@ -240,32 +240,27 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     assert context.base_branch
     origin = cloned.remotes.origin
     if upstream:
-        try:
-            upstream.fetch(no_tags=True)
-        except git.CommandError:
-            if SSH:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
-                )
-            else:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
-                )
         base_owner = context.upstream_owner
         base_remote = "upstream"
         base = upstream
+        if SSH:
+            base_read_error = "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
+        else:
+            base_read_error = "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
     else:
         base_owner = context.owner
         base_remote = "origin"
         base = origin
+        base_read_error = (
+            "Unable to fetch repo."  # Should only be seen in case of a network issue.
+        )
     base_branch_full = f"{base_owner}:{context.base_branch}"
     if context.create_branch:
         # Create a local branch, starting from the base branch.
         logger.info(
             f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
         )
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
+        fetch_base_branch(base, context.base_branch, base_read_error, base_branch_full)
         branch = cloned.create_head(context.branch, base.refs[context.base_branch])
         # Ensure that on first push, a remote branch is created and set as the tracking branch.
         # The remote branch will be created on origin (the default remote).
@@ -284,8 +279,7 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         # Create a local branch that tracks the existing branch on origin.
         branch_full = f"{context.owner}:{context.branch}"
         logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
+        fetch_base_branch(base, context.base_branch, base_read_error, base_branch_full)
         if context.branch not in origin.refs:
             raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
@@ -352,6 +346,20 @@ def f_link(value: str, url: str) -> str:
         return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
     else:
         return value
+
+
+def fetch_base_branch(base: git.Remote, spec: str, read_error: str, full: str) -> None:
+    try:
+        base.fetch(spec, no_tags=True)
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError(read_error)
+        if ": couldn't find remote ref " in e.stderr:
+            raise CloneError(f"The base branch {f_blue(full)} does not exist.")
+        raise
 
 
 def get_context(args: argparse.Namespace) -> Context:

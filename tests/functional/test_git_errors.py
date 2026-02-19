@@ -287,6 +287,7 @@ def test_invalid_upstream(uv_run, test_dir, askpass_env):
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
 Setting upstream to https://github.com/_invalid/jubilant.git
+Checking out a new branch my-feature based on _invalid:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
