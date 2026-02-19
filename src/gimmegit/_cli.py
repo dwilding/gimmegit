@@ -167,17 +167,6 @@ def clone(context: Context, cloning_args: list[str]) -> None:
     if context.upstream_url:
         logger.info(f"Setting upstream to {context.upstream_url}")
         upstream = cloned.create_remote("upstream", context.upstream_url)
-        try:
-            upstream.fetch(no_tags=True)
-        except git.CommandError:
-            if SSH:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
-                )
-            else:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
-                )
         create_local_branch(cloned, upstream, context)
     else:
         create_local_branch(cloned, None, context)
@@ -251,6 +240,17 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     assert context.base_branch
     origin = cloned.remotes.origin
     if upstream:
+        try:
+            upstream.fetch(no_tags=True)
+        except git.CommandError:
+            if SSH:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
+                )
+            else:
+                raise CloneError(
+                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
+                )
         base_owner = context.upstream_owner
         base_remote = "upstream"
         base = upstream
