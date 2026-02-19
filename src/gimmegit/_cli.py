@@ -144,6 +144,23 @@ def main() -> None:
         status_usage(status)
 
 
+def branch_taken(origin: git.Remote, spec: str) -> bool:
+    try:
+        origin.fetch(
+            spec, depth=1
+        )  # We don't care about history because we'll abort if the branch is taken.
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError("Unable to fetch repo.")  # Shouldn't happen in practice.
+        if ": couldn't find remote ref " in e.stderr:
+            return False
+        raise
+    return True
+
+
 def clone(context: Context, cloning_args: list[str]) -> None:
     logger.info(f"Cloning {context.clone_url}")
     try:
@@ -160,7 +177,7 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
             )
     origin = cloned.remotes.origin
-    if context.create_branch and context.branch in origin.refs:
+    if context.create_branch and branch_taken(origin, context.branch):
         raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
@@ -251,16 +268,14 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         base_owner = context.owner
         base_remote = "origin"
         base = origin
-        base_read_error = (
-            "Unable to fetch repo."  # Should only be seen in case of a network issue.
-        )
+        base_read_error = "Unable to fetch repo."  # Shouldn't happen in practice.
     base_branch_full = f"{base_owner}:{context.base_branch}"
     if context.create_branch:
         # Create a local branch, starting from the base branch.
         logger.info(
             f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
         )
-        fetch_base_branch(base, context.base_branch, base_read_error, base_branch_full)
+        fetch_base_branch(base, context.base_branch, base_branch_full, base_read_error)
         branch = cloned.create_head(context.branch, base.refs[context.base_branch])
         # Ensure that on first push, a remote branch is created and set as the tracking branch.
         # The remote branch will be created on origin (the default remote).
@@ -279,9 +294,8 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         # Create a local branch that tracks the existing branch on origin.
         branch_full = f"{context.owner}:{context.branch}"
         logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
-        fetch_base_branch(base, context.base_branch, base_read_error, base_branch_full)
-        if context.branch not in origin.refs:
-            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
+        fetch_base_branch(base, context.base_branch, base_branch_full, base_read_error)
+        fetch_branch(origin, context.branch, branch_full)
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
     branch.checkout()
@@ -348,7 +362,7 @@ def f_link(value: str, url: str) -> str:
         return value
 
 
-def fetch_base_branch(base: git.Remote, spec: str, read_error: str, full: str) -> None:
+def fetch_base_branch(base: git.Remote, spec: str, full: str, read_error: str) -> None:
     try:
         base.fetch(spec, no_tags=True)
     except git.CommandError as e:
@@ -359,6 +373,20 @@ def fetch_base_branch(base: git.Remote, spec: str, read_error: str, full: str) -
             raise CloneError(read_error)
         if ": couldn't find remote ref " in e.stderr:
             raise CloneError(f"The base branch {f_blue(full)} does not exist.")
+        raise
+
+
+def fetch_branch(origin: git.Remote, spec: str, full: str) -> None:
+    try:
+        origin.fetch(spec, no_tags=True)
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError("Unable to fetch repo.")  # Shouldn't happen in practice.
+        if ": couldn't find remote ref " in e.stderr:
+            raise CloneError(f"The branch {f_blue(full)} does not exist.")
         raise
 
 
