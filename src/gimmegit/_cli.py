@@ -159,7 +159,7 @@ def branch_taken(origin: git.Remote, branch: str) -> bool:
         return True
     try:
         # We'll abort if the branch exists. So there's no need to fetch history or create a ref.
-        origin.fetch(branch, depth=1)
+        origin.fetch(f"refs/heads/{branch}", no_tags=True, depth=1)
     except git.CommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
@@ -387,8 +387,8 @@ def fetch_base(base: Base) -> None:
     try:
         # We need a refspec to make Git create a ref, in case of origin, because origin is marked
         # as single-branch.
-        refspec = f"{base.branch}:refs/remotes/{base.remote_name}/{base.branch}"
-        base.remote.fetch(refspec, no_tags=True)
+        refspec = f"refs/heads/{base.branch}:refs/remotes/{base.remote_name}/{base.branch}"
+        base.remote.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
     except git.CommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
@@ -403,8 +403,8 @@ def fetch_base(base: Base) -> None:
 def fetch_branch(origin: git.Remote, branch: str, full: str) -> None:
     try:
         # We need a refspec to make Git create a ref, because origin is marked as single-branch.
-        refspec = f"{branch}:refs/remotes/origin/{branch}"
-        origin.fetch(refspec, no_tags=True)
+        refspec = f"refs/heads/{branch}:refs/remotes/origin/{branch}"
+        origin.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
     except git.CommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
