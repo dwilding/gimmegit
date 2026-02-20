@@ -176,7 +176,7 @@ def clone(context: Context, cloning_args: list[str]) -> None:
     logger.info(f"Cloning {context.clone_url}")
     try:
         cloned = git.Repo.clone_from(
-            context.clone_url, context.clone_dir, multi_options=[*cloning_args, "--single-branch"]
+            context.clone_url, context.clone_dir, multi_options=cloning_args, single_branch=True
         )
     except git.GitCommandError:
         if SSH:
