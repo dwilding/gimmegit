@@ -329,8 +329,8 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
                 "base_branch=$(git config --get gimmegit.baseBranch)",
                 'echo \\"$ git checkout $branch\\"',
                 "git checkout $branch",
-                'echo \\"$ git fetch $base_remote $base_branch\\"',
-                "git fetch $base_remote $base_branch",
+                'echo \\"$ git fetch --no-tags $base_remote $base_branch\\"',
+                "git fetch --no-tags $base_remote $base_branch",
                 'echo \\"$ git merge $base_remote/$base_branch\\"',
                 "git merge $base_remote/$base_branch",
             ]
@@ -388,7 +388,7 @@ def fetch_base(base: Base) -> None:
         # We need a refspec to make Git create a ref, in case of origin, because origin is marked
         # as single-branch.
         refspec = f"refs/heads/{base.branch}:refs/remotes/{base.remote_name}/{base.branch}"
-        base.remote.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
+        base.remote.fetch(refspec, no_tags=True)
     except git.CommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
@@ -404,7 +404,7 @@ def fetch_branch(origin: git.Remote, branch: str, full: str) -> None:
     try:
         # We need a refspec to make Git create a ref, because origin is marked as single-branch.
         refspec = f"refs/heads/{branch}:refs/remotes/origin/{branch}"
-        origin.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
+        origin.fetch(refspec, no_tags=True)
     except git.CommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
