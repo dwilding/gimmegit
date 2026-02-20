@@ -49,6 +49,16 @@ class FormattedStr:
 
 
 @dataclass
+class Base:
+    branch: str
+    full: str
+    owner: str
+    read_error: str
+    remote: git.Remote
+    remote_name: str
+
+
+@dataclass
 class BranchName:
     branch: str
 
@@ -144,11 +154,29 @@ def main() -> None:
         status_usage(status)
 
 
+def branch_taken(origin: git.Remote, branch: str) -> bool:
+    if branch in origin.refs:
+        return True
+    try:
+        # We'll abort if the branch exists. So there's no need to fetch history or create a ref.
+        origin.fetch(f"refs/heads/{branch}", no_tags=True, depth=1)
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError("Unable to fetch repo.")
+        if ": couldn't find remote ref " in e.stderr:
+            return False
+        raise
+    return True
+
+
 def clone(context: Context, cloning_args: list[str]) -> None:
     logger.info(f"Cloning {context.clone_url}")
     try:
         cloned = git.Repo.clone_from(
-            context.clone_url, context.clone_dir, multi_options=cloning_args
+            context.clone_url, context.clone_dir, multi_options=[*cloning_args, "--single-branch"]
         )
     except git.GitCommandError:
         if SSH:
@@ -160,24 +188,13 @@ def clone(context: Context, cloning_args: list[str]) -> None:
                 "Unable to clone repo. Is the repo private? Try configuring Git to use SSH."
             )
     origin = cloned.remotes.origin
-    if context.create_branch and context.branch in origin.refs:
+    if context.create_branch and branch_taken(origin, context.branch):
         raise CloneError(f"The branch {f_blue(context.branch)} already exists.")
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
     if context.upstream_url:
         logger.info(f"Setting upstream to {context.upstream_url}")
         upstream = cloned.create_remote("upstream", context.upstream_url)
-        try:
-            upstream.fetch(no_tags=True)
-        except git.CommandError:
-            if SSH:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
-                )
-            else:
-                raise CloneError(
-                    "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH."
-                )
         create_local_branch(cloned, upstream, context)
     else:
         create_local_branch(cloned, None, context)
@@ -251,22 +268,34 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     assert context.base_branch
     origin = cloned.remotes.origin
     if upstream:
-        base_owner = context.upstream_owner
-        base_remote = "upstream"
-        base = upstream
+        assert context.upstream_owner
+        base = Base(
+            branch=context.base_branch,
+            full=f"{context.upstream_owner}:{context.base_branch}",
+            owner=context.upstream_owner,
+            read_error="Unable to fetch upstream repo. Do you have access to the repo? Is SSH correctly configured?"
+            if SSH
+            else "Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH.",
+            remote=upstream,
+            remote_name="upstream",
+        )
     else:
-        base_owner = context.owner
-        base_remote = "origin"
-        base = origin
-    base_branch_full = f"{base_owner}:{context.base_branch}"
+        base = Base(
+            branch=context.base_branch,
+            full=f"{context.owner}:{context.base_branch}",
+            owner=context.owner,
+            read_error="Unable to fetch repo. Try running gimmegit again.",
+            remote=origin,
+            remote_name="origin",
+        )
     if context.create_branch:
         # Create a local branch, starting from the base branch.
         logger.info(
-            f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base_branch_full)}"
+            f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base.full)}"
         )
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
-        branch = cloned.create_head(context.branch, base.refs[context.base_branch])
+        if base.branch not in base.remote.refs:
+            fetch_base(base)
+        branch = cloned.create_head(context.branch, base.remote.refs[base.branch])
         # Ensure that on first push, a remote branch is created and set as the tracking branch.
         # The remote branch will be created on origin (the default remote).
         with cloned.config_writer() as config:
@@ -283,11 +312,11 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
     else:
         # Create a local branch that tracks the existing branch on origin.
         branch_full = f"{context.owner}:{context.branch}"
-        logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base_branch_full)}")
-        if context.base_branch not in base.refs:
-            raise CloneError(f"The base branch {f_blue(base_branch_full)} does not exist.")
+        logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base.full)}")
+        if base.branch not in base.remote.refs:
+            fetch_base(base)
         if context.branch not in origin.refs:
-            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
+            fetch_branch(origin, context.branch, branch_full)
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
     branch.checkout()
@@ -314,12 +343,12 @@ def create_local_branch(cloned: git.Repo, upstream: git.Remote | None, context: 
         config.set_value(
             "gimmegit",
             "baseBranch",
-            context.base_branch,
+            base.branch,
         )
         config.set_value(
             "gimmegit",
             "baseRemote",
-            base_remote,
+            base.remote_name,
         )
         config.set_value(
             "gimmegit",
@@ -352,6 +381,39 @@ def f_link(value: str, url: str) -> str:
         return f"\033]8;;{url}\a{f_blue(value)}\033]8;;\a"
     else:
         return value
+
+
+def fetch_base(base: Base) -> None:
+    try:
+        # We need a refspec to make Git create a ref, in case of origin, because origin is marked
+        # as single-branch.
+        refspec = f"refs/heads/{base.branch}:refs/remotes/{base.remote_name}/{base.branch}"
+        base.remote.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError(base.read_error)
+        if ": couldn't find remote ref " in e.stderr:
+            raise CloneError(f"The base branch {f_blue(base.full)} does not exist.")
+        raise
+
+
+def fetch_branch(origin: git.Remote, branch: str, full: str) -> None:
+    try:
+        # We need a refspec to make Git create a ref, because origin is marked as single-branch.
+        refspec = f"refs/heads/{branch}:refs/remotes/origin/{branch}"
+        origin.fetch(refspec, no_tags=True)  # TODO: Replace no_tags by fetch options.
+    except git.CommandError as e:
+        if (
+            ": Could not read from remote repository." in e.stderr
+            or ": Authentication failed for " in e.stderr
+        ):
+            raise CloneError("Unable to fetch repo. Try running gimmegit again.")
+        if ": couldn't find remote ref " in e.stderr:
+            raise CloneError(f"The branch {f_blue(full)} does not exist.")
+        raise
 
 
 def get_context(args: argparse.Namespace) -> Context:
@@ -415,10 +477,9 @@ def get_context(args: argparse.Namespace) -> Context:
 
 
 def get_default_branch(cloned: git.Repo) -> str:
-    for ref in cloned.remotes.origin.refs:
-        if ref.name == "origin/HEAD":
-            return ref.ref.name.removeprefix("origin/")
-    raise RuntimeError("Unable to identify default branch.")
+    if "HEAD" not in cloned.remotes.origin.refs:
+        raise RuntimeError("Unable to identify default branch.")
+    return cloned.remotes.origin.refs["HEAD"].ref.name.removeprefix("origin/")
 
 
 def get_github_login() -> str:

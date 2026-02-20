@@ -38,6 +38,14 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
     assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/HEAD -> origin/main
+  origin/main
+  upstream/main
+"""
+    )
 
 
 @pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
