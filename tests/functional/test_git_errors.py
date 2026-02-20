@@ -43,13 +43,20 @@ Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH
     assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
 
 
-def test_branch_exists(uv_run, test_dir, askpass_env):
+@pytest.mark.parametrize(
+    "new_branch",
+    [
+        "main",
+        "jubilant-backports",
+    ],
+)
+def test_branch_exists(uv_run, test_dir, askpass_env, new_branch: str):
     command = [
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "dwilding/jubilant",
-        "main",
+        "canonical/jubilant",
+        new_branch,
     ]
     result = subprocess.run(
         command,
@@ -61,15 +68,15 @@ def test_branch_exists(uv_run, test_dir, askpass_env):
     assert result.returncode == 1
     expected_stdout = """\
 Getting repo details
-Cloning https://github.com/dwilding/jubilant.git
+Cloning https://github.com/canonical/jubilant.git
 """
     assert result.stdout == expected_stdout
-    expected_stderr = """\
-Error: The branch main already exists.
+    expected_stderr = f"""\
+Error: The branch {new_branch} already exists.
 """
     assert result.stderr == expected_stderr
     assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+    assert not (Path(test_dir) / f"jubilant/canonical-{new_branch}").exists()
 
 
 def test_invalid_branch(uv_run, test_dir, askpass_env):
@@ -77,7 +84,7 @@ def test_invalid_branch(uv_run, test_dir, askpass_env):
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "https://github.com/dwilding/jubilant/tree/invalid",
+        "https://github.com/canonical/jubilant/tree/invalid",
     ]
     result = subprocess.run(
         command,
@@ -89,16 +96,16 @@ def test_invalid_branch(uv_run, test_dir, askpass_env):
     assert result.returncode == 1
     expected_stdout = """\
 Getting repo details
-Cloning https://github.com/dwilding/jubilant.git
-Checking out dwilding:invalid with base dwilding:main
+Cloning https://github.com/canonical/jubilant.git
+Checking out canonical:invalid with base canonical:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: The branch dwilding:invalid does not exist.
+Error: The branch canonical:invalid does not exist.
 """
     assert result.stderr == expected_stderr
     assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+    assert not (Path(test_dir) / "jubilant/canonical-my-feature").exists()
 
 
 def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):

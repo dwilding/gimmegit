@@ -45,3 +45,14 @@ def get_config(dir: Path, name: str) -> str:
         check=True,
     )
     return result.stdout.strip()
+
+
+def get_remote_branches(dir: Path) -> str:
+    result = subprocess.run(
+        ["git", "branch", "--remotes"],
+        cwd=dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout

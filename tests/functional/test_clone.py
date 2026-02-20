@@ -4,6 +4,85 @@ import subprocess
 import helpers_functional as helpers
 
 
+def test_repo_branch_off(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "canonical/operator",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "operator/canonical-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/operator.git
+Checking out a new branch my-feature based on canonical:main
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert helpers.get_branch(expected_dir) == "my-feature"
+    assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
+    assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "origin"
+    assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/HEAD -> origin/main
+  origin/main
+"""
+    )
+
+
+def test_repo_branch_off_base(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-b",
+        "2.23-maintenance",
+        "canonical/operator",
+        "my-feature-2.23",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "operator/canonical-my-feature-2.23"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/operator.git
+Checking out a new branch my-feature-2.23 based on canonical:2.23-maintenance
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert helpers.get_branch(expected_dir) == "my-feature-2.23"
+    assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature-2.23"
+    assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "origin"
+    assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "2.23-maintenance"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/2.23-maintenance
+  origin/HEAD -> origin/main
+  origin/main
+"""
+    )
+
+
 def test_repo_branch(uv_run, test_dir):
     command = [
         *uv_run,
@@ -32,6 +111,14 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.branch") == "2.23-maintenance"
     assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "origin"
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/2.23-maintenance
+  origin/HEAD -> origin/main
+  origin/main
+"""
+    )
 
 
 def test_forked_repo(uv_run, test_dir):
@@ -66,6 +153,58 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
     assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/HEAD -> origin/main
+  origin/main
+  upstream/main
+"""
+    )
+
+
+def test_forked_repo_base(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-b",
+        "jubilant-backports",
+        "-u",
+        "canonical",
+        "dwilding/jubilant",
+        "my-feature-backports",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature-backports"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Setting upstream to https://github.com/canonical/jubilant.git
+Checking out a new branch my-feature-backports based on canonical:jubilant-backports
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert helpers.get_branch(expected_dir) == "my-feature-backports"
+    assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature-backports"
+    assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
+    assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "jubilant-backports"
+    assert (
+        helpers.get_remote_branches(expected_dir)
+        == """\
+  origin/HEAD -> origin/main
+  origin/main
+  upstream/jubilant-backports
+"""
+    )
 
 
 def test_existing_clone(uv_run, test_dir):
