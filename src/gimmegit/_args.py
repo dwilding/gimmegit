@@ -29,6 +29,7 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("--force-project-dir", action="store_true")
     parser.add_argument("--allow-outer-repo", action="store_true")
     parser.add_argument("--no-pre-commit", action="store_true")
+    parser.add_argument("-j", "--jumbo", action="store_true")
     parser.add_argument("-b", "--base-branch", nargs="?")
     parser.add_argument("-u", "--upstream-owner", nargs="?")
     parser.add_argument("repo", nargs="?")
@@ -83,6 +84,9 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
         args.allow_outer_repo = False
     if not hasattr(args, "no_pre_commit"):
         args.no_pre_commit = False
+    # Handle -j/--jumbo.
+    if not hasattr(args, "jumbo"):
+        args.jumbo = False
     # Handle -b/--base-branch and -u/--upstream-owner.
     if not hasattr(args, "base_branch"):
         args.base_branch = None
@@ -204,6 +208,8 @@ def add_non_primary_unknown_args(args: argparse.Namespace, unknown_args: list[st
         extended.append("--allow-outer-repo")
     if hasattr(args, "no_pre_commit"):
         extended.append("--no-pre-commit")
+    if hasattr(args, "jumbo"):
+        extended.append("-j/--jumbo")
     if hasattr(args, "base_branch"):
         extended.append("-b/--base-branch")
     if hasattr(args, "upstream_owner"):

@@ -52,6 +52,9 @@ For new branches:
                                If '-b https://github.com/<owner>/<project>/tree/<name>',
                                gimmegit sets the base branch and ignores -u.
 
+-j, --jumbo                    Set '--shallow-since <date>' when cloning the repo, where
+                               <date> is 3 weeks before the latest commit on the main branch.
+
 --no-pre-commit                Don't try to install a pre-commit hook after cloning the repo.
 
 --allow-outer-repo             Allow the clone directory to be inside a repo.
@@ -71,8 +74,8 @@ For new branches:
 
 ▶ GIT CLONE OPTIONS
 
-gimmegit sets --no-tags when cloning. Use '-- <git-options>' to provide extra clone options.
-For example, use '-- --tags' to clone tags.
+gimmegit sets --no-tags and --single-branch when cloning the repo. Use '-- <options>' to
+provide extra 'git clone' options. For example, use '-- --tags' to cancel out --no-tags.
 
 ▶ PRE-COMMIT
 

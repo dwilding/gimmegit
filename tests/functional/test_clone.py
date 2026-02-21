@@ -402,3 +402,30 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+
+
+def test_jumbo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-j",
+        "juju/juju",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "juju/juju-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/juju/juju.git
+Checking out a new branch my-feature based on juju:main
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
