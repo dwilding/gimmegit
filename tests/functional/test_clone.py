@@ -1,3 +1,4 @@
+from datetime import datetime, date
 from pathlib import Path
 import subprocess
 
@@ -402,3 +403,36 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+
+
+def test_jumbo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-j",
+        "-u",
+        "juju",
+        "dwilding/juju",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = Path(test_dir) / "juju/dwilding-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/juju.git
+Setting upstream to https://github.com/juju/juju.git
+Checking out a new branch my-feature based on juju:main
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    raw_commit_date = helpers.get_first_commit_date(expected_dir)
+    commit_date = datetime.strptime(raw_commit_date, "%Y-%m-%d").date()
+    assert commit_date > date(2026, 1, 1)
