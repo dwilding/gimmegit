@@ -23,4 +23,4 @@ jobs:
       - name: Run unit tests
         env:
           UV_PYTHON: ${{ matrix.python-version }}
-        run: uvx --from rust-just just test-unit
+        run: uvx --from rust-just just unit
