@@ -180,18 +180,7 @@ def clone(context: Context, jumbo: bool, extra_args: list[str]) -> None:
     )
     if jumbo:
         try:
-            cloned = git.Repo.clone_from(
-                context.clone_url,
-                context.clone_dir,
-                single_branch=True,
-                no_tags=True,
-                depth=1,
-            )
-        except git.GitCommandError:
-            raise CloneError(clone_error)
-        shallow_date = make_shallow_date(cloned)
-        shutil.rmtree(context.clone_dir, ignore_errors=True)
-        try:
+            shallow_date = make_shallow_date(context.clone_url)
             cloned = git.Repo.clone_from(
                 context.clone_url,
                 context.clone_dir,
@@ -648,9 +637,18 @@ def make_github_url(repo: str) -> str:
     raise ValueError(f"'{repo}' is not a supported repo.")
 
 
-def make_shallow_date(cloned: git.Repo) -> str:
-    tip = cloned.head.commit
-    committed = datetime.fromtimestamp(tip.committed_date, tz=timezone.utc)
+def make_shallow_date(clone_url: str) -> str:
+    with tempfile.TemporaryDirectory() as empty_dir:
+        cloned = git.Repo.clone_from(
+            clone_url,
+            empty_dir,
+            single_branch=True,
+            bare=True,
+            filter="blob:none",
+            depth=1,
+        )
+        tip = cloned.head.commit
+        committed = datetime.fromtimestamp(tip.committed_date, tz=timezone.utc)
     date = committed - timedelta(days=21)
     return date.strftime("%Y-%m-%d")
 
