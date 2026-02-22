@@ -36,6 +36,17 @@ def get_branch(dir: Path) -> str:
     return result.stdout.strip()
 
 
+def get_first_commit_date(dir: Path) -> str:
+    result = subprocess.run(
+        ["git", "log", "--reverse", "--format=%cd", "--date=format:%Y-%m-%d"],
+        cwd=dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.splitlines()[0].strip()
+
+
 def get_config(dir: Path, name: str) -> str:
     result = subprocess.run(
         ["git", "config", "--get", name],
