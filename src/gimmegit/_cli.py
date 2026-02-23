@@ -572,7 +572,7 @@ def make_columns(status: _status.Status) -> list[Column]:
     return [project, base, review]
 
 
-def make_connection_error(upstream: bool):
+def make_connection_error(upstream: bool) -> str:
     repo = "upstream repo" if upstream else "repo"
     if SSH:
         return f"Unable to access {repo}. Do you have access to the repo? Is SSH correctly configured?"
