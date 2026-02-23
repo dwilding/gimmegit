@@ -153,8 +153,21 @@ def main() -> None:
         status_usage(status)
 
 
+def check_branch_not_taken(clone_url: str, branch: str) -> None:
+    with tempfile.TemporaryDirectory() as empty_dir:
+        try:
+            result = git.Git(empty_dir).ls_remote(clone_url, branch, heads=True).strip()
+        except git.GitCommandError:
+            raise CloneError(make_connection_error(False))
+        if result:
+            raise CloneError(f"The repo already has a branch {f_blue(branch)}.")
+
+
 def clone(context: Context, jumbo: bool, extra_args: list[str]) -> None:
     logger.info(f"Cloning {context.clone_url}")
+    context.clone_dir.parent.mkdir(exist_ok=True)
+    if context.create_branch:
+        check_branch_not_taken(context.clone_url, context.branch)
     if jumbo:
         try:
             shallow_date = make_shallow_date(context.clone_url)
@@ -274,7 +287,7 @@ def create_local_branch(
             branch=context.base_branch,
             full=f"{context.owner}:{context.base_branch}",
             owner=context.owner,
-            read_error="Unable to connect to repo. Try running gimmegit again.",
+            read_error="Unable to access repo. Try running gimmegit again.",
             remote=origin,
             remote_name="origin",
         )
@@ -385,7 +398,8 @@ def fetch_base(base: Base, shallow_date: str | None) -> None:
             base.remote.fetch(refspec, no_tags=True)
     except git.GitCommandError as e:
         if (
-            ": Could not read from remote repository." in e.stderr
+            ": Could not resolve host:" in e.stderr
+            or ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
         ):
             raise CloneError(base.read_error)
@@ -404,10 +418,11 @@ def fetch_branch(origin: git.Remote, branch: str, full: str, shallow_date: str |
             origin.fetch(refspec, no_tags=True)
     except git.GitCommandError as e:
         if (
-            ": Could not read from remote repository." in e.stderr
+            ": Could not resolve host:" in e.stderr
+            or ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
         ):
-            raise CloneError("Unable to connect to repo. Try running gimmegit again.")
+            raise CloneError("Unable to access repo. Try running gimmegit again.")
         if ": couldn't find remote ref " in e.stderr:
             raise CloneError(f"The branch {f_blue(full)} does not exist.")
         raise
@@ -519,12 +534,6 @@ def install_pre_commit(clone_dir: Path) -> None:
     )
 
 
-def is_branch_taken(clone_url: str, branch: str) -> bool:
-    with tempfile.TemporaryDirectory() as empty_dir:
-        result = git.Git(empty_dir).ls_remote(clone_url, branch, heads=True).strip()
-        return bool(result)
-
-
 def is_valid_branch_name(branch: str) -> bool:
     # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
     # Such references should be flagged as invalid, so we run the Git command in an empty dir.
@@ -566,9 +575,9 @@ def make_columns(status: _status.Status) -> list[Column]:
 def make_connection_error(upstream: bool):
     repo = "upstream repo" if upstream else "repo"
     if SSH:
-        return f"Unable to connect to {repo}. Do you have access to the repo? Is SSH correctly configured?"
+        return f"Unable to access {repo}. Do you have access to the repo? Is SSH correctly configured?"
     else:
-        return f"Unable to clone {repo}. Is the repo private? Try configuring Git to use SSH."
+        return f"Unable to access {repo}. Is the repo private? Try configuring Git to use SSH."
 
 
 def make_formatted_title(col: Column) -> FormattedStr:
@@ -716,12 +725,6 @@ def primary_usage(args: argparse.Namespace, extra_args: list[str]) -> None:
             exit_with_error(
                 "The working directory contains a gimmegit clone. Try running gimmegit in the parent directory."
             )
-    if context.create_branch:
-        try:
-            if is_branch_taken(context.clone_url, context.branch):
-                exit_with_error(f"The branch {f_blue(context.branch)} already exists.")
-        except git.GitCommandError:
-            exit_with_error(make_connection_error(False))
     try:
         clone(context, args.jumbo, extra_args)
     except CloneError as e:
