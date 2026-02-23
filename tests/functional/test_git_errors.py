@@ -1,4 +1,3 @@
-from pathlib import Path
 import os
 import subprocess
 
@@ -39,8 +38,8 @@ Cloning https://github.com/dwilding/invalid.git
 Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "invalid").exists()
-    assert not (Path(test_dir) / "invalid/dwilding-my-feature").exists()
+    assert (test_dir / "invalid").exists()
+    assert not (test_dir / "invalid/dwilding-my-feature").exists()
 
 
 @pytest.mark.parametrize(
@@ -75,8 +74,8 @@ Cloning https://github.com/canonical/jubilant.git
 Error: The branch {new_branch} already exists.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / f"jubilant/canonical-{new_branch}").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / f"jubilant/canonical-{new_branch}").exists()
 
 
 def test_invalid_branch(uv_run, test_dir, askpass_env):
@@ -104,8 +103,8 @@ Checking out canonical:invalid with base canonical:main
 Error: The branch canonical:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/canonical-my-feature").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/canonical-my-feature").exists()
 
 
 def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
@@ -136,8 +135,8 @@ Checking out dwilding:invalid with base canonical:main
 Error: The branch dwilding:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
 def test_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
@@ -167,8 +166,8 @@ Checking out dwilding:main with base dwilding:invalid
 Error: The base branch dwilding:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-main").exists()
 
 
 def test_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
@@ -201,8 +200,8 @@ Checking out dwilding:main with base canonical:invalid
 Error: The base branch canonical:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-main").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-main").exists()
 
 
 def test_new_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
@@ -233,8 +232,8 @@ Checking out a new branch my-feature based on dwilding:invalid
 Error: The base branch dwilding:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
 def test_new_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
@@ -268,8 +267,8 @@ Checking out a new branch my-feature based on canonical:invalid
 Error: The base branch canonical:invalid does not exist.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
 def test_invalid_upstream(uv_run, test_dir, askpass_env):
@@ -301,5 +300,5 @@ Checking out a new branch my-feature based on _invalid:main
 Error: Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
-    assert (Path(test_dir) / "jubilant").exists()
-    assert not (Path(test_dir) / "jubilant/dwilding-my-feature").exists()
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-my-feature").exists()

@@ -1,4 +1,6 @@
-check: lint test-unit
+[private]
+default:
+  @just --summary --unsorted
 
 format:
   uv run ruff format
@@ -8,17 +10,23 @@ lint:
   uv run ruff format --diff
   uv run ty check
 
-test-unit: (test "tests/unit")
+unit: (test "tests/unit")
 
-test-functional: (test "tests/functional")
+functional: (test "tests/functional")
 
+[private]
+stress: (test "tests/stress")
+
+[private]
 test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
+[private]
 check-command-reference:
   #!/bin/bash
   diff <(uv run .scripts/extract_command_reference.py) <(uv run gimmegit -h)
 
+[private]
 demo:
   #!/bin/bash
   package_dir="$PWD"
