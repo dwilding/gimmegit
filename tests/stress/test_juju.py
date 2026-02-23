@@ -19,7 +19,7 @@ def test_juju_clone_main(uv_run, test_dir):
     assert (test_dir / "juju/dwilding-main").exists()
 
 
-def test_juju_update_main(uv_run, test_dir):
+def test_juju_update_main(test_dir):
     subprocess.run(
         ["git", "update-branch"],
         cwd=test_dir / "juju/dwilding-main",
@@ -71,3 +71,11 @@ def test_juju_clone_branch(uv_run, test_dir):
         check=True,
     )
     assert (test_dir / "juju/dwilding-test-gimmegit").exists()
+
+
+def test_juju_delete_branch(test_dir):
+    subprocess.run(
+        ["git", "push", "origin", "--delete", "test-gimmegit"],
+        cwd=test_dir / "juju/dwilding-test-gimmegit",
+        check=True,
+    )
