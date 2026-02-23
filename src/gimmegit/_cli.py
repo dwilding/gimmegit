@@ -157,9 +157,10 @@ def branch_taken(origin: git.Remote, branch: str) -> bool:
     if branch in origin.refs:
         return True
     try:
-        # We'll abort if the branch exists. So there's no need to fetch history or create a ref.
-        origin.fetch(f"refs/heads/{branch}", no_tags=True, depth=1)
-    except git.CommandError as e:
+        # Empirically, 'git fetch' fails faster than 'git ls-remote'.
+        # We'll abort if the branch exists, so don't create a ref or fetch history.
+        origin.fetch(f"refs/heads/{branch}", depth=1)
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
@@ -409,7 +410,7 @@ def fetch_base(base: Base, shallow_date: str | None) -> None:
             base.remote.fetch(refspec, no_tags=True, shallow_since=shallow_date)
         else:
             base.remote.fetch(refspec, no_tags=True)
-    except git.CommandError as e:
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
@@ -428,7 +429,7 @@ def fetch_branch(origin: git.Remote, branch: str, full: str, shallow_date: str |
             origin.fetch(refspec, no_tags=True, shallow_since=shallow_date)
         else:
             origin.fetch(refspec, no_tags=True)
-    except git.CommandError as e:
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
@@ -549,19 +550,11 @@ def is_valid_branch_name(branch: str) -> bool:
     # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
     # Such references should be flagged as invalid, so we run the Git command in an empty dir.
     with tempfile.TemporaryDirectory() as empty_dir:
-        command = [
-            "git",
-            "check-ref-format",
-            "--branch",
-            branch,
-        ]
-        result = subprocess.run(
-            command,
-            cwd=empty_dir,
-            capture_output=True,
-            text=True,
-        )
-        return result.returncode == 0
+        try:
+            git.Git(empty_dir).check_ref_format(branch, branch=True)
+            return True
+        except git.GitCommandError:
+            return False
 
 
 def make_clone_path(owner: str, project: str, branch: str) -> Path:
