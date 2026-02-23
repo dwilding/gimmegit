@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import pytest
@@ -13,13 +14,23 @@ def askpass_env():
     return env
 
 
-def test_invalid_repo(uv_run, test_dir, askpass_env):
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["dwilding/invalid", "my-feature"],
+        ["https://github.com/dwilding/invalid/tree/my-feature"],
+        ["-j", "dwilding/invalid", "my-feature"],
+        ["-j", "https://github.com/dwilding/invalid/tree/my-feature"],
+    ],
+    ids=["branch_off", "branch", "jumbo_branch_off", "jumbo_branch"],
+)
+def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
+    shutil.rmtree(test_dir / "invalid", ignore_errors=True)
     command = [
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "dwilding/invalid",
-        "my-feature",
+        *args,
     ]
     result = subprocess.run(
         command,
@@ -35,7 +46,7 @@ Cloning https://github.com/dwilding/invalid.git
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: Unable to clone repo. Is the repo private? Try configuring Git to use SSH.
+Error: Unable to access repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
     assert (test_dir / "invalid").exists()
@@ -71,7 +82,7 @@ Cloning https://github.com/canonical/jubilant.git
 """
     assert result.stdout == expected_stdout
     expected_stderr = f"""\
-Error: The branch {new_branch} already exists.
+Error: The repo already has a branch {new_branch}.
 """
     assert result.stderr == expected_stderr
     assert (test_dir / "jubilant").exists()
@@ -297,7 +308,7 @@ Checking out a new branch my-feature based on _invalid:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: Unable to fetch upstream repo. Is the repo private? Try configuring Git to use SSH.
+Error: Unable to access upstream repo. Is the repo private? Try configuring Git to use SSH.
 """
     assert result.stderr == expected_stderr
     assert (test_dir / "jubilant").exists()
