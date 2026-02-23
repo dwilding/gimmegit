@@ -38,5 +38,6 @@ line-length = 99
 root = [
     "./src",
     "./tests/functional",
+    "./tests/stress",
     "./tests/unit",
 ]
