@@ -160,7 +160,7 @@ def branch_taken(origin: git.Remote, branch: str) -> bool:
         # Empirically, 'git fetch' fails faster than 'git ls-remote'.
         # We'll abort if the branch exists, so don't create a ref or fetch objects and history.
         origin.fetch(f"refs/heads/{branch}", filter="blob:none", depth=1)
-    except git.CommandError as e:
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
@@ -410,7 +410,7 @@ def fetch_base(base: Base, shallow_date: str | None) -> None:
             base.remote.fetch(refspec, no_tags=True, shallow_since=shallow_date)
         else:
             base.remote.fetch(refspec, no_tags=True)
-    except git.CommandError as e:
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
@@ -429,7 +429,7 @@ def fetch_branch(origin: git.Remote, branch: str, full: str, shallow_date: str |
             origin.fetch(refspec, no_tags=True, shallow_since=shallow_date)
         else:
             origin.fetch(refspec, no_tags=True)
-    except git.CommandError as e:
+    except git.GitCommandError as e:
         if (
             ": Could not read from remote repository." in e.stderr
             or ": Authentication failed for " in e.stderr
