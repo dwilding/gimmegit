@@ -157,6 +157,7 @@ def branch_taken(origin: git.Remote, branch: str) -> bool:
     if branch in origin.refs:
         return True
     try:
+        # Empirically, 'git fetch' fails faster than 'git ls-remote'.
         # We'll abort if the branch exists. So there's no need to fetch history or create a ref.
         origin.fetch(f"refs/heads/{branch}", no_tags=True, depth=1)
     except git.CommandError as e:
