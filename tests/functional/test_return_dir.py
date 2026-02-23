@@ -1,4 +1,3 @@
-from pathlib import Path
 import subprocess
 
 import helpers_functional as helpers
@@ -20,7 +19,7 @@ def test_return_dir_new_clone(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = test_dir / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 {expected_dir}
 """
@@ -52,7 +51,7 @@ def test_return_dir_existing_clone(uv_run, test_dir):
         text=True,
     )
     assert result.returncode == 10
-    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = test_dir / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 {expected_dir}
 """

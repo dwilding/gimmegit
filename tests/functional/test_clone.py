@@ -1,4 +1,3 @@
-from pathlib import Path
 import subprocess
 
 import helpers_functional as helpers
@@ -19,7 +18,7 @@ def test_repo_branch_off(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "operator/canonical-my-feature"
+    expected_dir = test_dir / "operator/canonical-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/operator.git
@@ -59,7 +58,7 @@ def test_repo_branch_off_base(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "operator/canonical-my-feature-2.23"
+    expected_dir = test_dir / "operator/canonical-my-feature-2.23"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/operator.git
@@ -97,7 +96,7 @@ def test_repo_branch(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    expected_dir = test_dir / "operator/canonical-2.23-maintenance"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/operator.git
@@ -138,7 +137,7 @@ def test_forked_repo(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = test_dir / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -182,7 +181,7 @@ def test_forked_repo_base(uv_run, test_dir):
         text=True,
         check=True,
     )
-    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature-backports"
+    expected_dir = test_dir / "jubilant/dwilding-my-feature-backports"
     expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
@@ -224,7 +223,7 @@ def test_existing_clone(uv_run, test_dir):
         text=True,
     )
     assert result.returncode == 10
-    expected_dir = Path(test_dir) / "jubilant/dwilding-my-feature"
+    expected_dir = test_dir / "jubilant/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
 You already have a clone:
@@ -234,7 +233,7 @@ You already have a clone:
 
 
 def test_dashboard(uv_run, test_dir):
-    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    working_dir = test_dir / "operator/canonical-2.23-maintenance"
     command = [
         *uv_run,
         "gimmegit",
@@ -254,7 +253,7 @@ operator   canonical:main   canonical:2.23-maintenance
 
 
 def test_dashboard_no_remote(uv_run, test_dir):
-    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    working_dir = test_dir / "jubilant/dwilding-my-feature/docs"
     command = [
         *uv_run,
         "gimmegit",
@@ -274,7 +273,7 @@ jubilant   canonical:main   dwilding:my-feature (not created)
 
 
 def test_dashboard_warning(uv_run, test_dir):
-    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    working_dir = test_dir / "jubilant/dwilding-my-feature/docs"
     command = [
         *uv_run,
         "gimmegit",
@@ -299,7 +298,7 @@ Warning: Skipped cloning because the working directory is inside a gimmegit clon
 
 
 def test_compare(uv_run, test_dir):
-    working_dir = Path(test_dir) / "operator/canonical-2.23-maintenance"
+    working_dir = test_dir / "operator/canonical-2.23-maintenance"
     command = [
         *uv_run,
         "gimmegit",
@@ -321,7 +320,7 @@ https://github.com/canonical/operator/compare/main...canonical:operator:2.23-mai
 
 
 def test_compare_no_remote(uv_run, test_dir):
-    working_dir = Path(test_dir) / "jubilant/dwilding-my-feature/docs"
+    working_dir = test_dir / "jubilant/dwilding-my-feature/docs"
     command = [
         *uv_run,
         "gimmegit",
@@ -344,7 +343,7 @@ def test_in_project_dir(uv_run, test_dir):
     # .
     # └── jubilant                  Try running 'gimmegit dwilding/jubilant my-feature'
     #     └── dwilding-my-feature   This dir exists from an earlier test
-    working_dir = Path(test_dir) / "jubilant"
+    working_dir = test_dir / "jubilant"
     command = [
         *uv_run,
         "gimmegit",
@@ -376,7 +375,7 @@ def test_in_project_dir_force(uv_run, test_dir):
     #     ├── dwilding-my-feature   This dir exists from an earlier test
     #     └── jubilant              These dirs will be created
     #         └── dwilding-my-feature
-    working_dir = Path(test_dir) / "jubilant"
+    working_dir = test_dir / "jubilant"
     command = [
         *uv_run,
         "gimmegit",
