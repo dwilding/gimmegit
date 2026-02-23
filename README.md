@@ -323,15 +323,17 @@ gimmegit [<options>] <repo> [<new-branch>] [-- <git-options>]   (1)
 gimmegit [<options>] <branch-url> [-- <git-options>]            (2)
 
 1. Clone a GitHub repo and check out a new branch.
-   <repo> is one of:
-    • <owner>/<project>. For example, 'dwilding/frogtab'. <owner> is optional if the
-      GIMMEGIT_GITHUB_TOKEN environment variable contains a personal access token.
-    • A repo URL. For example, 'https://github.com/dwilding/frogtab'.
-   <new-branch> is the name of a branch that doesn't already exist. gimmegit generates a
-   branch name if you omit <new-branch>. For example, 'snapshot0801' on August 1.
-
 2. Clone a GitHub repo and check out an existing branch.
-   <branch-url> is a URL such as 'https://github.com/dwilding/frogtab/tree/fix-something'.
+
+<repo>         One of:
+                • <owner>/<project>. For example, 'dwilding/frogtab'. <owner> is optional if
+                  the GIMMEGIT_GITHUB_TOKEN environment variable contains an access token.
+                • A repo URL. For example, 'https://github.com/dwilding/frogtab'.
+
+<new-branch>   Name of a branch that doesn't already exist in the repo. gimmegit generates a
+               branch name if you omit <new-branch>. For example, 'snapshot0801' on August 1.
+
+<branch-url>   A branch URL such as 'https://github.com/dwilding/frogtab/tree/fix-something'.
 
 ▶ DIRECTORY STRUCTURE
 
