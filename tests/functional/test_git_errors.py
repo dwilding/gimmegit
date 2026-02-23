@@ -40,10 +40,17 @@ def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
         text=True,
     )
     assert result.returncode == 1
-    expected_stdout = """\
+    expected_stdout = (
+        """\
+Getting repo details
+Cloning https://github.com/dwilding/invalid.git with limited history
+"""
+        if args[0] == "-j"
+        else """\
 Getting repo details
 Cloning https://github.com/dwilding/invalid.git
 """
+    )
     assert result.stdout == expected_stdout
     expected_stderr = """\
 Error: Unable to access repo. Is the repo private? Try configuring Git to use SSH.

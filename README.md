@@ -295,7 +295,7 @@ To create a shallow clone of a large repo, use `-j`:
 
 ```sh
 # Clone dwilding's fork of https://github.com/juju/juju and
-# create a branch called update-docs, cloning with --shallow-since
+# create a branch called update-docs, cloning with limited history
 gimmegit -j -u juju dwilding/juju update-docs
 ```
 

@@ -425,7 +425,7 @@ def test_jumbo(uv_run, test_dir):
     expected_dir = test_dir / "juju/dwilding-my-feature"
     expected_stdout = f"""\
 Getting repo details
-Cloning https://github.com/dwilding/juju.git
+Cloning https://github.com/dwilding/juju.git with limited history
 Setting upstream to https://github.com/juju/juju.git
 Checking out a new branch my-feature based on juju:main
 Cloned repo:

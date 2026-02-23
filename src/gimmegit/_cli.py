@@ -164,7 +164,10 @@ def check_branch_not_taken(clone_url: str, branch: str) -> None:
 
 
 def clone(context: Context, jumbo: bool, extra_args: list[str]) -> None:
-    logger.info(f"Cloning {context.clone_url}")
+    if jumbo:
+        logger.info(f"Cloning {context.clone_url} with limited history")
+    else:
+        logger.info(f"Cloning {context.clone_url}")
     context.clone_dir.parent.mkdir(exist_ok=True)
     if context.create_branch:
         check_branch_not_taken(context.clone_url, context.branch)
