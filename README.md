@@ -31,7 +31,8 @@ In this README:
   - [Clone a repo on an existing branch](#clone-a-repo-on-an-existing-branch)
   - [Clone a fork and create a branch](#clone-a-fork-and-create-a-branch)
   - [Clone a fork on an existing branch](#clone-a-fork-on-an-existing-branch)
-  - [Provide clone options](#provide-clone-options)
+  - [Clone a large repo](#clone-a-large-repo)
+  - [Provide Git clone options](#provide-git-clone-options)
   - [Command reference](#command-reference)
 
 ## Install gimmegit
@@ -288,9 +289,21 @@ cd operator/dwilding-backport-fix
 git update-branch
 ```
 
-## Provide clone options
+## Clone a large repo
 
-To provide [clone options](https://git-scm.com/docs/git-clone#_options) to gimmegit, list the options after `--`. For example:
+To create a shallow clone of a large repo, use `-j`:
+
+```sh
+# Clone dwilding's fork of https://github.com/juju/juju and
+# create a branch called update-docs, cloning with --shallow-since
+gimmegit -j -u juju dwilding/juju update-docs
+```
+
+Instead of fetching the full history of the repo (and the upstream repo), Git fetches history from three weeks before the latest commit on the repo's main branch.
+
+## Provide Git clone options
+
+To provide [clone options](https://git-scm.com/docs/git-clone#_options) to gimmegit, list the options after `--`:
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/charmcraft and
@@ -298,7 +311,7 @@ To provide [clone options](https://git-scm.com/docs/git-clone#_options) to gimme
 gimmegit -u canonical dwilding/charmcraft update-profile -- --recurse-submodules
 ```
 
-# Command reference
+## Command reference
 
 ```text
 gimmegit is a tool for cloning GitHub repos and creating branches. gimmegit puts each clone
@@ -354,6 +367,9 @@ For new branches:
                                If '-b https://github.com/<owner>/<project>/tree/<name>',
                                gimmegit sets the base branch and ignores -u.
 
+-j, --jumbo                    Set '--shallow-since <date>' when cloning the repo, where
+                               <date> is 3 weeks before the latest commit on the main branch.
+
 --no-pre-commit                Don't try to install a pre-commit hook after cloning the repo.
 
 --allow-outer-repo             Allow the clone directory to be inside a repo.
@@ -373,8 +389,8 @@ For new branches:
 
 ▶ GIT CLONE OPTIONS
 
-gimmegit sets --no-tags when cloning. Use '-- <git-options>' to provide extra clone options.
-For example, use '-- --tags' to clone tags.
+gimmegit sets --no-tags and --single-branch when cloning the repo. Use '-- <options>' to
+provide extra 'git clone' options. For example, use '-- --tags' to cancel out --no-tags.
 
 ▶ PRE-COMMIT
 
