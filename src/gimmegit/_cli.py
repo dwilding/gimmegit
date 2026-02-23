@@ -549,19 +549,11 @@ def is_valid_branch_name(branch: str) -> bool:
     # When run in a repo, 'git check-ref-format --branch' expands "previous checkout" references.
     # Such references should be flagged as invalid, so we run the Git command in an empty dir.
     with tempfile.TemporaryDirectory() as empty_dir:
-        command = [
-            "git",
-            "check-ref-format",
-            "--branch",
-            branch,
-        ]
-        result = subprocess.run(
-            command,
-            cwd=empty_dir,
-            capture_output=True,
-            text=True,
-        )
-        return result.returncode == 0
+        try:
+            git.Git(empty_dir).check_ref_format(branch, branch=True)
+            return True
+        except git.GitCommandError:
+            return False
 
 
 def make_clone_path(owner: str, project: str, branch: str) -> Path:
