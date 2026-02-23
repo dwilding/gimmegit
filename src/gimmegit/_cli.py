@@ -332,12 +332,14 @@ def create_local_branch(
         # Create a local branch that tracks the existing branch on origin.
         branch_full = f"{context.owner}:{context.branch}"
         logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base.full)}")
-        if base.branch not in base.remote.refs:
-            fetch_base(base, shallow_date)
         if context.branch not in origin.refs:
             fetch_branch(origin, context.branch, branch_full, shallow_date)
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
+        # We don't need the base branch for anything at this stage.
+        # Fetch the base branch to ensure that a local tracking branch exists.
+        if base.branch not in base.remote.refs:
+            fetch_base(base, shallow_date)
     branch.checkout()
     # Define the 'update-branch' alias.
     with cloned.config_writer() as config:
