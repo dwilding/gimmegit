@@ -40,6 +40,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_repo_branch_off_base(uv_run, test_dir):
@@ -81,6 +82,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_repo_branch(uv_run, test_dir):
@@ -119,6 +121,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_forked_repo(uv_run, test_dir):
@@ -161,6 +164,7 @@ Cloned repo:
   upstream/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_forked_repo_base(uv_run, test_dir):
@@ -205,6 +209,7 @@ Cloned repo:
   upstream/jubilant-backports
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_existing_clone(uv_run, test_dir):

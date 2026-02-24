@@ -67,3 +67,14 @@ def get_remote_branches(dir: Path) -> str:
         check=True,
     )
     return result.stdout
+
+
+def get_tags(dir: Path) -> str:
+    result = subprocess.run(
+        ["git", "tag", "--list"],
+        cwd=dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
