@@ -592,7 +592,8 @@ def make_formatted_value(col: Column) -> FormattedStr:
 
 
 def make_generic_git_error(e: git.GitCommandError) -> str:
-    return f"Unable to run Git command.\n\n{e.stderr.strip()}"
+    git_error = e.stderr.strip().removeprefix("stderr:").strip()
+    return f"Unable to run Git command.\n\n{git_error}"
 
 
 def make_github_clone_url(owner: str, project: str) -> str:
