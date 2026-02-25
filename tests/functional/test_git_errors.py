@@ -320,3 +320,35 @@ Error: Unable to access upstream repo. Is the repo private? Try configuring Git 
     assert result.stderr == expected_stderr
     assert (test_dir / "jubilant").exists()
     assert not (test_dir / "jubilant/dwilding-my-feature").exists()
+
+
+def test_invalid_fetch_opt(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "dwilding/jubilant",
+        "my-feature",
+        "--",
+        "--invalid",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: Unable to run Git command.
+
+  stderr: 'error: unknown option `invalid'
+"""
+    assert result.stderr.startswith(expected_stderr)
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/dwilding-my-feature").exists()
