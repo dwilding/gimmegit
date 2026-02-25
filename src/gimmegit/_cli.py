@@ -592,7 +592,7 @@ def make_formatted_value(col: Column) -> FormattedStr:
 
 
 def make_generic_git_error(e: git.GitCommandError) -> str:
-    git_error = e.stderr.strip().removeprefix("stderr:").strip()
+    git_error = e.stderr.strip().removeprefix("stderr:").strip(" \n'")
     return f"Unable to run Git command.\n\n{git_error}"
 
 
