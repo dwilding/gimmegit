@@ -159,7 +159,7 @@ def check_branch_not_taken(clone_url: str, branch: str) -> None:
         except git.GitCommandError as e:
             if is_access_error(e):
                 raise CloneError(make_access_error(False))
-            raise CloneError(f"Unable to run Git command.\n{e.stderr}")
+            raise CloneError(make_generic_git_error(e))
         if result:
             raise CloneError(f"The repo already has a branch {f_blue(branch)}.")
 
@@ -178,7 +178,7 @@ def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
         except git.GitCommandError as e:
             if is_access_error(e):
                 raise CloneError(make_access_error(False))
-            raise CloneError(f"Unable to run Git command.\n{e.stderr}")
+            raise CloneError(make_generic_git_error(e))
         fetch_opts = [f"--shallow-since={shallow_date}", *fetch_opts]
     try:
         cloned = git.Repo.clone_from(
@@ -190,7 +190,7 @@ def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
     except git.GitCommandError as e:
         if is_access_error(e):
             raise CloneError(make_access_error(False))
-        raise CloneError(f"Unable to run Git command.\n{e.stderr}")
+        raise CloneError(make_generic_git_error(e))
     if not context.base_branch:
         context.base_branch = get_default_branch(cloned)
     if context.upstream_url:
@@ -395,7 +395,7 @@ def fetch_base(cloned: git.Repo, base: Base, fetch_opts: list[str]) -> None:
             raise CloneError(base.read_error)
         if ": couldn't find remote ref " in e.stderr:
             raise CloneError(f"The base branch {f_blue(base.full)} does not exist.")
-        raise CloneError(f"Unable to run Git command.\n{e.stderr}")
+        raise CloneError(make_generic_git_error(e))
 
 
 def fetch_branch(cloned: git.Repo, branch: str, full: str, fetch_opts: list[str]) -> None:
@@ -408,7 +408,7 @@ def fetch_branch(cloned: git.Repo, branch: str, full: str, fetch_opts: list[str]
             raise CloneError("Unable to access repo. Try running gimmegit again.")
         if ": couldn't find remote ref " in e.stderr:
             raise CloneError(f"The branch {f_blue(full)} does not exist.")
-        raise CloneError(f"Unable to run Git command.\n{e.stderr}")
+        raise CloneError(make_generic_git_error(e))
 
 
 def get_context(args: argparse.Namespace) -> Context:
@@ -589,6 +589,10 @@ def make_formatted_value(col: Column) -> FormattedStr:
             formatted=col.value,
             plain=col.value,
         )
+
+
+def make_generic_git_error(e: git.GitCommandError) -> str:
+    return f"Unable to run Git command.\n\n{e.stderr.strip()}"
 
 
 def make_github_clone_url(owner: str, project: str) -> str:

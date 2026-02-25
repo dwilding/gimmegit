@@ -347,7 +347,7 @@ Cloning https://github.com/dwilding/jubilant.git
     expected_stderr = """\
 Error: Unable to run Git command.
 
-  stderr: 'error: unknown option `invalid'
+stderr: 'error: unknown option `invalid'
 """
     assert result.stderr.startswith(expected_stderr)
     assert (test_dir / "jubilant").exists()
