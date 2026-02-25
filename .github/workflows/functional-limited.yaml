@@ -12,5 +12,5 @@ jobs:
         uses: astral-sh/setup-uv@v7
       - name: Run functional tests
         env:
-          UV_PYTHON: '3.11'
+          UV_PYTHON: '3.10'
         run: uvx --from rust-just just functional
