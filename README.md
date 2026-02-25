@@ -32,7 +32,7 @@ In this README:
   - [Clone a fork and create a branch](#clone-a-fork-and-create-a-branch)
   - [Clone a fork on an existing branch](#clone-a-fork-on-an-existing-branch)
   - [Clone a large repo](#clone-a-large-repo)
-  - [Provide Git clone options](#provide-git-clone-options)
+  - [Provide git-fetch options](#provide-git-fetch-options)
   - [Command reference](#command-reference)
 
 ## Install gimmegit
@@ -301,9 +301,9 @@ gimmegit -j -u juju dwilding/juju update-docs
 
 Instead of fetching the full history of the repo (and the upstream repo), Git fetches history from three weeks before the latest commit on the repo's main branch.
 
-## Provide Git clone options
+## Provide git-fetch options
 
-To provide [clone options](https://git-scm.com/docs/git-clone#_options) to gimmegit, list the options after `--`:
+To provide [git-fetch options](https://git-scm.com/docs/git-fetch#_options) to gimmegit, list the options after `--`:
 
 ```sh
 # Clone dwilding's fork of https://github.com/canonical/charmcraft and
@@ -319,8 +319,8 @@ in a dedicated directory, based on the project, owner, and branch name.
 
 ▶ USAGE
 
-gimmegit [<options>] <repo> [<new-branch>] [-- <git-options>]   (1)
-gimmegit [<options>] <branch-url> [-- <git-options>]            (2)
+gimmegit [<options>] <repo> [<new-branch>] [-- <fetch-opts>]   (1)
+gimmegit [<options>] <branch-url> [-- <fetch-opts>]            (2)
 
 1. Clone a GitHub repo and check out a new branch.
 2. Clone a GitHub repo and check out an existing branch.
@@ -334,6 +334,8 @@ gimmegit [<options>] <branch-url> [-- <git-options>]            (2)
                branch name if you omit <new-branch>. For example, 'snapshot0801' on August 1.
 
 <branch-url>   A branch URL such as 'https://github.com/dwilding/frogtab/tree/fix-something'.
+
+<fetch-opts>   Extra git-fetch options. For example, --tags or --recurse-submodules.
 
 ▶ DIRECTORY STRUCTURE
 
@@ -388,11 +390,6 @@ For new branches:
 
 --return-dir                   Output the clone directory path to stdout and send full
                                progress to stderr.
-
-▶ GIT CLONE OPTIONS
-
-gimmegit sets --no-tags and --single-branch when cloning the repo. Use '-- <options>' to
-provide extra 'git clone' options. For example, use '-- --tags' to cancel out --no-tags.
 
 ▶ PRE-COMMIT
 

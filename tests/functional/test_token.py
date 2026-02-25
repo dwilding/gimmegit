@@ -45,6 +45,7 @@ Cloned repo:
   upstream/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 @pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)

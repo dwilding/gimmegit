@@ -40,6 +40,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_repo_branch_off_base(uv_run, test_dir):
@@ -81,6 +82,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_repo_branch(uv_run, test_dir):
@@ -119,6 +121,7 @@ Cloned repo:
   origin/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_forked_repo(uv_run, test_dir):
@@ -161,6 +164,7 @@ Cloned repo:
   upstream/main
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_forked_repo_base(uv_run, test_dir):
@@ -205,6 +209,7 @@ Cloned repo:
   upstream/jubilant-backports
 """
     )
+    assert not helpers.get_tags(expected_dir)
 
 
 def test_existing_clone(uv_run, test_dir):
@@ -402,6 +407,101 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+
+
+def test_tags_repo(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "canonical/jubilant",
+        "with-tags",
+        "--",
+        "--tags",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = test_dir / "jubilant/canonical-with-tags"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/jubilant.git
+Checking out a new branch with-tags based on canonical:main
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert helpers.get_tags(expected_dir)
+
+
+def test_tags_fork(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-u",
+        "canonical",
+        "dwilding/jubilant",
+        "with-tags",
+        "--",
+        "--tags",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = test_dir / "jubilant/dwilding-with-tags"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/jubilant.git
+Setting upstream to https://github.com/canonical/jubilant.git
+Checking out a new branch with-tags based on canonical:main
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert helpers.get_tags(expected_dir)
+
+
+def test_submodules_and_tags(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "canonical/charmcraft",
+        "my-feature",
+        "--",
+        "--recurse-submodules",
+        "--tags",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = test_dir / "charmcraft/canonical-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/charmcraft.git
+Checking out a new branch my-feature based on canonical:main
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert (expected_dir / "tools/external/setup.sh").exists()
+    assert helpers.get_tags(expected_dir)
 
 
 def test_jumbo(uv_run, test_dir):
