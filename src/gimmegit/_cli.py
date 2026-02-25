@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Never
+from typing import NoReturn
 import argparse
 import json
 import logging
@@ -360,7 +360,7 @@ def create_local_branch(
         )
 
 
-def exit_with_error(error: Exception | str, code: int = 1) -> Never:
+def exit_with_error(error: Exception | str, code: int = 1) -> NoReturn:
     logger.error(error)
     sys.exit(code)
 
