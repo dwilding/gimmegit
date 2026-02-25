@@ -34,9 +34,9 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("-u", "--upstream-owner", nargs="?")
     parser.add_argument("repo", nargs="?")
     parser.add_argument("new_branch", nargs="?")
-    parser.add_argument("-c", "--compare", action="store_const")
-    parser.add_argument("-h", "--help", action="store_const")
-    parser.add_argument("--version", action="store_const")
+    parser.add_argument("-c", "--compare", action="store_true")  # The value isn't significant.
+    parser.add_argument("-h", "--help", action="store_true")  # The value isn't significant.
+    parser.add_argument("--version", action="store_true")  # The value isn't significant.
     parser.add_argument("--parse-url", nargs="?")
     args, unknown_args = parser.parse_known_args(args_to_parse)
     # Handle --color.
