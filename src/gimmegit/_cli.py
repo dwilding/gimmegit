@@ -7,7 +7,6 @@ import json
 import logging
 import re
 import os
-import shlex
 import shutil
 import subprocess
 import sys
@@ -100,7 +99,7 @@ def main() -> None:
     fetch_opts = ["--no-tags"]
     if "--" in command_args:
         sep_index = command_args.index("--")
-        fetch_opts.extend(shlex.split(" ".join(command_args[sep_index + 1 :])))
+        fetch_opts.extend(command_args[sep_index + 1 :])
         command_args = command_args[:sep_index]
     args_with_usage = _args.parse_args(command_args)
     args = args_with_usage.args
@@ -318,6 +317,7 @@ def create_local_branch(
     branch.checkout()
     # Define the 'update-branch' alias.
     with cloned.config_writer() as config:
+        fetch_opts_str = " ".join(fetch_opts)
         update_branch = "!" + " && ".join(
             [
                 "branch=$(git config --get gimmegit.branch)",
@@ -325,8 +325,8 @@ def create_local_branch(
                 "base_branch=$(git config --get gimmegit.baseBranch)",
                 'echo \\"$ git checkout $branch\\"',
                 "git checkout $branch",
-                'echo \\"$ git fetch --no-tags $base_remote $base_branch\\"',
-                "git fetch --no-tags $base_remote $base_branch",
+                f'echo \\"$ git fetch {fetch_opts_str} $base_remote $base_branch\\"',
+                f"git fetch {fetch_opts_str} $base_remote $base_branch",
                 'echo \\"$ git merge $base_remote/$base_branch\\"',
                 "git merge $base_remote/$base_branch",
             ]
