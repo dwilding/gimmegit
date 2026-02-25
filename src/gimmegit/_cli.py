@@ -7,6 +7,7 @@ import json
 import logging
 import re
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -323,7 +324,7 @@ def create_local_branch(
     branch.checkout()
     # Define the 'update-branch' alias.
     with cloned.config_writer() as config:
-        fetch_opts_str = " ".join(fetch_opts)
+        fetch_opts_str = shlex.join(fetch_opts)
         update_branch = "!" + " && ".join(
             [
                 "branch=$(git config --get gimmegit.branch)",
