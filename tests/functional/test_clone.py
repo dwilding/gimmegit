@@ -472,6 +472,38 @@ Cloned repo:
     assert helpers.get_tags(expected_dir)
 
 
+def test_submodules_and_tags(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "canonical/charmcraft",
+        "my-feature",
+        "--",
+        "--recurse-submodules",
+        "--tags",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_dir = test_dir / "charmcraft/canonical-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/canonical/charmcraft.git
+Checking out a new branch my-feature based on canonical:main
+Installing pre-commit hook
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert (expected_dir / "tools/external/setup.sh").exists()
+    assert helpers.get_tags(expected_dir)
+
+
 def test_jumbo(uv_run, test_dir):
     command = [
         *uv_run,
