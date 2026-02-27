@@ -153,27 +153,9 @@ def main() -> None:
         status_usage(status)
 
 
-def check_branch_not_taken(clone_url: str, branch: str) -> None:
-    with tempfile.TemporaryDirectory() as empty_dir:
-        try:
-            result = git.Git(empty_dir).ls_remote(clone_url, branch, heads=True).strip()
-        except git.GitCommandError as e:
-            if is_access_error(e):
-                raise CloneError(make_access_error(False))
-            raise CloneError(make_generic_git_error(e))
-        if result:
-            raise CloneError(f"The repo already has a branch {f_blue(branch)}.")
-
-
 def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
     if jumbo:
         logger.info(f"Cloning {context.clone_url} with limited history")
-    else:
-        logger.info(f"Cloning {context.clone_url}")
-    context.clone_dir.parent.mkdir(exist_ok=True)
-    if context.create_branch:
-        check_branch_not_taken(context.clone_url, context.branch)
-    if jumbo:
         try:
             shallow_date = make_shallow_date(context.clone_url)
         except git.GitCommandError as e:
@@ -181,11 +163,12 @@ def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
                 raise CloneError(make_access_error(False))
             raise CloneError(make_generic_git_error(e))
         fetch_opts = [f"--shallow-since={shallow_date}", *fetch_opts]
+    else:
+        logger.info(f"Cloning {context.clone_url}")
     try:
         cloned = git.Repo.clone_from(
             context.clone_url,
             context.clone_dir,
-            single_branch=True,
             multi_options=fetch_opts,
         )
     except git.GitCommandError as e:
@@ -293,6 +276,8 @@ def create_local_branch(
         logger.info(
             f"Checking out a new branch {f_blue(context.branch)} based on {f_blue(base.full)}"
         )
+        if context.branch in origin.refs:
+            raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
         if base.branch not in base.remote.refs:
             fetch_base(cloned, base, fetch_opts)
         branch = cloned.create_head(context.branch, base.remote.refs[base.branch])
@@ -314,7 +299,7 @@ def create_local_branch(
         branch_full = f"{context.owner}:{context.branch}"
         logger.info(f"Checking out {f_blue(branch_full)} with base {f_blue(base.full)}")
         if context.branch not in origin.refs:
-            fetch_branch(cloned, context.branch, branch_full, fetch_opts)
+            raise CloneError(f"The branch {f_blue(branch_full)} does not exist.")
         branch = cloned.create_head(context.branch, origin.refs[context.branch])
         branch.set_tracking_branch(origin.refs[context.branch])
         # We don't need the base branch for anything at this stage.
@@ -396,19 +381,6 @@ def fetch_base(cloned: git.Repo, base: Base, fetch_opts: list[str]) -> None:
             raise CloneError(base.read_error)
         if ": couldn't find remote ref " in e.stderr:
             raise CloneError(f"The base branch {f_blue(base.full)} does not exist.")
-        raise CloneError(make_generic_git_error(e))
-
-
-def fetch_branch(cloned: git.Repo, branch: str, full: str, fetch_opts: list[str]) -> None:
-    # We need to force Git to create a ref, because origin is single-branch.
-    refspec = f"refs/heads/{branch}:refs/remotes/origin/{branch}"
-    try:
-        cloned.git.fetch([*fetch_opts, "origin", refspec])
-    except git.GitCommandError as e:
-        if is_access_error(e):
-            raise CloneError("Unable to access repo. Try running gimmegit again.")
-        if ": couldn't find remote ref " in e.stderr:
-            raise CloneError(f"The branch {f_blue(full)} does not exist.")
         raise CloneError(make_generic_git_error(e))
 
 
@@ -722,6 +694,7 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
             exit_with_error(
                 "The working directory contains a gimmegit clone. Try running gimmegit in the parent directory."
             )
+    context.clone_dir.parent.mkdir(exist_ok=True)
     try:
         clone(context, args.jumbo, fetch_opts)
     except CloneError as e:
