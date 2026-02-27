@@ -19,10 +19,8 @@ def askpass_env():
     [
         ["dwilding/invalid", "my-feature"],
         ["https://github.com/dwilding/invalid/tree/my-feature"],
-        ["-j", "dwilding/invalid", "my-feature"],
-        ["-j", "https://github.com/dwilding/invalid/tree/my-feature"],
     ],
-    ids=["branch_off", "branch", "jumbo_branch_off", "jumbo_branch"],
+    ids=["branch_off", "branch"],
 )
 def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
     shutil.rmtree(test_dir / "invalid", ignore_errors=True)
@@ -40,17 +38,48 @@ def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
         text=True,
     )
     assert result.returncode == 1
-    expected_stdout = (
-        """\
-Getting repo details
-Cloning https://github.com/dwilding/invalid.git with limited history
-"""
-        if args[0] == "-j"
-        else """\
+    expected_stdout = """\
 Getting repo details
 Cloning https://github.com/dwilding/invalid.git
 """
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: Unable to access repo. Is the repo private? Try configuring Git to use SSH.
+"""
+    assert result.stderr == expected_stderr
+    assert (test_dir / "invalid").exists()
+    assert not (test_dir / "invalid/dwilding-my-feature").exists()
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["dwilding/invalid", "my-feature"],
+        ["https://github.com/dwilding/invalid/tree/my-feature"],
+    ],
+    ids=["branch_off", "branch"],
+)
+def test_invalid_repo_jumbo(uv_run, test_dir, askpass_env, args: list[str]):
+    shutil.rmtree(test_dir / "invalid", ignore_errors=True)
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-j",
+        *args,
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
     )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/dwilding/invalid.git with limited history
+"""
     assert result.stdout == expected_stdout
     expected_stderr = """\
 Error: Unable to access repo. Is the repo private? Try configuring Git to use SSH.
@@ -96,6 +125,43 @@ Error: The repo already has a branch {new_branch}.
     assert not (test_dir / f"jubilant/canonical-{new_branch}").exists()
 
 
+@pytest.mark.parametrize(
+    "new_branch",
+    [
+        "main",
+        "jubilant-backports",
+    ],
+)
+def test_branch_exists_jumbo(uv_run, test_dir, askpass_env, new_branch: str):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-j",
+        "canonical/jubilant",
+        new_branch,
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/canonical/jubilant.git with limited history
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = f"""\
+Error: The repo already has a branch {new_branch}.
+"""
+    assert result.stderr == expected_stderr
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / f"jubilant/canonical-{new_branch}").exists()
+
+
 def test_invalid_branch(uv_run, test_dir, askpass_env):
     command = [
         *uv_run,
@@ -114,11 +180,39 @@ def test_invalid_branch(uv_run, test_dir, askpass_env):
     expected_stdout = """\
 Getting repo details
 Cloning https://github.com/canonical/jubilant.git
-Checking out canonical:invalid with base canonical:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: The branch canonical:invalid does not exist.
+Error: The repo does not have a branch invalid.
+"""
+    assert result.stderr == expected_stderr
+    assert (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant/canonical-my-feature").exists()
+
+
+def test_invalid_branch_jumbo(uv_run, test_dir, askpass_env):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "-j",
+        "https://github.com/canonical/jubilant/tree/invalid",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=askpass_env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+Cloning https://github.com/canonical/jubilant.git with limited history
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: The repo does not have a branch invalid.
 """
     assert result.stderr == expected_stderr
     assert (test_dir / "jubilant").exists()
@@ -145,12 +239,10 @@ def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
     expected_stdout = """\
 Getting repo details
 Cloning https://github.com/dwilding/jubilant.git
-Setting upstream to https://github.com/canonical/jubilant.git
-Checking out dwilding:invalid with base canonical:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = """\
-Error: The branch dwilding:invalid does not exist.
+Error: The repo does not have a branch invalid.
 """
     assert result.stderr == expected_stderr
     assert (test_dir / "jubilant").exists()

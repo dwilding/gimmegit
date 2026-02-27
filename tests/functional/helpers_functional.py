@@ -58,15 +58,12 @@ def get_config(dir: Path, name: str) -> str:
     return result.stdout.strip()
 
 
-def get_remote_branches(dir: Path) -> str:
+def get_ref_exists(dir: Path, ref: str) -> bool:
     result = subprocess.run(
-        ["git", "branch", "--remotes"],
+        ["git", "show-ref", "--verify", "--quiet", ref],
         cwd=dir,
-        capture_output=True,
-        text=True,
-        check=True,
     )
-    return result.stdout
+    return result.returncode == 0
 
 
 def get_tags(dir: Path) -> str:
