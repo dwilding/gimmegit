@@ -83,9 +83,10 @@ def test_branch_exists(uv_run, test_dir, askpass_env, new_branch: str):
         text=True,
     )
     assert result.returncode == 1
-    expected_stdout = """\
+    expected_stdout = f"""\
 Getting repo details
 Cloning https://github.com/canonical/jubilant.git
+Checking out a new branch {new_branch} based on canonical:main
 """
     assert result.stdout == expected_stdout
     expected_stderr = f"""\

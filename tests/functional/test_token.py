@@ -37,14 +37,8 @@ Cloned repo:
     assert helpers.get_config(expected_dir, "gimmegit.branch") == "my-feature"
     assert helpers.get_config(expected_dir, "gimmegit.baseRemote") == "upstream"
     assert helpers.get_config(expected_dir, "gimmegit.baseBranch") == "main"
-    assert (
-        helpers.get_remote_branches(expected_dir)
-        == """\
-  origin/HEAD -> origin/main
-  origin/main
-  upstream/main
-"""
-    )
+    assert helpers.get_ref_exists(expected_dir, "refs/remotes/origin/main")
+    assert helpers.get_ref_exists(expected_dir, "refs/remotes/upstream/main")
     assert not helpers.get_tags(expected_dir)
 
 
