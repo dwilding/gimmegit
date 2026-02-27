@@ -157,8 +157,8 @@ def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
     if jumbo:
         logger.info(f"Cloning {context.clone_url} with limited history")
         try:
-            # if context.create_branch and remote_has_branch(context.clone_url, context.branch):
-            #     raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
+            if context.create_branch and remote_has_branch(context.clone_url, context.branch):
+                raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
             shallow_date = make_shallow_date(context.clone_url)
         except git.GitCommandError as e:
             if is_access_error(e):
