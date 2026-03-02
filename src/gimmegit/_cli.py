@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import NoReturn
 import argparse
+import concurrent.futures
 import json
 import logging
 import re
@@ -156,14 +157,18 @@ def main() -> None:
 def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
     if jumbo:
         logger.info(f"Cloning {context.clone_url} with limited history")
-        try:
-            if context.create_branch and remote_has_branch(context.clone_url, context.branch):
-                raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
-            shallow_date = make_shallow_date(context.clone_url)
-        except git.GitCommandError as e:
-            if is_access_error(e):
-                raise CloneError(make_access_error(False))
-            raise CloneError(make_generic_git_error(e))
+        if context.create_branch:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                done_probe_branch, done_make_shallow_date = concurrent.futures.as_completed(
+                    [
+                        executor.submit(probe_branch, context),
+                        executor.submit(make_shallow_date, context),
+                    ]
+                )
+                done_probe_branch.result()
+                shallow_date = done_make_shallow_date.result()
+        else:
+            shallow_date = make_shallow_date(context)
         fetch_opts = [f"--shallow-since={shallow_date}", *fetch_opts]
     else:
         logger.info(f"Cloning {context.clone_url}")
@@ -610,16 +615,21 @@ def make_github_url(repo: str) -> str:
     raise ValueError(f"'{repo}' is not a supported repo.")
 
 
-def make_shallow_date(clone_url: str) -> str:
+def make_shallow_date(context: Context) -> str:
     with tempfile.TemporaryDirectory() as empty_dir:
-        cloned = git.Repo.clone_from(
-            clone_url,
-            empty_dir,
-            single_branch=True,
-            bare=True,
-            filter="blob:none",
-            depth=1,
-        )
+        try:
+            cloned = git.Repo.clone_from(
+                context.clone_url,
+                empty_dir,
+                single_branch=True,
+                bare=True,
+                filter="blob:none",
+                depth=1,
+            )
+        except git.GitCommandError as e:
+            if is_access_error(e):
+                raise CloneError(make_access_error(False))
+            raise CloneError(make_generic_git_error(e))
         tip = cloned.head.commit
         committed = datetime.fromtimestamp(tip.committed_date, tz=timezone.utc)
     date = committed - timedelta(days=21)
@@ -724,9 +734,15 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
         logger.log(DATA_LEVEL, context.clone_dir.resolve())
 
 
-def remote_has_branch(url: str, branch: str) -> bool:
+def probe_branch(context: Context) -> None:
     with tempfile.TemporaryDirectory() as empty_dir:
-        return bool(git.Git(empty_dir).ls_remote(url, branch, heads=True).strip())
+        try:
+            if git.Git(empty_dir).ls_remote(context.clone_url, context.branch, heads=True).strip():
+                raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
+        except git.GitCommandError as e:
+            if is_access_error(e):
+                raise CloneError(make_access_error(False))
+            raise CloneError(make_generic_git_error(e))
 
 
 def set_global_color(color_arg: str) -> None:
