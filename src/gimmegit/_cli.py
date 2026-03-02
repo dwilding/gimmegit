@@ -159,14 +159,10 @@ def clone(context: Context, jumbo: bool, fetch_opts: list[str]) -> None:
         logger.info(f"Cloning {context.clone_url} with limited history")
         if context.create_branch:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                done_probe_branch, done_make_shallow_date = concurrent.futures.as_completed(
-                    [
-                        executor.submit(probe_branch, context),
-                        executor.submit(make_shallow_date, context),
-                    ]
-                )
-                done_probe_branch.result()
-                shallow_date = done_make_shallow_date.result()
+                future_probe_branch = executor.submit(probe_branch, context)
+                future_make_shallow_date = executor.submit(make_shallow_date, context)
+                future_probe_branch.result()
+                shallow_date = future_make_shallow_date.result()
         else:
             shallow_date = make_shallow_date(context)
         fetch_opts = [f"--shallow-since={shallow_date}", *fetch_opts]
