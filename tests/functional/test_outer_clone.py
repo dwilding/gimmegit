@@ -1,10 +1,12 @@
 import os
 import subprocess
+import time
 
 import helpers_functional as helpers
 
 
 def test_working_clone_exclude_dotgit(uv_run, test_dir):
+    # Run gimmegit to get an outer repo.
     command_outer = [
         *uv_run,
         "gimmegit",
@@ -18,7 +20,10 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
         capture_output=True,
         check=True,
     )
-    os.utime(test_dir / "frogtab/dwilding-outer/.git")
+    # Ensure that the outer repo's .git dir is the latest dir.
+    future = time.time() + 10
+    os.utime(test_dir / "frogtab/dwilding-outer/.git", (future, future))
+    # Run gimmegit to get an inner repo.
     command_inner = [
         *uv_run,
         "gimmegit",
