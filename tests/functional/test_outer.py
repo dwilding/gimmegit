@@ -11,6 +11,7 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
     subprocess.run(
         ["git", "init", repo_dir],
         cwd=test_dir,
+        capture_output=True,
         check=True,
     )
     working_dir = repo_dir / "foo"

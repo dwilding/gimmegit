@@ -18,7 +18,7 @@ def get_repo(dir: Path) -> git.Repo | None:
 
 
 def get_repo_from_latest_dir(dir: Path) -> git.Repo | None:
-    dirs = [d for d in dir.iterdir() if d.is_dir()]
+    dirs = [d for d in dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
     if not dirs:
         return
     latest_dir = max(dirs, key=lambda d: d.stat().st_mtime)

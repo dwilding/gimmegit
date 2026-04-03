@@ -10,6 +10,7 @@ def init(dir: str) -> None:
     subprocess.run(
         ["git", "init"],
         cwd=dir,
+        capture_output=True,
         check=True,
     )
 
@@ -18,6 +19,7 @@ def set_config(dir: str, name: str, value: str) -> None:
     subprocess.run(
         ["git", "config", name, value],
         cwd=dir,
+        capture_output=True,
         check=True,
     )
 
