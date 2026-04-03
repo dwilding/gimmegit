@@ -15,6 +15,7 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
     subprocess.run(
         command_outer,
         cwd=test_dir,
+        capture_output=True,
         check=True,
     )
     os.utime(test_dir / "frogtab/dwilding-outer/.git")
