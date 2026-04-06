@@ -263,6 +263,7 @@ def test_dashboard_warning(uv_run, test_dir):
         check=True,
     )
     expected_stdout = """\
+
 Project    Base branch      Review branch
 jubilant   canonical:main   dwilding:my-feature (not created)
 """
