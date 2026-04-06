@@ -89,6 +89,8 @@ def test_working_repo_allow(uv_run, test_dir):
     #     └── foo           Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
     #         └── frogtab   These dirs will be created
     #             └── dwilding-my-feature
+    #
+    # Also check that we write a .gitignore file in the project dir.
     working_dir = test_dir / "frogtab/foo"
     command = [
         *uv_run,
@@ -114,6 +116,7 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+    assert (working_dir / "frogtab/.gitignore").read_text() == "*\n"
 
 
 def test_project_repo_no_clone(uv_run, test_dir):
@@ -149,6 +152,9 @@ def test_project_repo_allow(uv_run, test_dir):
     # .                             Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
     # └── frogtab                   Suppose that this dir is a repo
     #     └── dwilding-my-feature   This dir will be created
+    #
+    # Also check that we don't write a .gitignore file in the project dir (because the dir already exists).
+    (test_dir / "frogtab/.gitignore").unlink(missing_ok=True)
     command = [
         *uv_run,
         "gimmegit",
@@ -172,3 +178,33 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
+    assert not (test_dir / "frogtab/.gitignore").exists()
+
+
+def test_no_gitignore(uv_run, test_dir):
+    # Check that, by default, we don't write a .gitignore file in the project dir.
+    working_dir = test_dir / "bar"
+    working_dir.mkdir()
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "dwilding/frogtab",
+        "my-feature",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=working_dir,
+        capture_output=True,
+        text=True,
+    )
+    expected_dir = working_dir / "frogtab/dwilding-my-feature"
+    expected_stdout = f"""\
+Getting repo details
+Cloning https://github.com/dwilding/frogtab.git
+Checking out a new branch my-feature based on dwilding:main
+Cloned repo:
+{expected_dir}
+"""
+    assert result.stdout == expected_stdout
+    assert not (working_dir / "frogtab/.gitignore").exists()
