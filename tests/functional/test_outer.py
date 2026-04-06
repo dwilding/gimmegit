@@ -153,8 +153,8 @@ def test_project_repo_allow(uv_run, test_dir):
     # └── frogtab                   Suppose that this dir is a repo
     #     └── dwilding-my-feature   This dir will be created
     #
-    # Also check that we don't overwrite an existing .gitignore file in the project dir.
-    (test_dir / "frogtab/.gitignore").write_text("original")
+    # Also check that we don't write a .gitignore file in the project dir (because the dir already exists).
+    (test_dir / "frogtab/.gitignore").unlink(missing_ok=True)
     command = [
         *uv_run,
         "gimmegit",
@@ -178,7 +178,7 @@ Cloned repo:
 {expected_dir}
 """
     assert result.stdout == expected_stdout
-    assert (test_dir / "frogtab/.gitignore").read_text() == "original"
+    assert not (test_dir / "frogtab/.gitignore").exists()
 
 
 def test_no_gitignore(uv_run, test_dir):
