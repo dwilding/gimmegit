@@ -17,7 +17,8 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
     subprocess.run(
         command_outer,
         cwd=test_dir,
-        capture_output=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         check=True,
     )
     # Ensure that the outer repo's .git dir is the latest dir.
