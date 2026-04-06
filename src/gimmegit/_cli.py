@@ -778,4 +778,3 @@ def status_usage(status: _status.Status) -> None:
     if not status.has_remote:
         values = f"{values} (not created)"
     logger.info(values)
-
