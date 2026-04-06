@@ -779,6 +779,3 @@ def status_usage(status: _status.Status) -> None:
         values = f"{values} (not created)"
     logger.info(values)
 
-
-if __name__ == "__main__":
-    main()
