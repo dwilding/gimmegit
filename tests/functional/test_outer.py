@@ -87,7 +87,7 @@ Error: The working directory is inside a repo.
 def test_working_repo_allow(uv_run, test_dir):
     # .
     # └── frogtab           Suppose that this dir is a repo
-    #     └── foo           Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
+    #     └── foo           Try running 'gimmegit --allow-nested dwilding/frogtab my-feature'
     #         └── frogtab   These dirs will be created
     #             └── dwilding-my-feature
     #
@@ -97,7 +97,7 @@ def test_working_repo_allow(uv_run, test_dir):
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "--allow-outer-repo",
+        "--allow-nested",
         "dwilding/frogtab",
         "my-feature",
     ]
@@ -152,7 +152,7 @@ Error: '{project_dir}' is a repo.
 
 
 def test_project_repo_allow(uv_run, test_dir):
-    # .                             Try running 'gimmegit --allow-outer-repo dwilding/frogtab my-feature'
+    # .                             Try running 'gimmegit --allow-nested dwilding/frogtab my-feature'
     # └── frogtab                   Suppose that this dir is a repo
     #     └── dwilding-my-feature   This dir will be created
     #
@@ -162,7 +162,7 @@ def test_project_repo_allow(uv_run, test_dir):
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "--allow-outer-repo",
+        "--allow-nested",
         "dwilding/frogtab",
         "my-feature",
     ]
