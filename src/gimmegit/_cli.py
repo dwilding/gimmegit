@@ -716,6 +716,10 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
                 "The working directory contains a gimmegit clone. Try running gimmegit in the parent directory."
             )
     context.clone_dir.parent.mkdir(exist_ok=True)
+    if args.allow_outer_repo:
+        gitignore = context.clone_dir.parent / ".gitignore"
+        if not gitignore.exists():
+            gitignore.write_text("*\n")
     try:
         clone(context, args.jumbo, fetch_opts)
     except CloneError as e:
