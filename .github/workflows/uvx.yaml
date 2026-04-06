@@ -2,6 +2,8 @@ name: Run using uvx
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -19,10 +21,10 @@ jobs:
           package_dir="$PWD"
           mkdir -p demo
           cd demo
-          result="$(GIMMEGIT_FORCE_STDOUT=1 uvx --from "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
+          result="$(uvx --from "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
           grep --quiet -F 'Installing pre-commit hook' <<< "$result"
           grep --quiet -F 'Cloned repo:' <<< "$result"
           grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
           cd jubilant/dwilding-my-feature
-          status="$(GIMMEGIT_FORCE_STDOUT=1 uvx --from "$package_dir" gimmegit)"
+          status="$(uvx --from "$package_dir" gimmegit)"
           grep --quiet -F 'jubilant   canonical:main   dwilding:my-feature' <<< "$status"
