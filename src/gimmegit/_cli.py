@@ -123,10 +123,11 @@ def main() -> None:
                 status = _status.get_status(working)
                 if not status:
                     exit_with_error("The working directory is inside a repo.")
-                status_usage(status)
                 logger.warning(
                     "Skipped cloning because the working directory is inside a gimmegit clone."
                 )
+                logger.info("")
+                status_usage(status)
                 return
         primary_usage(args, fetch_opts)
     elif args_with_usage.usage == "compare":
