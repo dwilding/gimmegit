@@ -17,10 +17,10 @@ jobs:
           package_dir="$PWD"
           mkdir -p demo
           cd demo
-          result="$(pipx run --spec "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
-          grep --quiet -F 'Installing pre-commit hook' <<< "$result"
-          grep --quiet -F 'Cloned repo:' <<< "$result"
-          grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
+          clone_dir="$(pipx run --spec "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature 2>/tmp/gimmegit_stderr)"
+          grep --quiet -F 'Installing pre-commit hook' /tmp/gimmegit_stderr
+          grep --quiet -F 'Cloned repo:' /tmp/gimmegit_stderr
+          grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$clone_dir"
           cd jubilant/dwilding-my-feature
           status="$(pipx run --spec "$package_dir" gimmegit)"
           grep --quiet -F 'jubilant   canonical:main   dwilding:my-feature' <<< "$status"
