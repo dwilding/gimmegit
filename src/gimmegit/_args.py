@@ -26,7 +26,7 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("--color", nargs="?")
     parser.add_argument("--ssh", nargs="?")
     parser.add_argument("--force-project-dir", action="store_true")
-    parser.add_argument("--allow-outer-repo", action="store_true")
+    parser.add_argument("--allow-nested", action="store_true")
     parser.add_argument("--no-pre-commit", action="store_true")
     parser.add_argument("-j", "--jumbo", action="store_true")
     parser.add_argument("-b", "--base-branch", nargs="?")
@@ -73,11 +73,11 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
         return done(MISSING_SSH)
     elif args.ssh not in CHOICES:
         return done(BAD_SSH)
-    # Handle --force-project-dir, --allow-outer-repo, and --no-pre-commit.
+    # Handle --force-project-dir, --allow-nested, and --no-pre-commit.
     if not hasattr(args, "force_project_dir"):
         args.force_project_dir = False
-    if not hasattr(args, "allow_outer_repo"):
-        args.allow_outer_repo = False
+    if not hasattr(args, "allow_nested"):
+        args.allow_nested = False
     if not hasattr(args, "no_pre_commit"):
         args.no_pre_commit = False
     # Handle -j/--jumbo.
@@ -198,8 +198,8 @@ def add_non_primary_unknown_args(args: argparse.Namespace, unknown_args: list[st
     extended = unknown_args.copy()
     if hasattr(args, "force_project_dir"):
         extended.append("--force-project-dir")
-    if hasattr(args, "allow_outer_repo"):
-        extended.append("--allow-outer-repo")
+    if hasattr(args, "allow_nested"):
+        extended.append("--allow-nested")
     if hasattr(args, "no_pre_commit"):
         extended.append("--no-pre-commit")
     if hasattr(args, "jumbo"):

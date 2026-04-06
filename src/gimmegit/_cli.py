@@ -114,7 +114,7 @@ def main() -> None:
     if hasattr(args, "ssh"):
         set_global_ssh(args.ssh)
     if args_with_usage.usage == "primary":
-        if not args.allow_outer_repo:
+        if not args.allow_nested:
             working = _inspect.get_outer_repo()
             if working:
                 status = _status.get_status(working)
@@ -709,7 +709,7 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
             logger.log(DATA_LEVEL, context.clone_dir.resolve())
         sys.exit(10)
     if (
-        not args.allow_outer_repo
+        not args.allow_nested
         and context.clone_dir.parent.exists()
         and _inspect.get_repo(context.clone_dir.parent)
     ):

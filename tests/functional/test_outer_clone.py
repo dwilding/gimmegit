@@ -30,7 +30,7 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
         *uv_run,
         "gimmegit",
         *helpers.no_ssh,
-        "--allow-outer-repo",
+        "--allow-nested",
         "dwilding/frogtab",
         "inner",
     ]
