@@ -33,7 +33,7 @@ demo:
   mkdir -p demo
   cd demo
   rm -rf jubilant/dwilding-my-feature
-  uv run --project "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature
+  uv run --project "$package_dir" gimmegit --allow-nested -u canonical dwilding/jubilant my-feature
   cd jubilant/dwilding-my-feature
   echo
   uv run --project "$package_dir" gimmegit

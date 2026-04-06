@@ -17,7 +17,7 @@ jobs:
           package_dir="$PWD"
           mkdir -p demo
           cd demo
-          result="$(GIMMEGIT_FORCE_STDOUT=1 pipx run --spec "$package_dir" gimmegit --allow-outer-repo -u canonical dwilding/jubilant my-feature)"
+          result="$(GIMMEGIT_FORCE_STDOUT=1 pipx run --spec "$package_dir" gimmegit --allow-nested -u canonical dwilding/jubilant my-feature)"
           grep --quiet -F 'Installing pre-commit hook' <<< "$result"
           grep --quiet -F 'Cloned repo:' <<< "$result"
           grep --quiet -F '/jubilant/dwilding-my-feature' <<< "$result"
