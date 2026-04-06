@@ -73,9 +73,6 @@ For new branches:
                                 • auto (default): Use colors if the NO_COLOR environment
                                   variable is empty and the output is going to a terminal.
 
---return-dir                   Output the clone directory path to stdout and send full
-                               progress to stderr.
-
 ▶ PRE-COMMIT
 
 If the repo contains a file '.pre-commit-config.yaml', gimmegit installs a pre-commit hook

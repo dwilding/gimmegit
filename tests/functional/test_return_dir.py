@@ -7,7 +7,6 @@ def test_return_dir_new_clone(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        "--return-dir",
         *helpers.no_ssh,
         "dwilding/jubilant",
         "my-feature",
@@ -39,7 +38,6 @@ def test_return_dir_existing_clone(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
-        "--return-dir",
         *helpers.no_ssh,
         "dwilding/jubilant",
         "my-feature",

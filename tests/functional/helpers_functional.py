@@ -19,8 +19,22 @@ no_token = types.SimpleNamespace(
 )
 
 
+def askpass_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["GIMMEGIT_FORCE_STDOUT"] = "1"
+    env["GIT_ASKPASS"] = "/bin/true"
+    return env
+
+
+def default_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["GIMMEGIT_FORCE_STDOUT"] = "1"
+    return env
+
+
 def token_env() -> dict[str, str]:
     env = os.environ.copy()
+    env["GIMMEGIT_FORCE_STDOUT"] = "1"
     env["GIMMEGIT_GITHUB_TOKEN"] = os.environ["GITHUB_TOKEN"]
     return env
 

@@ -1,11 +1,14 @@
 import shutil
 import subprocess
 
+import helpers_stress as helpers
+
 
 def test_juju_clone_main(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
+        *helpers.no_ssh,
         "-j",
         "-u",
         "juju",
@@ -14,6 +17,7 @@ def test_juju_clone_main(uv_run, test_dir):
     subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=True,
@@ -42,6 +46,7 @@ def test_juju_create_branch(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
+        *helpers.no_ssh,
         "-j",
         "-u",
         "juju",
@@ -51,6 +56,7 @@ def test_juju_create_branch(uv_run, test_dir):
     subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=True,
@@ -70,6 +76,7 @@ def test_juju_clone_branch(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
+        *helpers.no_ssh,
         "-j",
         "-u",
         "juju",
@@ -78,6 +85,7 @@ def test_juju_clone_branch(uv_run, test_dir):
     subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=True,

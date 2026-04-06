@@ -104,6 +104,7 @@ def test_working_repo_allow(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=working_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -133,6 +134,7 @@ def test_project_repo_no_clone(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )
@@ -167,6 +169,7 @@ def test_project_repo_allow(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )
@@ -196,6 +199,7 @@ def test_no_gitignore(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=working_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )

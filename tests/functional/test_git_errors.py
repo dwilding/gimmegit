@@ -1,17 +1,9 @@
-import os
 import shutil
 import subprocess
 
 import pytest
 
 import helpers_functional as helpers
-
-
-@pytest.fixture
-def askpass_env():
-    env = os.environ.copy()
-    env["GIT_ASKPASS"] = "/bin/true"
-    return env
 
 
 @pytest.mark.parametrize(
@@ -22,7 +14,7 @@ def askpass_env():
     ],
     ids=["branch_off", "branch"],
 )
-def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
+def test_invalid_repo(uv_run, test_dir, args: list[str]):
     shutil.rmtree(test_dir / "invalid", ignore_errors=True)
     command = [
         *uv_run,
@@ -33,7 +25,7 @@ def test_invalid_repo(uv_run, test_dir, askpass_env, args: list[str]):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -59,7 +51,7 @@ Error: Unable to access repo. Is the repo private? Try configuring Git to use SS
     ],
     ids=["branch_off", "branch"],
 )
-def test_invalid_repo_jumbo(uv_run, test_dir, askpass_env, args: list[str]):
+def test_invalid_repo_jumbo(uv_run, test_dir, args: list[str]):
     shutil.rmtree(test_dir / "invalid", ignore_errors=True)
     command = [
         *uv_run,
@@ -71,7 +63,7 @@ def test_invalid_repo_jumbo(uv_run, test_dir, askpass_env, args: list[str]):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -96,7 +88,7 @@ Error: Unable to access repo. Is the repo private? Try configuring Git to use SS
         "jubilant-backports",
     ],
 )
-def test_branch_exists(uv_run, test_dir, askpass_env, new_branch: str):
+def test_branch_exists(uv_run, test_dir, new_branch: str):
     command = [
         *uv_run,
         "gimmegit",
@@ -107,7 +99,7 @@ def test_branch_exists(uv_run, test_dir, askpass_env, new_branch: str):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -132,7 +124,7 @@ Error: The repo already has a branch {new_branch}.
         "jubilant-backports",
     ],
 )
-def test_branch_exists_jumbo(uv_run, test_dir, askpass_env, new_branch: str):
+def test_branch_exists_jumbo(uv_run, test_dir, new_branch: str):
     command = [
         *uv_run,
         "gimmegit",
@@ -144,7 +136,7 @@ def test_branch_exists_jumbo(uv_run, test_dir, askpass_env, new_branch: str):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -162,7 +154,7 @@ Error: The repo already has a branch {new_branch}.
     assert not (test_dir / f"jubilant/canonical-{new_branch}").exists()
 
 
-def test_invalid_branch(uv_run, test_dir, askpass_env):
+def test_invalid_branch(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -172,7 +164,7 @@ def test_invalid_branch(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -190,7 +182,7 @@ Error: The repo does not have a branch invalid.
     assert not (test_dir / "jubilant/canonical-my-feature").exists()
 
 
-def test_invalid_branch_jumbo(uv_run, test_dir, askpass_env):
+def test_invalid_branch_jumbo(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -201,7 +193,7 @@ def test_invalid_branch_jumbo(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -219,7 +211,7 @@ Error: The repo does not have a branch invalid.
     assert not (test_dir / "jubilant/canonical-my-feature").exists()
 
 
-def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
+def test_invalid_branch_with_upstream(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -231,7 +223,7 @@ def test_invalid_branch_with_upstream(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -249,7 +241,7 @@ Error: The repo does not have a branch invalid.
     assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
-def test_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
+def test_branch_invalid_base_origin(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -261,7 +253,7 @@ def test_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -280,7 +272,7 @@ Error: The base branch dwilding:invalid does not exist.
     assert not (test_dir / "jubilant/dwilding-main").exists()
 
 
-def test_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
+def test_branch_invalid_base_upstream(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -294,7 +286,7 @@ def test_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -314,7 +306,7 @@ Error: The base branch canonical:invalid does not exist.
     assert not (test_dir / "jubilant/dwilding-main").exists()
 
 
-def test_new_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
+def test_new_branch_invalid_base_origin(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -327,7 +319,7 @@ def test_new_branch_invalid_base_origin(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -346,7 +338,7 @@ Error: The base branch dwilding:invalid does not exist.
     assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
-def test_new_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
+def test_new_branch_invalid_base_upstream(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -361,7 +353,7 @@ def test_new_branch_invalid_base_upstream(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -381,7 +373,7 @@ Error: The base branch canonical:invalid does not exist.
     assert not (test_dir / "jubilant/dwilding-my-feature").exists()
 
 
-def test_invalid_upstream(uv_run, test_dir, askpass_env):
+def test_invalid_upstream(uv_run, test_dir):
     command = [
         *uv_run,
         "gimmegit",
@@ -394,7 +386,7 @@ def test_invalid_upstream(uv_run, test_dir, askpass_env):
     result = subprocess.run(
         command,
         cwd=test_dir,
-        env=askpass_env,
+        env=helpers.askpass_env(),
         capture_output=True,
         text=True,
     )
@@ -427,6 +419,7 @@ def test_invalid_fetch_opt(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )

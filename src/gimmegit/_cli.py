@@ -106,14 +106,11 @@ def main() -> None:
     args_with_usage = _args.parse_args(command_args)
     args = args_with_usage.args
     set_global_color(args.color)
-    configure_logger_error()
+    configure_logger_data()
     configure_logger_warning()
+    configure_logger_error()
     if args_with_usage.error:
         exit_with_error(f"{args_with_usage.error} Run 'gimmegit -h' for help.", 2)
-    if hasattr(args, "return_dir"):
-        set_global_info(args.return_dir)
-    configure_logger_info()
-    configure_logger_data()
     if hasattr(args, "ssh"):
         set_global_ssh(args.ssh)
     if args_with_usage.usage == "primary":
@@ -126,9 +123,14 @@ def main() -> None:
                 logger.warning(
                     "Skipped cloning because the working directory is inside a gimmegit clone."
                 )
+                configure_logger_info()
                 logger.info("")
                 status_usage(status)
                 return
+        if not os.isatty(sys.stdout.fileno()) and not bool(os.getenv("GIMMEGIT_FORCE_STDOUT")):
+            # GIMMEGIT_FORCE_STDOUT is intended for use in tests, not to be documented.
+            set_global_info_to_stderr()
+        configure_logger_info()
         primary_usage(args, fetch_opts)
     elif args_with_usage.usage == "compare":
         working = _inspect.get_outer_repo()
@@ -137,6 +139,7 @@ def main() -> None:
             exit_with_error("The working directory is not inside a gimmegit clone.")
         compare_usage(status)
     elif args_with_usage.usage == "help":
+        configure_logger_info()
         logger.info(_help.help)
     elif args_with_usage.usage == "version":
         logger.log(DATA_LEVEL, f"gimmegit {_version.__version__}")
@@ -146,6 +149,7 @@ def main() -> None:
             exit_with_error(f"'{args.parse_url}' is not a supported GitHub URL.")
         logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
     elif args_with_usage.usage == "bare":
+        configure_logger_info()
         working = _inspect.get_outer_repo()
         if not working:
             exit_with_error("No repo specified. Run 'gimmegit -h' for help.", 2)
@@ -757,10 +761,9 @@ def set_global_color(color_arg: str) -> None:
         COLOR["stderr"] = True
 
 
-def set_global_info(return_dir_arg: bool) -> None:
+def set_global_info_to_stderr() -> None:
     global INFO_TO
-    if return_dir_arg:
-        INFO_TO = "stderr"
+    INFO_TO = "stderr"
 
 
 def set_global_ssh(ssh_arg: str) -> None:

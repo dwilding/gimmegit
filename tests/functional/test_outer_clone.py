@@ -17,6 +17,7 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
     subprocess.run(
         command_outer,
         cwd=test_dir,
+        env=helpers.default_env(),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=True,
@@ -37,6 +38,7 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
     result = subprocess.run(
         command_inner,
         cwd=working_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,

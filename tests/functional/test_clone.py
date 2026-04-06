@@ -15,6 +15,7 @@ def test_repo_branch_off(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -50,6 +51,7 @@ def test_repo_branch_off_base(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -83,6 +85,7 @@ def test_repo_branch(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -119,6 +122,7 @@ def test_forked_repo(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -158,6 +162,7 @@ def test_forked_repo_base(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -195,6 +200,7 @@ def test_existing_clone(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )
@@ -331,6 +337,7 @@ def test_in_project_dir(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=working_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
     )
@@ -364,6 +371,7 @@ def test_in_project_dir_force(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=working_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -393,6 +401,7 @@ def test_tags_repo(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -425,6 +434,7 @@ def test_tags_fork(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -457,6 +467,7 @@ def test_submodules_and_tags(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
@@ -489,6 +500,7 @@ def test_jumbo(uv_run, test_dir):
     result = subprocess.run(
         command,
         cwd=test_dir,
+        env=helpers.default_env(),
         capture_output=True,
         text=True,
         check=True,
