@@ -1,1 +1,6 @@
-__version__ = "1.0.1.dev0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("gimmegit")
+except PackageNotFoundError:
+    __version__ = "unknown"
