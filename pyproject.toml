@@ -29,7 +29,7 @@ dev = [
 
 [build-system]
 requires = [
-    "uv_build>=0.7.21,<0.8",
+    "uv_build>=0.7.21,<0.12",
 ]
 build-backend = "uv_build"
 
