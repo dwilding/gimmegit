@@ -25,6 +25,7 @@ dev = [
     "ruff",
     "pytest",
     "ty>=0.0.17",
+    "zizmor",
 ]
 
 [build-system]

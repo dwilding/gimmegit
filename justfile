@@ -22,6 +22,10 @@ test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
 [private]
+zizmor:
+  uv run zizmor .
+
+[private]
 check-command-reference:
   #!/bin/bash
   diff <(uv run .scripts/extract_command_reference.py) <(uv run gimmegit -h)
