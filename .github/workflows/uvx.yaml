@@ -6,13 +6,17 @@ on:
     branches:
       - main
 
+permissions: {}
+
 jobs:
   uvx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57  # v8.0.0
       - name: Run gimmegit
         run: |
           set -ex

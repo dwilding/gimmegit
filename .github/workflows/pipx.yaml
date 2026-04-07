@@ -6,11 +6,15 @@ on:
     branches:
       - main
 
+permissions: {}
+
 jobs:
   pipx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Run gimmegit
         run: |
           set -ex
