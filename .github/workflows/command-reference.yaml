@@ -1,4 +1,4 @@
-name: Command reference
+name: Check command reference
 
 on:
   pull_request:
