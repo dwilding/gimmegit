@@ -26,7 +26,7 @@ zizmor:
   uv run --locked zizmor .
 
 [private]
-check-command-reference:
+command-reference:
   #!/bin/bash
   diff <(uv run --locked .scripts/extract_command_reference.py) <(uv run --locked gimmegit -h)
 
