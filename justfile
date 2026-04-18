@@ -23,7 +23,7 @@ test args="tests/unit tests/functional":
 
 [private]
 zizmor:
-  uv run --locked zizmor .
+  uv run --locked zizmor --format=sarif . > workflows.sarif
 
 [private]
 command-reference:
