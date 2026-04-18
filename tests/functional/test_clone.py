@@ -266,8 +266,8 @@ def test_dashboard_warning(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
-        check=True,
     )
+    assert result.returncode == 11
     expected_stdout = """\
 
 Project    Base branch      Review branch
