@@ -32,12 +32,14 @@ zizmor:
 [private]
 command-ref:
   #!/bin/bash
+  set -e
   uv lock --check
-  diff <(uv run --script .scripts/extract_command_reference.py) <(uv run gimmegit -h)
+  diff <(uv run --script .scripts/extract_command_ref.py) <(uv run gimmegit -h)
 
 [private]
 demo:
   #!/bin/bash
+  set -e
   uv lock --check
   package_dir="$PWD"
   mkdir -p demo
