@@ -30,7 +30,7 @@ zizmor:
   uv run zizmor --format=sarif . > workflows.sarif
 
 [private]
-command-reference:
+command-ref:
   #!/bin/bash
   uv lock --check
   diff <(uv run --script .scripts/extract_command_reference.py) <(uv run gimmegit -h)
