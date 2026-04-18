@@ -335,7 +335,7 @@ requires-dist = [
 dev = [
     { name = "pytest" },
     { name = "ruff" },
-    { name = "ty", specifier = ">=0.0.17" },
+    { name = "ty", specifier = ">=0.0.31" },
     { name = "zizmor" },
 ]
 
