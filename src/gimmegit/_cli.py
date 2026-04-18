@@ -126,7 +126,7 @@ def main() -> None:
                 configure_logger_info()
                 logger.info("")
                 status_usage(status)
-                return
+                sys.exit(11)  # Set a non-zero code because we didn't do what the user asked for.
         if not os.isatty(sys.stdout.fileno()) and not bool(os.getenv("GIMMEGIT_FORCE_STDOUT")):
             # GIMMEGIT_FORCE_STDOUT is intended for use in tests, not to be documented.
             set_global_info_to_stderr()
@@ -707,7 +707,7 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
         logger.info(context.clone_dir.resolve())
         if INFO_TO == "stderr":
             logger.log(DATA_LEVEL, context.clone_dir.resolve())
-        sys.exit(10)
+        sys.exit(10)  # Set a non-zero code because we didn't do what the user asked for.
     if (
         not args.allow_nested
         and context.clone_dir.parent.exists()
