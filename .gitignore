@@ -2,3 +2,4 @@ __pycache__
 build
 demo
 gimmegit.egg-info
+workflows.sarif

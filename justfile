@@ -3,9 +3,11 @@ default:
   @just --summary --unsorted
 
 format:
+  uv lock --check
   uv run ruff format
 
 lint:
+  uv lock --check
   uv run ruff check
   uv run ruff format --diff
   uv run ty check
@@ -19,20 +21,26 @@ stress: (test "tests/stress")
 
 [private]
 test args="tests/unit tests/functional":
+  uv lock --check
   uv run pytest -vv {{args}}
 
 [private]
 zizmor:
-  uv run zizmor .
+  uv lock --check
+  uv run zizmor --format=sarif . > workflows.sarif
 
 [private]
-check-command-reference:
+command-ref:
   #!/bin/bash
-  diff <(uv run .scripts/extract_command_reference.py) <(uv run gimmegit -h)
+  set -e
+  uv lock --check
+  diff <(uv run --script .scripts/extract_command_ref.py) <(uv run gimmegit -h)
 
 [private]
 demo:
   #!/bin/bash
+  set -e
+  uv lock --check
   package_dir="$PWD"
   mkdir -p demo
   cd demo
