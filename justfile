@@ -28,7 +28,7 @@ zizmor:
 [private]
 command-reference:
   #!/bin/bash
-  diff <(uv run --locked .scripts/extract_command_reference.py) <(uv run --locked gimmegit -h)
+  diff <(uv run --script .scripts/extract_command_reference.py) <(uv run --no-project gimmegit -h)
 
 [private]
 demo:
