@@ -1,10 +1,9 @@
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import NoReturn
 import argparse
 import concurrent.futures
-import json
 import logging
 import re
 import os
@@ -143,11 +142,6 @@ def main() -> None:
         logger.info(_help.help)
     elif args_with_usage.usage == "version":
         logger.log(DATA_LEVEL, f"gimmegit {_version.__version__}")
-    elif args_with_usage.usage == "tool":
-        parsed_url = parse_github_url(args.parse_url)
-        if not parsed_url:
-            exit_with_error(f"'{args.parse_url}' is not a supported GitHub URL.")
-        logger.log(DATA_LEVEL, json.dumps(asdict(parsed_url)))
     elif args_with_usage.usage == "bare":
         configure_logger_info()
         working = _inspect.get_outer_repo()
