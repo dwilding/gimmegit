@@ -1,6 +1,6 @@
 import pytest
 
-from gimmegit import _cli
+import gimmegit
 
 
 @pytest.fixture(autouse=True)
@@ -9,9 +9,9 @@ def no_ssh(monkeypatch):
 
 
 def test_url_branch():
-    assert _cli.parse_github_url(
+    assert gimmegit.parse_github_url(
         "github.com/canonical/operator/tree/2.23-maintenance"
-    ) == _cli.ParsedURL(
+    ) == gimmegit.ParsedURL(
         branch="2.23-maintenance",
         owner="canonical",
         project="operator",
@@ -20,7 +20,7 @@ def test_url_branch():
 
 
 def test_url_no_branch():
-    assert _cli.parse_github_url("github.com/canonical/operator") == _cli.ParsedURL(
+    assert gimmegit.parse_github_url("github.com/canonical/operator") == gimmegit.ParsedURL(
         branch=None,
         owner="canonical",
         project="operator",
@@ -29,4 +29,4 @@ def test_url_no_branch():
 
 
 def test_url_invalid():
-    assert _cli.parse_github_url("github.com/canonical") is None
+    assert gimmegit.parse_github_url("github.com/canonical") is None
