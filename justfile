@@ -3,12 +3,12 @@ default:
   @just --summary --unsorted
 
 format:
-  uv run --frozen ruff format
+  uv run ruff format
 
 lint:
-  uv run --frozen ruff check
-  uv run --frozen ruff format --diff
-  uv run --frozen ty check
+  uv run ruff check
+  uv run ruff format --diff
+  uv run ty check
 
 unit: (test "tests/unit")
 
@@ -19,17 +19,17 @@ stress: (test "tests/stress")
 
 [private]
 test args="tests/unit tests/functional":
-  uv run --locked pytest -vv {{args}}
+  uv run pytest -vv {{args}}
 
 [private]
 zizmor:
-  uv run --frozen zizmor --format=sarif . > workflows.sarif
+  uv run zizmor --format=sarif . > workflows.sarif
 
 [private]
 command-ref:
   #!/bin/bash
   set -e
-  diff <(uv run --frozen --script .scripts/extract_command_ref.py) <(uv run --frozen gimmegit -h)
+  diff <(uv run --script .scripts/extract_command_ref.py) <(uv run gimmegit -h)
 
 [private]
 demo:
@@ -39,7 +39,19 @@ demo:
   mkdir -p demo
   cd demo
   rm -rf jubilant/dwilding-my-feature
-  uv run --frozen --project "$package_dir" gimmegit --allow-nested -u canonical dwilding/jubilant my-feature
+  uv run --project "$package_dir" gimmegit --allow-nested -u canonical dwilding/jubilant my-feature
   cd jubilant/dwilding-my-feature
   echo
-  uv run --frozen --project "$package_dir" gimmegit
+  uv run --project "$package_dir" gimmegit
+
+[private]
+deps:
+  #!/bin/bash
+  set -e
+  uv lock --check
+  # If we bumped a direct dependency in uv.lock, we should also bump the minimum version constraint
+  # in pyproject.toml (because gimmegit doesn't require uv). Let's check for any inconsistencies:
+  uv_output=$(uv lock --dry-run --resolution lowest-direct 2>&1)
+  if grep '^Update ' <<<"$uv_output"; then
+    exit 1
+  fi
