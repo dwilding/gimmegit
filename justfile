@@ -51,7 +51,8 @@ deps:
   uv lock --check
   # If we bumped a direct dependency in uv.lock, we should also bump the minimum version constraint
   # in pyproject.toml (because gimmegit doesn't require uv). Let's check for any inconsistencies:
-  uv_output=$(uv lock --dry-run --resolution lowest-direct 2>&1)
+  lockfile_committed=$(git log --max-count=1 --format=%cI -- uv.lock)
+  uv_output=$(uv lock --dry-run --resolution lowest-direct --exclude-newer "$lockfile_committed" 2>&1)
   if grep '^Update ' <<<"$uv_output"; then
     exit 1
   fi
