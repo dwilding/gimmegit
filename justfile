@@ -1,3 +1,5 @@
+set ignore-comments
+
 [private]
 default:
   @just --summary --unsorted
