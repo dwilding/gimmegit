@@ -7,13 +7,16 @@ import subprocess
 def main() -> None:
     passed = True
     packages = direct_deps()
-    result = subprocess.run(
-        ["uv", "lock", "--dry-run", "--resolution", "lowest-direct"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["uv", "lock", "--dry-run", "--resolution", "lowest-direct"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise SystemExit(e.stdout)
     for line in result.stdout.splitlines():
         if not line.startswith("Update "):
             continue
@@ -31,12 +34,15 @@ def main() -> None:
 
 def direct_deps() -> list[str]:
     packages = []
-    result = subprocess.run(
-        ["uv", "tree", "--depth", "1"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["uv", "tree", "--depth", "1"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise SystemExit(e.stderr)
     package_pattern = re.compile(r"─ ([^ \[]+)")
     for line in result.stdout.splitlines():
         match = package_pattern.search(line)
