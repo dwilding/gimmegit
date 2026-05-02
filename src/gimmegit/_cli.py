@@ -5,20 +5,18 @@ from typing import NoReturn
 import argparse
 import concurrent.futures
 import logging
-import re
 import os
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.parse
 import webbrowser
 
 import git
 import github
 
-from . import _args, _help, _inspect, _remote, _status, _version
+from . import _args, _help, _inspect, _parse, _remote, _status, _version
 
 DATA_LEVEL = 19
 logger = logging.getLogger(__name__)
@@ -65,14 +63,6 @@ class BranchName:
 
 @dataclass
 class ParsedBranchSpec(BranchName):
-    owner: str
-    project: str
-    remote_url: str
-
-
-@dataclass
-class ParsedURL:
-    branch: str | None
     owner: str
     project: str
     remote_url: str
@@ -403,7 +393,7 @@ def get_context(args: argparse.Namespace) -> Context:
     logger.info("Getting repo details")
     # Parse the 'repo' arg to get the owner, project, and branch.
     github_url = make_github_url(args.repo)
-    parsed = parse_github_url(github_url)
+    parsed = _parse.parse_url(github_url, ssh=SSH)
     if not parsed:
         raise ValueError(f"'{github_url}' is not a supported GitHub URL.")
     owner = parsed.owner
@@ -429,7 +419,7 @@ def get_context(args: argparse.Namespace) -> Context:
     elif args.upstream_owner:
         if args.upstream_owner != owner:
             upstream_owner = args.upstream_owner
-            upstream_url = make_github_clone_url(upstream_owner, project)
+            upstream_url = _remote.make_remote_url(SSH, upstream_owner, project)
     elif upstream:
         project = upstream.project
         upstream_owner = upstream.owner
@@ -486,7 +476,7 @@ def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
         return _remote.Remote(
             owner=parent.owner.login,
             project=parent.name,
-            url=make_github_clone_url(parent.owner.login, parent.name),
+            url=_remote.make_remote_url(SSH, parent.owner.login, parent.name),
         )
 
 
@@ -584,13 +574,6 @@ def make_generic_git_error(e: git.GitCommandError) -> str:
     return f"Unable to run Git command.\n\n{git_error}"
 
 
-def make_github_clone_url(owner: str, project: str) -> str:
-    if SSH:
-        return f"git@github.com:{owner}/{project}.git"
-    else:
-        return f"https://github.com/{owner}/{project}.git"
-
-
 def make_github_url(repo: str) -> str:
     if repo.startswith(("https://github.com/", "github.com/")):
         return repo
@@ -658,7 +641,7 @@ def make_value_cell(col: Column) -> str:
 
 
 def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | BranchName | None:
-    parsed = parse_github_url(branch_spec)
+    parsed = _parse.parse_url(branch_spec, ssh=SSH)
     if not parsed:
         if not is_valid_branch_name(branch_spec):
             raise ValueError(f"'{branch_spec}' is not a valid branch name.")
@@ -673,22 +656,6 @@ def parse_github_branch_spec(branch_spec: str) -> ParsedBranchSpec | BranchName 
         project=parsed.project,
         remote_url=parsed.remote_url,
     )
-
-
-def parse_github_url(url: str) -> ParsedURL | None:
-    pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
-    # TODO: Disallow PR URLs.
-    match = re.search(pattern, url)
-    if match:
-        branch = match.group(5)
-        if branch:
-            branch = urllib.parse.unquote(branch)
-        return ParsedURL(
-            branch=branch,
-            owner=match.group(2),
-            project=match.group(3),
-            remote_url=make_github_clone_url(match.group(2), match.group(3)),
-        )
 
 
 def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
@@ -763,8 +730,7 @@ def set_global_info_to_stderr() -> None:
 def set_global_ssh(ssh_arg: str) -> None:
     global SSH
     if ssh_arg == "auto":
-        ssh_dir = Path.home() / ".ssh"
-        SSH = any(ssh_dir.glob("id_*"))
+        SSH = _remote.is_ssh_configured()
     elif ssh_arg == "always":
         SSH = True
 

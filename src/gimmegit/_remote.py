@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -6,6 +7,18 @@ class Remote:
     owner: str
     project: str
     url: str
+
+
+def is_ssh_configured() -> bool:
+    ssh_dir = Path.home() / ".ssh"
+    return any(ssh_dir.glob("id_*"))
+
+
+def make_remote_url(ssh: bool, owner: str, project: str) -> str:
+    if ssh:
+        return f"git@github.com:{owner}/{project}.git"
+    else:
+        return f"https://github.com/{owner}/{project}.git"
 
 
 def remote_from_url(url: str) -> Remote:
