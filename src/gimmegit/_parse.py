@@ -24,6 +24,7 @@ def parse_url(url: str, *, ssh: bool | None = None) -> ParsedURL | None:
     """
     pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
     # TODO: Disallow PR URLs.
+    # TODO: Improve parsing. See https://github.com/dwilding/gimmegit/pull/120#discussion_r3176453217
     match = re.search(pattern, url)
     if match:
         branch = match.group(5)
