@@ -16,11 +16,16 @@ class ParsedURL:
 def parse_url(url: str, *, ssh: bool | None = None) -> ParsedURL | None:
     """Parse a GitHub URL into owner, project, and branch.
 
-    This function also returns the corresponding Git remote URL.
+    Also returns the corresponding Git remote URL.
 
     Args:
+        url: URL to parse. For example,
+            https://github.com/canonical/operator/tree/2.23-maintenance.
         ssh: Controls whether the Git remote uses SSH or HTTPS. If not specified, the Git remote
-            uses SSH if ``~/.ssh`` contains an SSH key.
+            uses SSH if `~/.ssh` contains an SSH key.
+
+    Returns:
+        A ParsedURL object, or None if the URL cannot be parsed.
     """
     pattern = r"(https://)?github\.com/([^/]+)/([^/]+)(/tree/(.+))?"
     # TODO: Disallow PR URLs.
