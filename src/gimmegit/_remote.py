@@ -13,7 +13,7 @@ def is_ssh_configured() -> bool:
     try:
         ssh_dir = Path.home() / ".ssh"
         return any(ssh_dir.glob("id_*"))
-    except OSError:
+    except (RuntimeError, OSError):
         return False
 
 
