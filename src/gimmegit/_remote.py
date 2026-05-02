@@ -10,8 +10,11 @@ class Remote:
 
 
 def is_ssh_configured() -> bool:
-    ssh_dir = Path.home() / ".ssh"
-    return any(ssh_dir.glob("id_*"))
+    try:
+        ssh_dir = Path.home() / ".ssh"
+        return any(ssh_dir.glob("id_*"))
+    except OSError:
+        return False
 
 
 def make_remote_url(ssh: bool, owner: str, project: str) -> str:
