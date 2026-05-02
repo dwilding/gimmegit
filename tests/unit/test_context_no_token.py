@@ -9,7 +9,7 @@ from gimmegit import _cli
 
 @pytest.fixture(autouse=True)
 def no_ssh(monkeypatch):
-    monkeypatch.setattr("gimmegit._cli.SSH", False)
+    monkeypatch.setattr("gimmegit._remote.is_ssh_configured", lambda: False)
 
 
 @pytest.fixture(autouse=True)

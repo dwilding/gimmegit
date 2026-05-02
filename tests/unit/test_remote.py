@@ -1,6 +1,6 @@
-from gimmegit import _remote
-
 import pytest
+
+from gimmegit import _remote
 
 
 def test_remote_from_ssh():

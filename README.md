@@ -399,13 +399,11 @@ gimmegit [--color auto|always|never]                   (1)
 gimmegit -c | --compare                                (2)
 gimmegit -h | --help                                   (3)
 gimmegit --version                                     (4)
-gimmegit [--ssh auto|always|never] --parse-url <url>   (5)
 
 1. Display the branch mapping if the working directory is inside a gimmegit clone.
 2. Compare branches in GitHub if the working directory is inside a gimmegit clone.
 3. Display a summary of how to use gimmegit.
 4. Display the installed version of gimmegit.
-5. Display a JSON representation of a GitHub URL. Intended for extensions to gimmegit.
 
 ▶ EXAMPLES
 
