@@ -36,13 +36,18 @@ modified subdirectory is a gimmegit clone).
 
 ▶ BRANCH MAPPING
 
-gimmegit creates a Git alias 'update-branch' that merges remote changes from the base branch.
 The base branch is the repo's main branch. If the repo is a fork and GIMMEGIT_GITHUB_TOKEN is
 set, the base branch is the upstream version of the repo's main branch.
 
 For new branches:
  • gimmegit branches off the base branch.
  • gimmegit doesn't push the branch to GitHub.
+
+gimmegit creates a Git alias that fetches and merges changes from the base branch:
+   git update-branch
+
+To rebase instead of merge:
+   git update-branch rebase
 
 ▶ OPTIONS
 
