@@ -36,7 +36,6 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
     parser.add_argument("-c", "--compare", action="store_true")  # The value isn't significant.
     parser.add_argument("-h", "--help", action="store_true")  # The value isn't significant.
     parser.add_argument("--version", action="store_true")  # The value isn't significant.
-    parser.add_argument("--parse-url", nargs="?")
     args, unknown_args = parser.parse_known_args(args_to_parse)
     # Handle --color.
     # We use args.color to configure error logging, so make sure it has a proper value.
@@ -57,8 +56,6 @@ def parse_args(args_to_parse) -> ArgsWithUsage:
         return parse_as_help(args, unknown_args)
     if hasattr(args, "version"):
         return parse_as_version(args, unknown_args)
-    if hasattr(args, "parse_url"):
-        return parse_as_tool(args, unknown_args)
     return parse_as_bare(args, unknown_args)
 
 
@@ -102,8 +99,6 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
         unknown_args.append("-h/--help")
     if hasattr(args, "version"):
         unknown_args.append("--version")
-    if hasattr(args, "parse_url"):
-        unknown_args.append("--parse-url")
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
@@ -121,8 +116,6 @@ def parse_as_compare(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
         unknown_args.append("-h/--help")
     if hasattr(args, "version"):
         unknown_args.append("--version")
-    if hasattr(args, "parse_url"):
-        unknown_args.append("--parse-url")
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
@@ -138,8 +131,6 @@ def parse_as_help(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWith
         unknown_args.append("--ssh")
     if hasattr(args, "version"):
         unknown_args.append("--version")
-    if hasattr(args, "parse_url"):
-        unknown_args.append("--parse-url")
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
@@ -153,29 +144,6 @@ def parse_as_version(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
     unknown_args = add_non_primary_unknown_args(args, unknown_args)
     if hasattr(args, "ssh"):
         unknown_args.append("--ssh")
-    if hasattr(args, "parse_url"):
-        unknown_args.append("--parse-url")
-    if unknown_args:
-        return done(f"Unexpected options: {', '.join(unknown_args)}.")
-    return done(None)
-
-
-def parse_as_tool(args: argparse.Namespace, unknown_args: list[str]) -> ArgsWithUsage:
-    def done(error: str | None) -> ArgsWithUsage:
-        return ArgsWithUsage(args=args, error=error, usage="tool")
-
-    # Handle --ssh.
-    if not hasattr(args, "ssh"):
-        args.ssh = DEFAULT_CHOICE
-    elif not args.ssh:
-        return done(MISSING_SSH)
-    elif args.ssh not in CHOICES:
-        return done(BAD_SSH)
-    # Handle --parse-url.
-    if not args.parse_url:
-        return done("No GitHub URL specified.")
-    # Handle unknown args.
-    unknown_args = add_non_primary_unknown_args(args, unknown_args)
     if unknown_args:
         return done(f"Unexpected options: {', '.join(unknown_args)}.")
     return done(None)
