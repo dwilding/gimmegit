@@ -1,3 +1,4 @@
+from pathlib import Path
 import subprocess
 
 import git
@@ -6,7 +7,7 @@ import pytest
 from gimmegit import _status
 
 
-def init(dir: str) -> None:
+def init(dir: Path) -> None:
     subprocess.run(
         ["git", "init"],
         cwd=dir,
@@ -16,7 +17,7 @@ def init(dir: str) -> None:
     )
 
 
-def set_config(dir: str, name: str, value: str) -> None:
+def set_config(dir: Path, name: str, value: str) -> None:
     subprocess.run(
         ["git", "config", name, value],
         cwd=dir,
