@@ -1,18 +1,11 @@
 from pathlib import Path
 import os
-import re
 import subprocess
 import types
 
-from gimmegit import _version
 
 no_ssh = ["--ssh", "never"]
 
-fail_in_dev = types.SimpleNamespace(
-    condition=re.search(r"\.dev\d+$", _version.__version__),
-    reason="Follow up before release",
-    strict=True,
-)
 no_token = types.SimpleNamespace(
     condition="GITHUB_TOKEN" not in os.environ,
     reason="GITHUB_TOKEN is not set",

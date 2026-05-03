@@ -17,7 +17,7 @@ jobs:
           persist-credentials: false
       - name: Run gimmegit
         run: |
-          set -ex
+          set -x
           package_dir="$PWD"
           mkdir -p demo
           cd demo

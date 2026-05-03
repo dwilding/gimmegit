@@ -37,13 +37,13 @@ zizmor:
 [private]
 command-ref:
   #!/bin/bash
-  set -e
+  set -euo pipefail
   diff <(uv run --script .scripts/extract_command_ref.py) <(uv run gimmegit -h)
 
 [private]
 demo:
   #!/bin/bash
-  set -e
+  set -euo pipefail
   package_dir="$PWD"
   mkdir -p demo
   cd demo
