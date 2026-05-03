@@ -37,7 +37,6 @@ zizmor:
 [private]
 command-ref:
   #!/bin/bash
-  set -e
   diff <(uv run --script .scripts/extract_command_ref.py) <(uv run gimmegit -h)
 
 [private]
