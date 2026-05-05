@@ -304,15 +304,16 @@ def create_local_branch(
         fetch_opts_str = shlex.join(fetch_opts)
         update_branch = "!" + " && ".join(
             [
+                'mode=$([ \\"$1\\" = rebase ] && echo rebase || echo merge)',
+                #         ^ Git drops unescaped quotes when reading the alias.
+                "set --",  # Clear positional args, to avoid leaking into the final Git command.
                 "branch=$(git config --get gimmegit.branch)",
                 "base_remote=$(git config --get gimmegit.baseRemote)",
                 "base_branch=$(git config --get gimmegit.baseBranch)",
-                'echo \\"$ git checkout $branch\\"',
+                "set -x",  # From now on, output each command before running it.
                 "git checkout $branch",
-                f'echo \\"$ git fetch {fetch_opts_str} $base_remote $base_branch\\"',
                 f"git fetch {fetch_opts_str} $base_remote $base_branch",
-                'echo \\"$ git merge $base_remote/$base_branch\\"',
-                "git merge $base_remote/$base_branch",
+                "git $mode $base_remote/$base_branch",
             ]
         )  # Not cross-platform!
         config.set_value(

@@ -32,6 +32,7 @@ In this README:
   - [Clone a fork and create a branch](#clone-a-fork-and-create-a-branch)
   - [Clone a fork on an existing branch](#clone-a-fork-on-an-existing-branch)
   - [Clone a large repo](#clone-a-large-repo)
+  - [Update your branch](#update-your-branch)
   - [Provide git-fetch options](#provide-git-fetch-options)
   - [Command reference](#command-reference)
 
@@ -57,7 +58,7 @@ The new branch is based on the repo's main branch. To specify the base branch, u
 gimmegit -b <base-branch> <owner>/<project> <new-branch>
 ```
 
-After working on the new branch for a while, you might want to merge remote changes from the base branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
+After working on the new branch for a while, you might want to merge remote changes from the base branch. To merge remote changes, run `git update-branch` in the clone directory. See [Update your branch](#update-your-branch).
 
 ### Example
 
@@ -98,7 +99,7 @@ gimmegit https://github.com/<owner>/<project>/tree/<branch>
 
 This clones the repo `<owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
 
-After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
+After working on the branch for a while, you might want to merge remote changes from the repo's main branch. To merge remote changes, run `git update-branch` in the clone directory. See [Update your branch](#update-your-branch).
 
 ### Example
 
@@ -150,7 +151,7 @@ The new branch is based on the upstream repo's main branch. (Technically, it's b
 gimmegit -b <upstream-base-branch> -u <upstream-owner> <owner>/<project> <new-branch>
 ```
 
-After working on the new branch for a while, you might want to merge changes from the upstream base branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
+After working on the new branch for a while, you might want to merge changes from the upstream base branch. To merge changes from upstream, run `git update-branch` in the clone directory. See [Update your branch](#update-your-branch).
 
 ### Example
 
@@ -228,7 +229,7 @@ gimmegit -u <upstream-owner> https://github.com/<owner>/<project>/tree/<branch>
 
 This clones `<owner>`'s fork of `<upstream-owner>/<project>` into a directory called `<project>/<owner>-<branch>` and checks out the branch `<branch>`.
 
-After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. `update-branch` is a Git alias that gimmegit created.
+After working on the branch for a while, you might want to merge changes from the upstream repo's main branch. To merge changes from upstream, run `git update-branch` in the clone directory. See [Update your branch](#update-your-branch).
 
 ### Example
 
@@ -301,6 +302,20 @@ gimmegit -j -u juju dwilding/juju update-docs
 
 Instead of fetching the full history of the repo (and the upstream repo), Git fetches history from three weeks before the latest commit on the repo's main branch.
 
+## Update your branch
+
+gimmegit creates a Git alias called `update-branch` that syncs your branch with the base branch. Run the alias in the clone directory.
+
+You can choose whether to merge or rebase:
+
+- `git update-branch` - Fetches the base branch and merges changes into your branch.
+
+- `git update-branch rebase` - Fetches the base branch and rebases your branch.
+
+The alias doesn't push the updated branch to GitHub. The alias is otherwise equivalent to the [Update branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/keeping-your-pull-request-in-sync-with-the-base-branch) button you might have seen on GitHub pull requests.
+
+It's up to you to decide whether to merge or rebase, depending on the project's conventions. I generally use this approach: rebase before PR review, merge during PR review.
+
 ## Provide git-fetch options
 
 To provide [git-fetch options](https://git-scm.com/docs/git-fetch#_options) to gimmegit, list the options after `--`:
@@ -351,13 +366,18 @@ modified subdirectory is a gimmegit clone).
 
 ▶ BRANCH MAPPING
 
-gimmegit creates a Git alias 'update-branch' that merges remote changes from the base branch.
 The base branch is the repo's main branch. If the repo is a fork and GIMMEGIT_GITHUB_TOKEN is
 set, the base branch is the upstream version of the repo's main branch.
 
 For new branches:
  • gimmegit branches off the base branch.
  • gimmegit doesn't push the branch to GitHub.
+
+gimmegit creates a Git alias that fetches and merges changes from the base branch:
+   git update-branch
+
+To rebase instead of merge:
+   git update-branch rebase
 
 ▶ OPTIONS
 
