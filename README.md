@@ -312,7 +312,7 @@ You can choose whether to merge or rebase:
 
 - `git update-branch rebase` - Fetches the base branch and rebases your branch.
 
-The alias doesn't push the updated branch to GitHub. Otherwise, the alias is equivalent to the [Update branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/keeping-your-pull-request-in-sync-with-the-base-branch) button you might have seen on GitHub pull requests.
+The alias doesn't push the updated branch to GitHub. The alias is otherwise equivalent to the [Update branch](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/keeping-your-pull-request-in-sync-with-the-base-branch) button you might have seen on GitHub pull requests.
 
 It's up to you to decide whether to merge or rebase, depending on the project's conventions. I generally use this approach: rebase before PR review, merge during PR review.
 
