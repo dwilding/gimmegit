@@ -24,7 +24,7 @@ gimmegit = "gimmegit._cli:main"
 dev = [
     "ruff>=0.15.13,<1",
     "pytest>=9.0.3,<10",
-    "ty>=0.0.38,<2",
+    "ty>=0.0.38,<1",
     "zizmor>=1.24.1,<2",
 ]
 
