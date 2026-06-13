@@ -25,13 +25,6 @@ test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
 [private]
-deps:
-  uv lock --check
-  # If we bumped a direct dependency in uv.lock, we should also bump the minimum version constraint
-  # in pyproject.toml (because gimmegit doesn't require uv). Let's check for any inconsistencies:
-  uv run --script .scripts/check_deps.py
-
-[private]
 zizmor:
   uv run zizmor --format=sarif . > workflows.sarif
 

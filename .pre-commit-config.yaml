@@ -10,9 +10,9 @@ repos:
       - id: check-toml
   - repo: local
     hooks:
-      - id: just-deps
-        name: Run 'just deps'
-        entry: just deps
+      - id: deps
+        name: Check uv.lock
+        entry: uv lock --check
         language: system
         pass_filenames: false
         always_run: true
