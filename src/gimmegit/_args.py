@@ -73,8 +73,8 @@ def parse_as_primary(args: argparse.Namespace, unknown_args: list[str]) -> ArgsW
     # Handle --force-project-dir, --nest, and --no-pre-commit.
     if not hasattr(args, "force_project_dir"):
         args.force_project_dir = False
-    if not hasattr(args, "allow_nested"):
-        args.allow_nested = False
+    if not hasattr(args, "nest"):
+        args.nest = False
     if not hasattr(args, "no_pre_commit"):
         args.no_pre_commit = False
     # Handle -j/--jumbo.
@@ -166,7 +166,7 @@ def add_non_primary_unknown_args(args: argparse.Namespace, unknown_args: list[st
     extended = unknown_args.copy()
     if hasattr(args, "force_project_dir"):
         extended.append("--force-project-dir")
-    if hasattr(args, "allow_nested"):
+    if hasattr(args, "nest"):
         extended.append("--nest")
     if hasattr(args, "no_pre_commit"):
         extended.append("--no-pre-commit")
