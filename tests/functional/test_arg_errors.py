@@ -218,7 +218,7 @@ def test_status_unexpected(uv_run, test_dir):
         "--ssh",
         "always",
         "--force-project-dir",
-        "--allow-nested",
+        "--nest",
         "--no-pre-commit",
         "-j",
         "-b",
@@ -235,7 +235,7 @@ def test_status_unexpected(uv_run, test_dir):
     assert result.returncode == 2
     assert not result.stdout
     expected_stderr = """\
-Error: Unexpected options: --force-project-dir, --allow-nested, --no-pre-commit, -j/--jumbo, -b/--base-branch, -u/--upstream-owner, --ssh. Run 'gimmegit -h' for help.
+Error: Unexpected options: --force-project-dir, --nest, --no-pre-commit, -j/--jumbo, -b/--base-branch, -u/--upstream-owner, --ssh. Run 'gimmegit -h' for help.
 """
     assert result.stderr == expected_stderr
 
