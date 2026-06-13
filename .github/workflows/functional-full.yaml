@@ -29,4 +29,4 @@ jobs:
         env:
           UV_PYTHON: ${{ matrix.python-version }}
           GITHUB_TOKEN: ${{ secrets.DWILDING_GITHUB_TOKEN }}
-        run: uvx --from rust-just just functional
+        run: uvx --from rust-just@1.52.0 just functional

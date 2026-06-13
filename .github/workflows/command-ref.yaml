@@ -18,4 +18,4 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
       - name: Check the command reference
-        run: uvx --from rust-just just command-ref
+        run: uvx --from rust-just@1.52.0 just command-ref
