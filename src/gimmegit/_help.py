@@ -66,7 +66,7 @@ To rebase instead of merge:
 
 --no-pre-commit                Don't try to install a pre-commit hook after cloning the repo.
 
---allow-nested                 Allow the clone directory to be inside a repo.
+--nest                         Allow the clone directory to be inside a repo.
 
 --force-project-dir            Create the project directory even if gimmegit finds a gimmegit
                                clone in the working directory.
