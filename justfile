@@ -25,10 +25,6 @@ test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
 [private]
-zizmor:
-  uv run zizmor --format=sarif . > workflows.sarif
-
-[private]
 command-ref:
   #!/bin/bash
   set -euo pipefail

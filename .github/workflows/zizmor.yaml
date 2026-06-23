@@ -21,7 +21,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
       - name: Run zizmor
-        run: uvx --from rust-just@1.52.0 just zizmor
+        run: uv run zizmor --format=sarif . > workflows.sarif
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Avoid rate limits for zizmor's "online" checks.
       - name: Upload SARIF file
