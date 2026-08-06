@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import argparse
+from dataclasses import dataclass
 
 CHOICES = ["auto", "always", "never"]
 DEFAULT_CHOICE = "auto"

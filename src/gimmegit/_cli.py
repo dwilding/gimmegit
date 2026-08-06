@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import NoReturn
 import argparse
 import concurrent.futures
 import logging
@@ -12,6 +8,10 @@ import subprocess
 import sys
 import tempfile
 import webbrowser
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import NoReturn
 
 import git
 import github

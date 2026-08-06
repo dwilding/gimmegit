@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import re
 import urllib.parse
+from dataclasses import dataclass
 
 from . import _remote
 

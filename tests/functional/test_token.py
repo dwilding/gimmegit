@@ -1,8 +1,7 @@
 import subprocess
 
-import pytest
-
 import helpers_functional as helpers
+import pytest
 
 
 @pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)

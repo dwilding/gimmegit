@@ -1,9 +1,8 @@
 import shutil
 import subprocess
 
-import pytest
-
 import helpers_functional as helpers
+import pytest
 
 
 @pytest.mark.parametrize(
