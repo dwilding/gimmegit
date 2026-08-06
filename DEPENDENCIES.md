@@ -4,6 +4,7 @@ Runtime dependencies:
 - [pre-commit](https://github.com/pre-commit/pre-commit/releases)
 - [PyGithub](https://github.com/PyGithub/PyGithub/releases)
     - [PyJWT](https://github.com/jpadilla/pyjwt/releases)
+        - [cryptography](https://github.com/pyca/cryptography/releases)
     - [requests](https://github.com/psf/requests/releases)
 
 Development dependencies:
