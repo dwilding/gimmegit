@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import NoReturn
 import argparse
 import concurrent.futures
 import logging
@@ -12,6 +8,10 @@ import subprocess
 import sys
 import tempfile
 import webbrowser
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import NoReturn
 
 import git
 import github
@@ -195,6 +195,7 @@ def compare_usage(status: _status.Status) -> None:
             ["xdg-open", status.compare_url],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            check=False,
         )
         if result.returncode:
             logger.log(DATA_LEVEL, status.compare_url)
@@ -580,7 +581,7 @@ def make_github_url(repo: str) -> str:
         return repo
     if repo.count("/") == 1 and not repo.endswith("/"):
         return f"https://github.com/{repo}"
-    if repo.endswith("/") or repo.endswith("\\"):
+    if repo.endswith(("/", "\\")):
         project = repo[:-1]  # The user might have tab-completed a project dir.
     else:
         project = repo
@@ -616,7 +617,7 @@ def make_shallow_date(context: Context) -> str:
 
 
 def make_snapshot_name() -> str:
-    today = datetime.now()
+    today = datetime.now(tz=timezone.utc).astimezone()
     today_formatted = today.strftime("%m%d")
     return f"snapshot{today_formatted}"
 
@@ -705,7 +706,11 @@ def primary_usage(args: argparse.Namespace, fetch_opts: list[str]) -> None:
 def probe_branch(context: Context) -> None:
     with tempfile.TemporaryDirectory() as empty_dir:
         try:
-            if git.Git(empty_dir).ls_remote(context.clone_url, context.branch, heads=True).strip():
+            remote_refs = git.Git(empty_dir).ls_remote(
+                context.clone_url, context.branch, heads=True
+            )
+            assert isinstance(remote_refs, str)
+            if remote_refs.strip():
                 raise CloneError(f"The repo already has a branch {f_blue(context.branch)}.")
         except git.GitCommandError as e:
             if is_access_error(e):
@@ -714,7 +719,6 @@ def probe_branch(context: Context) -> None:
 
 
 def set_global_color(color_arg: str) -> None:
-    global COLOR
     if color_arg == "auto":
         COLOR["stdout"] = os.isatty(sys.stdout.fileno()) and not bool(os.getenv("NO_COLOR"))
         COLOR["stderr"] = os.isatty(sys.stderr.fileno()) and not bool(os.getenv("NO_COLOR"))

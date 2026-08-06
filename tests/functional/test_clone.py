@@ -1,5 +1,5 @@
-from datetime import date, datetime
 import subprocess
+from datetime import date
 
 import helpers_functional as helpers
 
@@ -203,6 +203,7 @@ def test_existing_clone(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 10
     expected_dir = test_dir / "jubilant/dwilding-my-feature"
@@ -266,6 +267,7 @@ def test_dashboard_warning(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 11
     expected_stdout = """\
@@ -314,6 +316,7 @@ def test_compare_no_remote(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert not result.stdout
     expected_stderr = """\
@@ -340,6 +343,7 @@ def test_in_project_dir(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -516,5 +520,5 @@ Cloned repo:
 """
     assert result.stdout == expected_stdout
     raw_commit_date = helpers.get_first_commit_date(expected_dir)
-    commit_date = datetime.strptime(raw_commit_date, "%Y-%m-%d").date()
+    commit_date = date.fromisoformat(raw_commit_date)
     assert commit_date > date(2026, 1, 1)

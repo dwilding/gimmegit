@@ -1,8 +1,7 @@
 import subprocess
 
-import pytest
-
 import helpers_functional as helpers
+import pytest
 
 
 @pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
@@ -56,6 +55,7 @@ def test_invalid_repo_token(uv_run, test_dir):
         env=helpers.token_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\

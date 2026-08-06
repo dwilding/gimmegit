@@ -1,9 +1,8 @@
 import shutil
 import subprocess
 
-import pytest
-
 import helpers_functional as helpers
+import pytest
 
 
 @pytest.mark.parametrize(
@@ -28,6 +27,7 @@ def test_invalid_repo(uv_run, test_dir, args: list[str]):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -66,6 +66,7 @@ def test_invalid_repo_jumbo(uv_run, test_dir, args: list[str]):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -102,6 +103,7 @@ def test_branch_exists(uv_run, test_dir, new_branch: str):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -139,6 +141,7 @@ def test_branch_exists_jumbo(uv_run, test_dir, new_branch: str):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -167,6 +170,7 @@ def test_invalid_branch(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -196,6 +200,7 @@ def test_invalid_branch_jumbo(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -226,6 +231,7 @@ def test_invalid_branch_with_upstream(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -256,6 +262,7 @@ def test_branch_invalid_base_origin(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -289,6 +296,7 @@ def test_branch_invalid_base_upstream(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -322,6 +330,7 @@ def test_new_branch_invalid_base_origin(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -356,6 +365,7 @@ def test_new_branch_invalid_base_upstream(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -389,6 +399,7 @@ def test_invalid_upstream(uv_run, test_dir):
         env=helpers.askpass_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\
@@ -422,6 +433,7 @@ def test_invalid_fetch_opt(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\

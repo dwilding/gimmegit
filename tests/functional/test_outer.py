@@ -26,6 +26,7 @@ def test_working_repo_no_dashboard(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     assert not result.stdout
@@ -50,6 +51,7 @@ def test_working_repo_no_compare(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     assert not result.stdout
@@ -74,6 +76,7 @@ def test_working_repo_no_clone(uv_run, test_dir):
         cwd=working_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     assert not result.stdout
@@ -137,6 +140,7 @@ def test_project_repo_no_clone(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     project_dir = test_dir / "frogtab"
@@ -172,6 +176,7 @@ def test_project_repo_allow(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     expected_dir = test_dir / "frogtab/dwilding-my-feature"
     expected_stdout = f"""\
@@ -202,6 +207,7 @@ def test_no_gitignore(uv_run, test_dir):
         env=helpers.default_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     expected_dir = working_dir / "frogtab/dwilding-my-feature"
     expected_stdout = f"""\

@@ -47,6 +47,7 @@ def test_return_dir_existing_clone(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 10
     expected_dir = test_dir / "jubilant/dwilding-my-feature"
