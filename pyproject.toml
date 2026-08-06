@@ -9,8 +9,8 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
-    "gitpython==3.1.50",
-    "pre-commit==4.6.0",
+    "gitpython==3.1.57",
+    "pre-commit==4.6.1",
     "PyGithub==2.9.1",
     # Dependencies of PyGithub. Specified because of security advisories.
     "PyJWT[crypto]==2.13.0",
@@ -22,15 +22,15 @@ gimmegit = "gimmegit._cli:main"
 
 [dependency-groups]
 dev = [
-    "ruff==0.15.16",
-    "pytest==9.0.3",
-    "ty==0.0.44",
-    "zizmor==1.25.2",
+    "ruff==0.16.0",
+    "pytest==9.1.1",
+    "ty==0.0.65",
+    "zizmor==1.28.0",
 ]
 
 [build-system]
 requires = [
-    "uv_build==0.11.19",
+    "uv_build==0.12.0",
 ]
 build-backend = "uv_build"
 
