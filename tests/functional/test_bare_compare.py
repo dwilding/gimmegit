@@ -12,6 +12,7 @@ def test_compre_no_outer(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     assert not result.stdout

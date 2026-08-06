@@ -68,6 +68,7 @@ def get_ref_exists(dir: Path, ref: str) -> bool:
     result = subprocess.run(
         ["git", "show-ref", "--verify", "--quiet", ref],
         cwd=dir,
+        check=False,
     )
     return result.returncode == 0
 

@@ -55,6 +55,7 @@ def test_invalid_repo_token(uv_run, test_dir):
         env=helpers.token_env(),
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1
     expected_stdout = """\

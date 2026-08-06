@@ -11,6 +11,7 @@ def test_no_repo(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -32,6 +33,7 @@ def test_missing_upstream_owner(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -53,6 +55,7 @@ def test_missing_base_branch(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -74,6 +77,7 @@ def test_missing_color(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -96,6 +100,7 @@ def test_invalid_color(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -117,6 +122,7 @@ def test_missing_ssh(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -139,6 +145,7 @@ def test_invalid_ssh(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -160,6 +167,7 @@ def test_repo_with_compare(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -181,6 +189,7 @@ def test_repo_with_help(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -202,6 +211,7 @@ def test_repo_with_version(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -231,6 +241,7 @@ def test_status_unexpected(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
@@ -252,6 +263,7 @@ def test_parse_unsupported(uv_run, test_dir):
         cwd=test_dir,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 2
     assert not result.stdout
