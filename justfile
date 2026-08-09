@@ -25,6 +25,10 @@ test args="tests/unit tests/functional":
   uv run pytest -vv {{args}}
 
 [private]
+deps:
+  uv run --script .scripts/bump_deps.py
+
+[private]
 command-ref:
   #!/bin/bash
   set -euo pipefail
