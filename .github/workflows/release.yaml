@@ -82,8 +82,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
-    outputs:
-      release: ${{ steps.draft.outputs.release }}
     steps:
       - name: Create draft release
         id: draft
@@ -97,16 +95,13 @@ jobs:
           latest_tag="$(gh release list -L 1 --json tagName -q '.[0].tagName')"
           release_date="$(gh api "repos/${{ github.repository }}/releases/tags/${latest_tag}" --jq '.created_at')"
           prs_json="$(gh pr list --state merged --base main --json number,title --search "merged:>${release_date}" --limit 50)"
-          # Group PRs by prefix, sorted by PR number.
-          prefixes=("feat!:" "fix!:" "feat:" "fix:" "docs:")
+          # Group PRs by prefix, sorted by breaking then by PR number.
+          prefixes=("feat:" "fix:" "revert:" "perf:" "docs:")
           entries=""
-          breaking=false
           for prefix in "${prefixes[@]}"; do
-            group="$(echo "$prs_json" | jq --arg p "$prefix" '[.[] | select(.title | startswith($p))] | sort_by(.number)')"
+            breaking_prefix="${prefix%%:}!:"
+            group="$(echo "$prs_json" | jq --arg p "$prefix" --arg bp "$breaking_prefix" '[.[] | select(.title | startswith($p) or startswith($bp))] | sort_by([if .title | startswith($bp) then 0 else 1 end, .number])')"
             count="$(echo "$group" | jq 'length')"
-            if [[ "$prefix" == "feat!:" || "$prefix" == "fix!:" ]] && [[ "$count" -gt 0 ]]; then
-              breaking=true
-            fi
             for i in $(seq 0 $((count - 1))); do
               title="$(echo "$group" | jq -r ".[$i].title")"
               number="$(echo "$group" | jq -r ".[$i].number")"
@@ -120,25 +115,3 @@ jobs:
             body="$entries"
           fi
           gh release create "$version" --draft --target main --notes "$body"
-          if [[ "$breaking" == "true" ]]; then
-            release=false
-          else
-            release=true
-          fi
-          echo "release=$release" >> "$GITHUB_OUTPUT"
-
-  publish-release:
-    runs-on: ubuntu-latest
-    needs: create-draft
-    if: needs.create-draft.outputs.release == 'true' && github.event_name == 'push'
-    permissions:
-      contents: write
-    steps:
-      - name: Publish release
-        env:
-          VERSION: ${{ needs.check-version.outputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          version="$VERSION"
-          gh release edit "$version" --draft=false
