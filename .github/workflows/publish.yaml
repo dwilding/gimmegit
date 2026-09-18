@@ -60,7 +60,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "bump version to $version"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push origin "bump-to-$version"
+          git push --force origin "bump-to-$version"
           gh pr create --base main --head "bump-to-$version" \
             --title "chore: bump version to $version" \
             --body "" \

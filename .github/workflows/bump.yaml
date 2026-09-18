@@ -53,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push origin "bump-to-$VERSION"
+          git push --force origin "bump-to-$VERSION"
           gh pr create --base main --head "bump-to-$VERSION" \
             --title "chore: bump package to $VERSION" \
             --body "" \
