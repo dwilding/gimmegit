@@ -55,16 +55,19 @@ jobs:
     steps:
       - name: Wait for checks
         id: wait
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           sha="${{ github.sha }}"
           release=false
           # Wait for all other workflow runs on this SHA to complete.
-          other_runs="$(gh run list --branch main --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"${sha}\") | .databaseId")"
+          other_runs="$(gh run list --repo "$REPO" --branch main --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"${sha}\") | .databaseId")"
           other_runs="$(echo "$other_runs" | grep -v "${{ github.run_id }}" || true)"
           all_passed=true
           for run in $other_runs; do
-            if ! gh run watch "$run" --exit-status >/dev/null 2>&1; then
+            if ! gh run watch "$run" --repo "$REPO" --exit-status >/dev/null 2>&1; then
               all_passed=false
             fi
           done
@@ -72,8 +75,6 @@ jobs:
             release=true
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-draft:
     runs-on: ubuntu-latest
