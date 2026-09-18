@@ -28,6 +28,8 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Check version
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           version="$(uvx --from "$PWD" gimmegit --version)"
@@ -40,8 +42,6 @@ jobs:
             fi
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   wait-checks:
     runs-on: ubuntu-latest
@@ -91,10 +91,10 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Create draft release
         id: draft
+        env:
+          VERSION: ${{ needs.check-version.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           notes="$(uv run --script .github/scripts/write_release_notes.py "$VERSION")"
           gh release create "$VERSION" --draft --target main --notes "$notes"
-        env:
-          VERSION: ${{ needs.check-version.outputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
