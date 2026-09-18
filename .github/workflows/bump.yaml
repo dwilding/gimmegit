@@ -56,4 +56,5 @@ jobs:
           git push origin "bump-to-$VERSION"
           gh pr create --base main --head "bump-to-$VERSION" \
             --title "chore: bump package to $VERSION" \
+            --body "" \
             --reviewer dwilding
