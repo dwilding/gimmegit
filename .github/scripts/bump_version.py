@@ -20,7 +20,7 @@ def parse_version(version: str) -> tuple[int, ...] | None:
     parts = version.split(".")
     if not all(part.isdigit() for part in parts):
         return None
-    return tuple(int(part) for part in parts)
+    return tuple(int(part) for part in parts) + (0,)
 
 
 def main() -> None:
@@ -28,7 +28,7 @@ def main() -> None:
         sys.exit("usage: bump_version.py VERSION")
     new = sys.argv[1]
     parsed = parse_version(new)
-    if parsed is None or len(parsed) != 3:
+    if parsed is None or len(parsed) != 4 or parsed[-1] != 0:
         sys.exit(f"Error: {new} is not an x.y.z version.")
     content = Path("pyproject.toml").read_text()
     match = re.search(r'^version = "(.+)"$', content, re.MULTILINE)
