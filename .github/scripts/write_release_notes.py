@@ -15,18 +15,7 @@ def gh(*args: str) -> str:
 
 
 def latest_tag() -> str:
-    return gh(
-        "release",
-        "list",
-        "--repo",
-        os.environ["GITHUB_REPOSITORY"],
-        "-L",
-        "1",
-        "--json",
-        "tagName",
-        "-q",
-        ".[0].tagName",
-    )
+    return gh("release", "list", "-L", "1", "--json", "tagName", "-q", ".[0].tagName")
 
 
 def merged_prs() -> list[dict]:
@@ -36,8 +25,6 @@ def merged_prs() -> list[dict]:
     prs = gh(
         "pr",
         "list",
-        "--repo",
-        repo,
         "--state",
         "merged",
         "--base",

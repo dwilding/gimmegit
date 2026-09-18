@@ -28,6 +28,8 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Check version
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           version="$(uvx --from "$PWD" gimmegit --version)"
@@ -40,8 +42,6 @@ jobs:
             fi
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   wait-checks:
     runs-on: ubuntu-latest
@@ -53,21 +53,23 @@ jobs:
     outputs:
       release: ${{ steps.wait.outputs.release }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Wait for checks
         id: wait
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           sha="${{ github.sha }}"
           release=false
           # Wait for all other workflow runs on this SHA to complete.
-          other_runs="$(gh run list --repo "$REPO" --branch main --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"${sha}\") | .databaseId")"
+          other_runs="$(gh run list --branch main --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"${sha}\") | .databaseId")"
           other_runs="$(echo "$other_runs" | grep -v "${{ github.run_id }}" || true)"
           all_passed=true
           for run in $other_runs; do
-            if ! gh run watch "$run" --repo "$REPO" --exit-status >/dev/null 2>&1; then
+            if ! gh run watch "$run" --exit-status >/dev/null 2>&1; then
               all_passed=false
             fi
           done
@@ -84,6 +86,9 @@ jobs:
       contents: write
       pull-requests: read
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Create draft release
@@ -91,8 +96,7 @@ jobs:
         env:
           VERSION: ${{ needs.check-version.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           notes="$(uv run --script .github/scripts/write_release_notes.py "$VERSION")"
-          gh release create "$VERSION" --repo "$REPO" --draft --target main --notes "$notes"
+          gh release create "$VERSION" --draft --target main --notes "$notes"
