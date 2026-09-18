@@ -34,6 +34,7 @@ jobs:
           set -euo pipefail
           version="$(uvx --from "$PWD" gimmegit --version)"
           version="${version#gimmegit }"
+          echo "Detected version: $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           release=false
           if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -42,6 +43,8 @@ jobs:
             fi
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "GITHUB_OUTPUT file contents:"
+          cat "$GITHUB_OUTPUT"
 
   wait-checks:
     runs-on: ubuntu-latest
@@ -63,20 +66,29 @@ jobs:
         run: |
           set -euo pipefail
           sha="${{ github.sha }}"
+          run_id="${{ github.run_id }}"
+          echo "SHA: $sha"
+          echo "Run ID: $run_id"
           release=false
           # Wait for all other workflow runs on this SHA to complete.
           other_runs="$(gh run list --branch main --limit 50 --json databaseId,headSha --jq ".[] | select(.headSha == \"${sha}\") | .databaseId")"
-          other_runs="$(echo "$other_runs" | grep -v "${{ github.run_id }}" || true)"
+          echo "All runs on this SHA: $other_runs"
+          other_runs="$(echo "$other_runs" | grep -v "$run_id" || true)"
+          echo "Other runs (excluding this one): $other_runs"
           all_passed=true
           for run in $other_runs; do
+            echo "Watching run $run..."
             if ! gh run watch "$run" --exit-status >/dev/null 2>&1; then
               all_passed=false
             fi
           done
+          echo "all_passed=$all_passed"
           if [[ "$all_passed" == "true" ]]; then
             release=true
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "GITHUB_OUTPUT file contents:"
+          cat "$GITHUB_OUTPUT"
 
   create-draft:
     runs-on: ubuntu-latest
@@ -98,5 +110,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          echo "VERSION env: [$VERSION]"
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: VERSION is empty"
+            exit 1
+          fi
           notes="$(uv run --script .github/scripts/write_release_notes.py "$VERSION")"
+          echo "Notes generated, creating release..."
           gh release create "$VERSION" --draft --target main --notes "$notes"
