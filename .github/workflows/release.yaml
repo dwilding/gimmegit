@@ -90,28 +90,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          version="$VERSION"
-          # Fetch merged PRs since the latest release.
-          latest_tag="$(gh release list -L 1 --json tagName -q '.[0].tagName')"
-          release_date="$(gh api "repos/${{ github.repository }}/releases/tags/${latest_tag}" --jq '.created_at')"
-          prs_json="$(gh pr list --state merged --base main --json number,title --search "merged:>${release_date}" --limit 50)"
-          # Group PRs by prefix, sorted by breaking then by PR number.
-          prefixes=("feat:" "fix:" "revert:" "perf:" "docs:")
-          entries=""
-          for prefix in "${prefixes[@]}"; do
-            breaking_prefix="${prefix%%:}!:"
-            group="$(echo "$prs_json" | jq --arg p "$prefix" --arg bp "$breaking_prefix" '[.[] | select(.title | startswith($p) or startswith($bp))] | sort_by([if .title | startswith($bp) then 0 else 1 end, .number])')"
-            count="$(echo "$group" | jq 'length')"
-            for i in $(seq 0 $((count - 1))); do
-              title="$(echo "$group" | jq -r ".[$i].title")"
-              number="$(echo "$group" | jq -r ".[$i].number")"
-              entries+="- ${title} (#${number})"$'\n'
-            done
-          done
-          # Create the release.
-          if [[ -z "$entries" ]]; then
-            body="This is a maintenance release with no fixes or new features."
-          else
-            body="$entries"
-          fi
-          gh release create "$version" --draft --target main --notes "$body"
+          notes="$(uv run --script .github/scripts/write_release_notes.py "$VERSION")"
+          gh release create "$VERSION" --draft --target main --notes "$notes"
