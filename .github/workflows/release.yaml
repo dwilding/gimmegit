@@ -101,4 +101,4 @@ jobs:
         run: |
           set -euo pipefail
           notes="$(uv run --script .github/scripts/write_release_notes.py "$VERSION")"
-          gh release create "$VERSION" --draft --target main --notes "$notes"
+          gh release create "$VERSION" --draft --target main --title "$VERSION" --notes "$notes"
