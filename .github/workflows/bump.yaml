@@ -36,7 +36,7 @@ jobs:
           git checkout -b "bump-to-$VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "bump version to $VERSION"
+          git commit -am "bump package to $VERSION"
       - name: Bump dependency versions
         run: uv run --script .github/scripts/bump_deps.py
       - name: Commit dependency bumps
@@ -55,6 +55,6 @@ jobs:
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force origin "bump-to-$VERSION"
           gh pr create --base main --head "bump-to-$VERSION" \
-            --title "chore: bump version to $VERSION" \
+            --title "chore: bump package to $VERSION" \
             --body "" \
             --reviewer dwilding

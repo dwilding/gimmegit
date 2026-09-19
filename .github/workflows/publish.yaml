@@ -58,10 +58,10 @@ jobs:
           git checkout -b "bump-to-$version"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "bump version to $version"
+          git commit -am "bump package to $version"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force origin "bump-to-$version"
           gh pr create --base main --head "bump-to-$version" \
-            --title "chore: bump version to $version" \
+            --title "chore: bump package to $version" \
             --body "" \
             --reviewer dwilding
