@@ -49,17 +49,25 @@ def latest_version(package: str) -> str:
     sys.exit(f"Error: no stable release of {package} older than 7 days")
 
 
-def bump_build(version: str) -> None:
+def bump_build(uv_version: str) -> None:
     content = Path("pyproject.toml").read_text()
-    content = re.sub(r'"uv_build==[^"]+"', f'"uv_build=={version}"', content)
+    content = re.sub(r'"uv_build==[^"]+"', f'"uv_build=={uv_version}"', content)
     Path("pyproject.toml").write_text(content)
     subprocess.run(["uv", "lock"], check=True)
 
 
-def bump_workflows(version: str) -> None:
+def bump_precommit(just_version: str) -> None:
+    path = Path(".pre-commit-config.yaml")
+    content = path.read_text()
+    new = re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", content)
+    if new != content:
+        path.write_text(new)
+
+
+def bump_workflows(just_version: str) -> None:
     for path in Path(".github/workflows").glob("*.yaml"):
         content = path.read_text()
-        new = re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{version}", content)
+        new = re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", content)
         if new != content:
             path.write_text(new)
 
@@ -78,12 +86,13 @@ def main() -> None:
                 cmd.append("--dev")
             cmd.append(f"{requirement}=={version}")
             subprocess.run(cmd, check=True)
-    version = latest_version("uv_build")
-    print(f"uv_build: {version}")
-    bump_build(version)
-    version = latest_version("rust-just")
-    print(f"rust-just: {version}")
-    bump_workflows(version)
+    uv_version = latest_version("uv_build")
+    print(f"uv_build: {uv_version}")
+    bump_build(uv_version)
+    just_version = latest_version("rust-just")
+    print(f"rust-just: {just_version}")
+    bump_precommit(just_version)
+    bump_workflows(just_version)
 
 
 if __name__ == "__main__":
