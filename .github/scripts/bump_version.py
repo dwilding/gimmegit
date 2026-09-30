@@ -27,27 +27,18 @@ def main() -> None:
     if len(sys.argv) != 2:
         sys.exit("usage: bump_version.py VERSION")
     new = sys.argv[1]
-    parsed = parse_version(new)
-    if parsed is None or len(parsed) != 4 or parsed[-1] != 0:
+    new_parsed = parse_version(new)
+    if new_parsed is None or len(new_parsed) != 4 or new_parsed[-1] != 0:
         sys.exit(f"Error: {new} is not an x.y.z version.")
-    content = Path("pyproject.toml").read_text()
-    match = re.search(r'^version = "(.+)"$', content, re.MULTILINE)
-    assert match is not None
-    current = match[1]
+    current = subprocess.run(
+        ["uv", "version", "--short"], capture_output=True, text=True, check=True
+    ).stdout.strip()
     current_parsed = parse_version(current)
     assert current_parsed is not None
-    if parsed <= current_parsed:
+    if new_parsed <= current_parsed:
         sys.exit(f"Error: {new} does not exceed the current version {current}.")
-    content = re.sub(
-        r'^version = ".+"$',
-        f'version = "{new}"',
-        content,
-        count=1,
-        flags=re.MULTILINE,
-    )
-    Path("pyproject.toml").write_text(content)
+    subprocess.run(["uv", "version", new, "--no-sync"], check=True)
     VERSION_FILE.write_text(f'__version__ = "{new}"\n')
-    subprocess.run(["uv", "lock"], check=True)
 
 
 if __name__ == "__main__":

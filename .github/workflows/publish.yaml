@@ -47,14 +47,15 @@ jobs:
         with:
           enable-cache: false  # Avoid cache poisoning.
       - name: Bump package version
-        run: uv run --script .github/scripts/bump_version_dev.py
+        run: |
+          new="$(uv version --bump patch --bump dev=0 --short --no-sync)"
+          printf '__version__ = "%s"\n' "$new" > src/gimmegit/_version.py
       - name: Open a PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          version="$(uvx --from "$PWD" gimmegit --version)"
-          version="${version#gimmegit }"
+          version="$(uv version --short)"
           git checkout -b "bump-to-$version"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
