@@ -8,13 +8,6 @@ from pathlib import Path
 VERSION_FILE = Path("src/gimmegit/_version.py")
 
 
-def current_version() -> str:
-    """Return the project's current version."""
-    return subprocess.run(
-        ["uv", "version", "--short"], capture_output=True, text=True, check=True
-    ).stdout.strip()
-
-
 def parse_version(version: str) -> tuple[int, ...] | None:
     """Parse 'x.y.z' or 'x.y.z.devN' into a comparable tuple.
 
@@ -37,7 +30,9 @@ def main() -> None:
     new_parsed = parse_version(new)
     if new_parsed is None or len(new_parsed) != 4 or new_parsed[-1] != 0:
         sys.exit(f"Error: {new} is not an x.y.z version.")
-    current = current_version()
+    current = subprocess.run(
+        ["uv", "version", "--short"], capture_output=True, text=True, check=True
+    ).stdout.strip()
     current_parsed = parse_version(current)
     assert current_parsed is not None
     if new_parsed <= current_parsed:
