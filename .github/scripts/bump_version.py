@@ -37,7 +37,6 @@ def main() -> None:
     assert current_parsed is not None
     if new_parsed <= current_parsed:
         sys.exit(f"Error: {new} does not exceed the current version {current}.")
-    # Update pyproject.toml and re-lock the project (no venv sync needed).
     subprocess.run(["uv", "version", new, "--no-sync"], check=True)
     VERSION_FILE.write_text(f'__version__ = "{new}"\n')
 
