@@ -8,6 +8,13 @@ from pathlib import Path
 VERSION_FILE = Path("src/gimmegit/_version.py")
 
 
+def current_version() -> str:
+    """Return the project's current version."""
+    return subprocess.run(
+        ["uv", "version", "--short"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+
 def parse_version(version: str) -> tuple[int, ...] | None:
     """Parse 'x.y.z' or 'x.y.z.devN' into a comparable tuple.
 
@@ -27,27 +34,17 @@ def main() -> None:
     if len(sys.argv) != 2:
         sys.exit("usage: bump_version.py VERSION")
     new = sys.argv[1]
-    parsed = parse_version(new)
-    if parsed is None or len(parsed) != 4 or parsed[-1] != 0:
+    new_parsed = parse_version(new)
+    if new_parsed is None or len(new_parsed) != 4 or new_parsed[-1] != 0:
         sys.exit(f"Error: {new} is not an x.y.z version.")
-    content = Path("pyproject.toml").read_text()
-    match = re.search(r'^version = "(.+)"$', content, re.MULTILINE)
-    assert match is not None
-    current = match[1]
+    current = current_version()
     current_parsed = parse_version(current)
     assert current_parsed is not None
-    if parsed <= current_parsed:
+    if new_parsed <= current_parsed:
         sys.exit(f"Error: {new} does not exceed the current version {current}.")
-    content = re.sub(
-        r'^version = ".+"$',
-        f'version = "{new}"',
-        content,
-        count=1,
-        flags=re.MULTILINE,
-    )
-    Path("pyproject.toml").write_text(content)
+    # Update pyproject.toml and re-lock the project (no venv sync needed).
+    subprocess.run(["uv", "version", new, "--no-sync"], check=True)
     VERSION_FILE.write_text(f'__version__ = "{new}"\n')
-    subprocess.run(["uv", "lock"], check=True)
 
 
 if __name__ == "__main__":

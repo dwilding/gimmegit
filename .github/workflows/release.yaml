@@ -32,8 +32,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          version="$(uvx --from "$PWD" gimmegit --version)"
-          version="${version#gimmegit }"
+          version="$(uv version --short)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           release=false
           if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
