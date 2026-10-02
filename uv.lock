@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10"
 
 [options]
@@ -309,7 +309,7 @@ wheels = [
 
 [[package]]
 name = "gimmegit"
-version = "3.0.4.dev0"
+version = "3.0.4"
 source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
