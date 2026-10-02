@@ -4,8 +4,7 @@ import json
 import os
 import subprocess
 import sys
-
-PREFIXES = ["feat:", "fix:", "revert:", "perf:", "docs:"]
+from pathlib import Path
 
 
 def gh(*args: str) -> str:
@@ -14,14 +13,19 @@ def gh(*args: str) -> str:
     return result.stdout.strip()
 
 
-def latest_tag() -> str:
-    return gh("release", "list", "-L", "1", "--json", "tagName", "-q", ".[0].tagName")
+LATEST_TAG = gh("release", "list", "-L", "1", "--json", "tagName", "-q", ".[0].tagName")
+
+
+def release_types() -> list[str]:
+    """Return the PR types that appear in release notes."""
+    pr_types_file = Path(__file__).parent.parent / "pr-types.json"
+    return json.loads(pr_types_file.read_text())["release"]
 
 
 def merged_prs() -> list[dict]:
     """Return the number and title of PRs merged since the latest release."""
     repo = os.environ["GITHUB_REPOSITORY"]
-    release_date = gh("api", f"repos/{repo}/releases/tags/{latest_tag()}", "--jq", ".created_at")
+    release_date = gh("api", f"repos/{repo}/releases/tags/{LATEST_TAG}", "--jq", ".created_at")
     prs = gh(
         "pr",
         "list",
@@ -36,27 +40,24 @@ def merged_prs() -> list[dict]:
         "--limit",
         "50",
     )
-    return json.loads(prs)
+    return json.loads(prs)[::-1]  # Put oldest merged first.
 
 
 def release_notes(prs: list[dict], new_tag: str) -> str:
     """Return the release notes body for the given PRs.
 
-    Groups PRs by title prefix then breaking/non-breaking.
+    Groups PRs by title prefix, in the order given by pr-types.json.
     """
     entries = ""
-    for prefix in PREFIXES:
-        breaking_prefix = f"{prefix.removesuffix(':')}!:"
-        group = sorted(
-            (pr for pr in prs if pr["title"].startswith((prefix, breaking_prefix))),
-            key=lambda pr: (not pr["title"].startswith(breaking_prefix), pr["number"]),
-        )
-        for pr in group:
-            entries += f"- {pr['title']} (#{pr['number']})\n"
+    for pr_type in release_types():
+        prefix = f"{pr_type}:"
+        for pr in prs:
+            if pr["title"].startswith(prefix):
+                entries += f"- {pr['title']} (#{pr['number']})\n"
     if not entries:
         entries = "This is a maintenance release with no fixes or new features.\n"
     repo = os.environ["GITHUB_REPOSITORY"]
-    return f"{entries}\nChangelog: https://github.com/{repo}/compare/{latest_tag()}...{new_tag}"
+    return f"{entries}\nChangelog: https://github.com/{repo}/compare/{LATEST_TAG}...{new_tag}"
 
 
 if __name__ == "__main__":
