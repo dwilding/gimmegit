@@ -1,5 +1,5 @@
 # Guards against merging a lockfile that's misaligned with pyproject.toml.
-# Other workflows silently update the lockfile instead of failing on a transient branch state.
+# Other workflows update the lockfile automatically instead of requiring alignment.
 name: Check Python deps
 
 on:
