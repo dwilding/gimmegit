@@ -9,7 +9,7 @@ import sys
 import tempfile
 import webbrowser
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import NoReturn
 
@@ -611,13 +611,13 @@ def make_shallow_date(context: Context) -> str:
                 raise CloneError(make_access_error(False))
             raise CloneError(make_generic_git_error(e))
         tip = cloned.head.commit
-        committed = datetime.fromtimestamp(tip.committed_date, tz=timezone.utc)
+        committed = datetime.fromtimestamp(tip.committed_date, tz=UTC)
     date = committed - timedelta(days=21)
     return date.strftime("%Y-%m-%d")
 
 
 def make_snapshot_name() -> str:
-    today = datetime.now(tz=timezone.utc).astimezone()
+    today = datetime.now(tz=UTC).astimezone()
     today_formatted = today.strftime("%m%d")
     return f"snapshot{today_formatted}"
 
