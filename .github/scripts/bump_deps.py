@@ -58,18 +58,16 @@ def bump_build(uv_version: str) -> None:
 
 def bump_precommit(just_version: str) -> None:
     path = Path(".pre-commit-config.yaml")
-    content = path.read_text()
-    new = re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", content)
-    if new != content:
-        path.write_text(new)
+    path.write_text(
+        re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", path.read_text())
+    )
 
 
 def bump_workflows(just_version: str) -> None:
     for path in Path(".github/workflows").glob("*.yaml"):
-        content = path.read_text()
-        new = re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", content)
-        if new != content:
-            path.write_text(new)
+        path.write_text(
+            re.sub(r"rust-just@[0-9][0-9.]*", f"rust-just@{just_version}", path.read_text())
+        )
 
 
 def main() -> None:
