@@ -5,10 +5,10 @@ import re
 import subprocess
 import sys
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-CUTOFF = datetime.now(timezone.utc) - timedelta(days=7)
+CUTOFF = datetime.now(UTC) - timedelta(days=7)
 
 
 def requirements(dev: bool) -> list[str]:
@@ -44,7 +44,7 @@ def latest_version(package: str) -> str:
         upload_time = max(f["upload_time_iso_8601"] for f in files)
         versions.append((parsed, version, upload_time))
     for parsed, version, upload_time in sorted(versions, reverse=True):
-        if datetime.fromisoformat(upload_time.replace("Z", "+00:00")) <= CUTOFF:
+        if datetime.fromisoformat(upload_time) <= CUTOFF:
             return version
     sys.exit(f"Error: no stable release of {package} older than 7 days")
 
