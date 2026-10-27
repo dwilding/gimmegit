@@ -459,8 +459,10 @@ def get_default_branch(cloned: git.Repo) -> str:
 
 def get_github_login() -> str:
     api = github.Github(GITHUB_TOKEN)
-    user = api.get_user()
-    return user.login
+    try:
+        return api.get_user().login  # If this raises, it will be 'login' that raises.
+    except github.BadCredentialsException:
+        raise ValueError("GitHub rejected the token. Has the token expired?")
 
 
 def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
@@ -469,6 +471,8 @@ def get_github_upstream(owner: str, project: str) -> _remote.Remote | None:
     api = github.Github(GITHUB_TOKEN)
     try:
         repo = api.get_repo(f"{owner}/{project}")
+    except github.BadCredentialsException:
+        raise ValueError("GitHub rejected the token. Has the token expired?")
     except github.UnknownObjectException:
         raise ValueError(
             f"Unable to find '{owner}/{project}' on GitHub. Do you have access to the repo?"
