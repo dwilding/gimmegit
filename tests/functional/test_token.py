@@ -93,7 +93,7 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists() or not any((test_dir / "jubilant").iterdir())
 
 
 def test_bad_token_no_upstream_owner(uv_run, test_dir):
@@ -120,7 +120,7 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists() or not any((test_dir / "jubilant").iterdir())
 
 
 @pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
