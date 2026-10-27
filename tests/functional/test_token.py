@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 
 import helpers_functional as helpers
@@ -69,7 +70,9 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (test_dir / "invalid").exists()
 
 
-def test_bad_token_no_owner(uv_run, fresh_dir):
+def test_bad_token_no_owner(uv_run, test_dir):
+    # An earlier test in this module may have created jubilant.
+    shutil.rmtree(test_dir / "jubilant", ignore_errors=True)
     command = [
         *uv_run,
         "gimmegit",
@@ -78,7 +81,7 @@ def test_bad_token_no_owner(uv_run, fresh_dir):
     ]
     result = subprocess.run(
         command,
-        cwd=fresh_dir,
+        cwd=test_dir,
         env=helpers.bad_token_env(),
         capture_output=True,
         text=True,
@@ -93,10 +96,12 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (fresh_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists()
 
 
-def test_bad_token_no_upstream_owner(uv_run, fresh_dir):
+def test_bad_token_no_upstream_owner(uv_run, test_dir):
+    # An earlier test in this module may have created jubilant.
+    shutil.rmtree(test_dir / "jubilant", ignore_errors=True)
     command = [
         *uv_run,
         "gimmegit",
@@ -105,7 +110,7 @@ def test_bad_token_no_upstream_owner(uv_run, fresh_dir):
     ]
     result = subprocess.run(
         command,
-        cwd=fresh_dir,
+        cwd=test_dir,
         env=helpers.bad_token_env(),
         capture_output=True,
         text=True,
@@ -120,7 +125,7 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (fresh_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists()
 
 
 @pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
