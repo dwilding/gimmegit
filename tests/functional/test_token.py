@@ -4,7 +4,7 @@ import helpers_functional as helpers
 import pytest
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_forked_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -41,7 +41,7 @@ Cloned repo:
     assert not helpers.get_tags(expected_dir)
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_invalid_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -69,7 +69,7 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (test_dir / "invalid").exists()
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
@@ -100,7 +100,7 @@ Cloned repo:
     assert result.stdout == expected_stdout
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
