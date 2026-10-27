@@ -69,6 +69,60 @@ Error: Unable to find 'dwilding/invalid' on GitHub. Do you have access to the re
     assert not (test_dir / "invalid").exists()
 
 
+def test_bad_token_no_owner(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "jubilant",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=helpers.bad_token_env(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: GitHub rejected the token. Has the token expired?
+"""
+    assert result.stderr == expected_stderr
+    assert not (test_dir / "jubilant").exists()
+
+
+def test_bad_token_no_upstream_owner(uv_run, test_dir):
+    command = [
+        *uv_run,
+        "gimmegit",
+        *helpers.no_ssh,
+        "dwilding/jubilant",
+    ]
+    result = subprocess.run(
+        command,
+        cwd=test_dir,
+        env=helpers.bad_token_env(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    expected_stdout = """\
+Getting repo details
+"""
+    assert result.stdout == expected_stdout
+    expected_stderr = """\
+Error: GitHub rejected the token. Has the token expired?
+"""
+    assert result.stderr == expected_stderr
+    assert not (test_dir / "jubilant").exists()
+
+
 @pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
 def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
