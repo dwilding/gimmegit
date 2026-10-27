@@ -11,3 +11,9 @@ def uv_run():
 @pytest.fixture(scope="module")
 def test_dir(tmp_path_factory):
     yield tmp_path_factory.mktemp("functional")
+
+
+@pytest.fixture()
+def fresh_dir(tmp_path_factory):
+    # A dir no other test has touched. Use it in tests that assert nothing is created.
+    yield tmp_path_factory.mktemp("functional")
