@@ -66,20 +66,36 @@ def fake_github(monkeypatch):
 
 
 @pytest.mark.parametrize("token", [None, ""])
-def test_upstream_no_token(monkeypatch, fake_github, token):
-    monkeypatch.setattr(_cli, "GITHUB_TOKEN", token)
-    assert _cli.get_github_upstream("dwilding", "forked-jubilant") is None
-    assert fake_github.clients == []
-
-
-@pytest.mark.parametrize("token", [None, ""])
-def test_github_url_no_token(monkeypatch, fake_github, token):
+def test_github_url_token_unset(monkeypatch, fake_github, token):
     monkeypatch.setattr(_cli, "GITHUB_TOKEN", token)
     with pytest.raises(ValueError) as exc_info:
         _cli.make_github_url("frogtab")
     assert str(exc_info.value) == (
         "GIMMEGIT_GITHUB_TOKEN is not set. For the repo, use '<owner>/<project>' or a GitHub URL."
     )
+    assert fake_github.clients == []
+
+
+@pytest.mark.parametrize("repo", ["frogtab", "frogtab/"])
+def test_github_url_project(monkeypatch, fake_github, repo):
+    monkeypatch.setattr(_cli, "GITHUB_TOKEN", "fake-token")
+    fake_github.user = SimpleNamespace(login="dwilding")
+    assert _cli.make_github_url(repo) == "https://github.com/dwilding/frogtab"
+    assert fake_github.clients[0].token == "fake-token"
+
+
+def test_github_url_denied(monkeypatch, fake_github):
+    monkeypatch.setattr(_cli, "GITHUB_TOKEN", "bad-token")
+    fake_github.denied = True
+    with pytest.raises(ValueError) as exc_info:
+        _cli.make_github_url("frogtab")
+    assert str(exc_info.value) == "GitHub rejected the token. Has the token expired?"
+
+
+@pytest.mark.parametrize("token", [None, ""])
+def test_upstream_token_unset(monkeypatch, fake_github, token):
+    monkeypatch.setattr(_cli, "GITHUB_TOKEN", token)
+    assert _cli.get_github_upstream("dwilding", "forked-jubilant") is None
     assert fake_github.clients == []
 
 
@@ -133,22 +149,6 @@ def test_upstream_denied(monkeypatch, fake_github):
     assert str(exc_info.value) == "GitHub rejected the token. Has the token expired?"
 
 
-def test_github_url_denied(monkeypatch, fake_github):
-    monkeypatch.setattr(_cli, "GITHUB_TOKEN", "bad-token")
-    fake_github.denied = True
-    with pytest.raises(ValueError) as exc_info:
-        _cli.make_github_url("frogtab")
-    assert str(exc_info.value) == "GitHub rejected the token. Has the token expired?"
-
-
-@pytest.mark.parametrize("repo", ["frogtab", "frogtab/"])
-def test_github_url_project(monkeypatch, fake_github, repo):
-    monkeypatch.setattr(_cli, "GITHUB_TOKEN", "fake-token")
-    fake_github.user = SimpleNamespace(login="dwilding")
-    assert _cli.make_github_url(repo) == "https://github.com/dwilding/frogtab"
-    assert fake_github.clients[0].token == "fake-token"
-
-
 def test_context_fork(monkeypatch, fake_github):
     monkeypatch.setattr(_cli, "GITHUB_TOKEN", "fake-token")
     fake_github.repo = FORKED_REPO
@@ -172,6 +172,8 @@ def test_context_fork(monkeypatch, fake_github):
     assert _cli.get_context(args) == expected_context
 
 
+# -u overrides the fork's upstream, but get_context still queries the fork.
+# The query doubles as a fast-fail check that the repo exists, so it's worth keeping.
 def test_context_fork_u_overrides_upstream(monkeypatch, fake_github):
     monkeypatch.setattr(_cli, "GITHUB_TOKEN", "fake-token")
     fake_github.repo = FORKED_REPO
@@ -193,10 +195,11 @@ def test_context_fork_u_overrides_upstream(monkeypatch, fake_github):
         upstream_url="https://github.com/some-org/forked-jubilant.git",
     )
     assert _cli.get_context(args) == expected_context
-    # get_context still queries the fork on GitHub.
     assert fake_github.repo_calls == ["dwilding/forked-jubilant"]
 
 
+# -b overrides the fork's upstream, but get_context still queries the fork.
+# The query doubles as a fast-fail check that the repo exists, so it's worth keeping.
 def test_context_fork_b_overrides_upstream(monkeypatch, fake_github):
     monkeypatch.setattr(_cli, "GITHUB_TOKEN", "fake-token")
     fake_github.repo = FORKED_REPO
@@ -218,6 +221,7 @@ def test_context_fork_b_overrides_upstream(monkeypatch, fake_github):
         upstream_url="https://github.com/some-org/frogtab.git",
     )
     assert _cli.get_context(args) == expected_context
+    assert fake_github.repo_calls == ["dwilding/forked-jubilant"]
 
 
 def test_context_repo_from_login(monkeypatch, fake_github):
