@@ -5,7 +5,7 @@ from pathlib import Path
 
 no_ssh = ["--ssh", "never"]
 
-no_token = types.SimpleNamespace(
+token_unset = types.SimpleNamespace(
     condition="GITHUB_TOKEN" not in os.environ,
     reason="GITHUB_TOKEN is not set",
 )

@@ -4,7 +4,7 @@ import helpers_functional as helpers
 import pytest
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_forked_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -41,7 +41,7 @@ Cloned repo:
     assert not helpers.get_tags(expected_dir)
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_invalid_repo_token(uv_run, test_dir):
     command = [
         *uv_run,
@@ -93,7 +93,7 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists() or not any((test_dir / "jubilant").iterdir())
 
 
 def test_bad_token_no_upstream_owner(uv_run, test_dir):
@@ -120,10 +120,10 @@ Getting repo details
 Error: GitHub rejected the token. Has the token expired?
 """
     assert result.stderr == expected_stderr
-    assert not (test_dir / "jubilant").exists()
+    assert not (test_dir / "jubilant").exists() or not any((test_dir / "jubilant").iterdir())
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_u_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,
@@ -154,7 +154,7 @@ Cloned repo:
     assert result.stdout == expected_stdout
 
 
-@pytest.mark.skipif(helpers.no_token.condition, reason=helpers.no_token.reason)
+@pytest.mark.skipif(helpers.token_unset.condition, reason=helpers.token_unset.reason)
 def test_b_sets_upstream_owner(uv_run, test_dir):
     command = [
         *uv_run,

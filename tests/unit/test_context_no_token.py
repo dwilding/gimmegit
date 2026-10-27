@@ -8,6 +8,11 @@ from gimmegit import _cli
 
 
 @pytest.fixture(autouse=True)
+def no_token(monkeypatch):
+    monkeypatch.setattr(_cli, "GITHUB_TOKEN", None)
+
+
+@pytest.fixture(autouse=True)
 def no_ssh(monkeypatch):
     monkeypatch.setattr("gimmegit._remote.is_ssh_configured", lambda: False)
 
