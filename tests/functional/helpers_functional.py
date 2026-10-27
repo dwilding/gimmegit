@@ -31,6 +31,13 @@ def token_env() -> dict[str, str]:
     return env
 
 
+def bad_token_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["GIMMEGIT_FORCE_STDOUT"] = "1"
+    env["GIMMEGIT_GITHUB_TOKEN"] = "invalid-token"
+    return env
+
+
 def get_branch(dir: Path) -> str:
     result = subprocess.run(
         ["git", "branch", "--show-current"],
