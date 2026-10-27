@@ -32,7 +32,7 @@ class FakeGithubState:
     repo: object | None = None
     user: object | None = None
     missing: bool = False  # Whether to raise UnknownObjectException for a missing repo.
-    denied: bool = False  # Whether to raise GithubException for a rejected token.
+    denied: bool = False  # Whether to raise BadCredentialsException for a rejected token.
     clients: list = field(default_factory=list)
     repo_calls: list = field(default_factory=list)
 
@@ -53,10 +53,12 @@ def fake_github(monkeypatch):
             if state.missing:
                 raise github.UnknownObjectException(404, None)
             if state.denied:
-                raise github.GithubException(401, "Bad credentials")
+                raise github.BadCredentialsException(401, "Bad credentials")
             return state.repo
 
         def get_user(self):
+            if state.denied:
+                raise github.BadCredentialsException(401, "Bad credentials")
             return state.user
 
     monkeypatch.setattr(github, "Github", FakeGithub)
@@ -124,11 +126,19 @@ def test_upstream_missing(monkeypatch, fake_github):
 
 
 def test_upstream_denied(monkeypatch, fake_github):
-    # GitHub rejects an invalid token with GithubException, which get_github_upstream does not catch.
     monkeypatch.setattr(_cli, "GITHUB_TOKEN", "bad-token")
     fake_github.denied = True
-    with pytest.raises(github.GithubException):
+    with pytest.raises(ValueError) as exc_info:
         _cli.get_github_upstream("dwilding", "frogtab")
+    assert str(exc_info.value) == "GitHub rejected the token. Has the token expired?"
+
+
+def test_github_url_denied(monkeypatch, fake_github):
+    monkeypatch.setattr(_cli, "GITHUB_TOKEN", "bad-token")
+    fake_github.denied = True
+    with pytest.raises(ValueError) as exc_info:
+        _cli.make_github_url("frogtab")
+    assert str(exc_info.value) == "GitHub rejected the token. Has the token expired?"
 
 
 @pytest.mark.parametrize("repo", ["frogtab", "frogtab/"])
