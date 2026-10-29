@@ -305,8 +305,7 @@ def create_local_branch(
         fetch_opts_str = shlex.join(fetch_opts)
         update_branch = "!" + " && ".join(
             [
-                'mode=$([ \\"$1\\" = rebase ] && echo rebase || echo merge)',
-                #         ^ Git drops unescaped quotes when reading the alias.
+                'mode=$([ "$1" = rebase ] && echo rebase || echo merge)',
                 "set --",  # Clear positional args, to avoid leaking into the final Git command.
                 "branch=$(git config --get gimmegit.branch)",
                 "base_remote=$(git config --get gimmegit.baseRemote)",
