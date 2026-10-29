@@ -21,13 +21,13 @@ gimmegit = "gimmegit._cli:main"
 dev = [
     "ruff==0.17.1",
     "pytest==9.1.1",
-    "ty==0.0.89",
+    "ty==0.0.90",
     "zizmor==1.31.1",
 ]
 
 [build-system]
 requires = [
-    "uv_build==0.13.3",
+    "uv_build==0.13.5",
 ]
 build-backend = "uv_build"
 
