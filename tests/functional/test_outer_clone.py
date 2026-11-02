@@ -48,6 +48,7 @@ def test_working_clone_exclude_dotgit(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/frogtab.git
 Checking out a new branch inner based on dwilding:main
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """

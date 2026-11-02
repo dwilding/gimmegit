@@ -117,6 +117,7 @@ def test_working_repo_allow(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/frogtab.git
 Checking out a new branch my-feature based on dwilding:main
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -183,6 +184,7 @@ def test_project_repo_allow(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/frogtab.git
 Checking out a new branch my-feature based on dwilding:main
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
@@ -214,6 +216,7 @@ def test_no_gitignore(uv_run, test_dir):
 Getting repo details
 Cloning https://github.com/dwilding/frogtab.git
 Checking out a new branch my-feature based on dwilding:main
+Installing pre-commit hook
 Cloned repo:
 {expected_dir}
 """
